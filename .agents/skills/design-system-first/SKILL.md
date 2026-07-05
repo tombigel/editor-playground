@@ -5,7 +5,7 @@ description: Use when adding or changing editor-facing UI in this repo. Check AG
 
 # Design System First
 
-Use this skill for any editor-facing UI work:
+Use this skill for editor-facing UI work that changes structure, shared components, interaction patterns, or visual contracts:
 
 - new panel or dialog UI
 - new inspector or settings controls
@@ -13,11 +13,24 @@ Use this skill for any editor-facing UI work:
 - component refactors that touch visual structure
 - CSS cleanup related to shared UI contracts
 
+For Tier 0 local polish from `AGENTS.md` (for example a one-line token/class swap to match an adjacent label), use the small-change path below instead of the full workflow.
+
+## Small-Change Path
+
+For obvious Tier 0/Tier 1 visual fixes:
+
+1. Inspect the nearby component and existing style pattern.
+2. Reuse the existing token/class/component path.
+3. Verify with diff review plus file-scoped lint or the nearest focused test only if behavior changed.
+4. Do not run `/design-system-check`, update demos, add tests, spawn agents, or run a full build unless the local diff reveals shared-contract risk.
+
 ## Required Workflow
+
+Use this full workflow for new UI, shared UI changes, repeated patterns, or uncertain visual decisions:
 
 1. Read [`docs/EDITOR_STYLE_GUIDE.md`](../../../docs/EDITOR_STYLE_GUIDE.md) for visual direction.
 2. Read [`docs/SKILLS.md`](../../../docs/SKILLS.md) for available audit and development skills.
-3. Run `/design-system-check` to find existing token violations and duplication in the area you're touching.
+3. Run `/design-system-check` to find existing token violations and duplication in the area you're touching when the change is shared, repeated, or broader than Tier 0 local polish.
 4. Inspect `src/components/ui` and `src/design-system` before creating local markup or CSS.
 
 ## Decision Order

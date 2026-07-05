@@ -13,7 +13,7 @@ When planning work in this repo:
 - For editor-facing UI changes, include design-system/style-guide review and prefer the `design-system-first` skill when available.
 - For important functional changes, include the matching `docs/PLAYGROUND_SPEC.md` and automated test updates in the same task.
 - Keep tasks scoped so each implementation task can be verified and committed independently.
-- End substantial or multi-file implementation plans with `pnpm run build` as the final gate.
+- Match the verification gate to the change tier below. End substantial, cross-layer, release-facing, or risky implementation plans with `pnpm run build` as the final gate.
 
 ## Architecture Boundary
 
@@ -56,6 +56,25 @@ When changing editor-facing UI styling, align the change to the style guide firs
 
 Do not introduce one-off editor styling that conflicts with the guide when an existing token or role can be reused.
 
+## Change Tiers And Verification Budget
+
+Scale process to risk. A small local edit should not automatically trigger subagents, new tests, e2e, or a full build just because the file is editor-facing.
+
+Use these tiers as the default verification budget:
+
+- **Tier 0: trivial/local polish** — copy changes, token/class swaps, label color/radius/spacing fixes, comments, or docs-only edits with no behavior or public contract change. Verify with diff review plus the narrowest cheap check that applies, such as file-scoped lint or no command when the edit is markdown-only. Do not add tests, spawn clean-context agents, run e2e, or run `pnpm run build` unless the user asks or the diff reveals real risk.
+- **Tier 1: focused local behavior** — a localized component/API behavior change inside one subsystem with existing nearby coverage. Run the nearest focused unit/component test and lint touched source files. Add or update a test only when behavior or a reusable contract changes.
+- **Tier 2: important functional change** — model/state semantics, public API, editor workflow, interaction behavior, persistence/import/export, rendering semantics, or inspector/debug controls that affect workflow. Update `docs/PLAYGROUND_SPEC.md` when behavior/model/UX changes, update automated tests, and run relevant focused suites plus typecheck or architecture/API-doc checks when touched.
+- **Tier 3: substantial or release-facing change** — cross-layer work, dependency/build config changes, broad refactors, multi-subsystem changes, risky rendering/editor interaction work, or anything being prepared for release/PR. Run `pnpm run build` before finishing.
+
+Adding a narrowly scoped test file to cover Tier 1 behavior does not by itself promote the change to Tier 3. A cosmetic Tier 0 edit should stay Tier 0 even if it is in an editor UI file.
+
+## Agent And Commit Budget
+
+Use clean-context subagents when they materially reduce uncertainty for medium or risky work. For obvious Tier 0/Tier 1 fixes, prefer direct local inspection over spawning an explorer agent.
+
+Do not create commits for tiny fixes unless the user asked for commits, the current workflow explicitly requires commits, or the change is part of an implementation plan with commit-sized tasks. Commit hooks update versions and changelog, so committing every polish tweak has real overhead.
+
 ## Subsystem Structure
 
 Keep subsystem structure explicit and consistent:
@@ -69,7 +88,7 @@ Do not keep shared exported subsystem types inline in implementation files when 
 
 ## Documentation And Test Gate
 
-For every important functional change or addition, update documentation in the same change set.
+For every important functional change or addition, update documentation in the same change set. Tier 0 cosmetic polish and docs-only edits normally do not require `docs/PLAYGROUND_SPEC.md` changes.
 
 Required files:
 
@@ -83,12 +102,12 @@ Important functional change includes (non-exhaustive):
 - sticky computation or rendering behavior changes
 - inspector/debug controls that affect workflow or state
 
-When no doc change is needed, explicitly confirm why in the final summary.
-When a change is not reasonably testable, explicitly confirm why in the final summary.
+When no doc change is needed for Tier 1+ work, explicitly confirm why in the final summary.
+When a behavior change is not reasonably testable, explicitly confirm why in the final summary.
 
 ## Build Gate
 
-For every substantial or multi-file task, run `pnpm run build` before finishing the task.
+For Tier 3 work, run `pnpm run build` before finishing the task. Do not promote Tier 0/Tier 1 work to the full build gate solely because the task touched an editor UI file or included a nearby focused test.
 
 - treat build failures as blockers for completion
 - fix build issues introduced by the change before handing off

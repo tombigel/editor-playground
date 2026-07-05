@@ -29,6 +29,17 @@ Commits use [Conventional Commits](https://www.conventionalcommits.org/) format,
 
 ## Build Notes
 
+### Verification tiers
+
+Use the change tiers in [`AGENTS.md`](../AGENTS.md) to choose the cheapest honest verification gate:
+
+- Tier 0 local polish: diff review plus file-scoped lint when useful; no tests, e2e, or full build by default.
+- Tier 1 focused behavior: nearest focused test plus lint for touched source files.
+- Tier 2 important functional change: relevant focused suites plus docs/spec updates and typecheck/API/architecture checks when touched.
+- Tier 3 substantial or release-facing change: `pnpm run build`.
+
+The full build remains the merge/release confidence gate, not the default response to every label color, copy, or token alignment fix.
+
 ### End-to-end test lanes
 
 The default E2E lane is `pnpm run test:e2e`. It includes the stable stage, settings, smoke, and accessibility coverage that can block a release.

@@ -128,15 +128,16 @@ Provides the checklist and available primitives for building new interactive UI 
 
 ### `/implementation-plan` — Clean Task Planning
 
-Turns a medium or large request into an execution-ready plan with bounded tasks, optional clean-context subagents, parallel read-only waves, focused verification, and one commit per code task.
+Turns a medium or large request into an execution-ready plan with bounded tasks, optional clean-context subagents, parallel read-only waves, and tier-appropriate verification.
 
 **What it provides:**
 
 - A repeatable plan format with execution strategy, prep wave, code tasks, verification wave, and final acceptance
-- Guidance for when to use `explorer` vs `worker` agents
-- Sequential commit hygiene: focused tests, stage only task files, commit, then continue
+- Guidance for when to use `explorer` vs `worker` agents, including when not to use subagents for obvious small fixes
+- Verification tiers so tiny polish can stop at diff review or a focused check while substantial work still ends with `pnpm run build`
+- Sequential commit hygiene when the user or plan calls for commits
 
-**Run:** when a request needs a detailed task list, clean commits, subagents, or parallel prep/verification
+**Run:** when a request needs a detailed task list, clean commits, subagents, or parallel prep/verification. Do not use it to inflate a tiny local fix.
 
 ## Composite Skills
 
@@ -158,7 +159,8 @@ Enforces the decision order for editor-facing UI work: reuse existing shared com
 
 **What it provides:**
 
-- Required workflow before writing any editor UI (read style guide, check existing components)
+- Small-change path for obvious local polish so one-line token/class fixes do not require the full audit workflow
+- Required workflow before substantial editor UI work (read style guide, check existing components)
 - Decision order for reuse vs new code
 - Follow-through requirements (update demos, preserve light/dark parity)
 - Exception rule for justified specialization

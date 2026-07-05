@@ -67,6 +67,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - tidy gradient controls
 - separate playback controls
 - clarify markup sanitization
+- scale verification process by change risk
 
 ### Fixed
 
