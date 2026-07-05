@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { OptionsSelector } from '@/components/ui/options-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LabeledControlRow } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
 import { FormField, HoverColorField, NumberInput, NumericUnitInlineField } from '../../InspectorControls';
 import {
@@ -72,14 +73,15 @@ export function GradientControl({
 
   return (
     <div className="space-y-2">
-      <OptionsSelector
-        ariaLabel="Gradient type"
-        size="compact"
-        className="w-full"
-        value={parsed.type}
-        options={GRADIENT_TYPES.map((t) => ({ ...t }))}
-        onValueChange={(next) => update(changeGradientType(parsed, next as GradientType))}
-      />
+      <FormField label="Type" layout="inline">
+        <OptionsSelector
+          ariaLabel="Gradient type"
+          size="compact"
+          value={parsed.type}
+          options={GRADIENT_TYPES.map((t) => ({ ...t }))}
+          onValueChange={(next) => update(changeGradientType(parsed, next as GradientType))}
+        />
+      </FormField>
 
       <LeadingParams gradient={parsed} onUpdate={update} />
 
@@ -209,28 +211,63 @@ function RadialSizeFields({ gradient, onUpdate }: { gradient: ParsedGradient; on
         </Select>
       </FormField>
       {usingExplicit ? (
-        <FormField label={isEllipse ? 'Radii' : 'Radius'} layout="inline">
-          <div className="flex gap-1">
-            <NumericUnitInlineField
+        <div className="space-y-1.5">
+          <Label className="text-[11px] font-medium">{isEllipse ? 'Radii' : 'Radius'}</Label>
+          <div className="grid grid-cols-2 gap-1.5">
+            <GradientAxisField
+              label="W"
               value={formatPosition(gradient.sizes?.[0])}
               units={['px', '%']}
-              className={AXIS_FIELD_CLASS}
-              aria-label="Radial size X"
+              ariaLabel="Radial size X"
               onChange={(raw) => setSize(0, raw)}
             />
             {isEllipse ? (
-              <NumericUnitInlineField
+              <GradientAxisField
+                label="H"
                 value={formatPosition(gradient.sizes?.[1])}
                 units={['px', '%']}
-                className={AXIS_FIELD_CLASS}
-                aria-label="Radial size Y"
+                ariaLabel="Radial size Y"
                 onChange={(raw) => setSize(1, raw)}
               />
             ) : null}
           </div>
-        </FormField>
+        </div>
       ) : null}
     </>
+  );
+}
+
+/** Layout-section letter pattern: leading single-letter label + unit field, two per row. */
+export function GradientAxisField({
+  label,
+  value,
+  units,
+  ariaLabel,
+  placeholder,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  units: ('px' | '%')[];
+  ariaLabel: string;
+  placeholder?: string;
+  onChange: (raw: string) => void;
+}) {
+  return (
+    <LabeledControlRow
+      label={label}
+      className="gap-1.5"
+      labelClassName="w-4 shrink-0 flex-none text-right text-[12px] font-medium"
+      controlClassName="ml-0 flex-1"
+    >
+      <NumericUnitInlineField
+        value={value}
+        units={units}
+        aria-label={ariaLabel}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
+    </LabeledControlRow>
   );
 }
 
@@ -242,24 +279,25 @@ function PositionFields({ gradient, onUpdate }: { gradient: ParsedGradient; onUp
     onUpdate({ ...gradient, position: { ...position, [axis]: parsedAxis } });
   };
   return (
-    <FormField label="Position" layout="inline">
-      <div className="flex gap-1">
-        <NumericUnitInlineField
+    <div className="space-y-1.5">
+      <Label className="text-[11px] font-medium">Position</Label>
+      <div className="grid grid-cols-2 gap-1.5">
+        <GradientAxisField
+          label="X"
           value={formatPosition(position.x)}
           units={['%', 'px']}
-          className={AXIS_FIELD_CLASS}
-          aria-label="Gradient position X"
+          ariaLabel="Gradient position X"
           onChange={(raw) => setAxis('x', raw)}
         />
-        <NumericUnitInlineField
+        <GradientAxisField
+          label="Y"
           value={formatPosition(position.y)}
           units={['%', 'px']}
-          className={AXIS_FIELD_CLASS}
-          aria-label="Gradient position Y"
+          ariaLabel="Gradient position Y"
           onChange={(raw) => setAxis('y', raw)}
         />
       </div>
-    </FormField>
+    </div>
   );
 }
 
@@ -280,19 +318,10 @@ function StopRow({
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
 }) {
+  // Matches the panel's color-row convention: actions on the left, then the
+  // value input, with the color swatch outermost on the right.
   return (
-    <div className="flex items-center gap-1">
-      <HoverColorField value={stop.color} ariaLabel={`Stop ${index + 1} color`} onChange={onColorChange} />
-      <NumericUnitInlineField
-        value={formatPosition(stop.position)}
-        units={['%', 'px']}
-        className={AXIS_FIELD_CLASS}
-        aria-label={`Stop ${index + 1} position`}
-        onChange={(raw) => {
-          const next = parseAxis(raw);
-          if (next) onPositionChange(next);
-        }}
-      />
+    <div className="flex items-center justify-end gap-1">
       <Button
         type="button"
         size="icon"
@@ -326,6 +355,17 @@ function StopRow({
       >
         <Trash2 className="h-3.5 w-3.5" />
       </Button>
+      <NumericUnitInlineField
+        value={formatPosition(stop.position)}
+        units={['%', 'px']}
+        className={AXIS_FIELD_CLASS}
+        aria-label={`Stop ${index + 1} position`}
+        onChange={(raw) => {
+          const next = parseAxis(raw);
+          if (next) onPositionChange(next);
+        }}
+      />
+      <HoverColorField value={stop.color} ariaLabel={`Stop ${index + 1} color`} onChange={onColorChange} />
     </div>
   );
 }

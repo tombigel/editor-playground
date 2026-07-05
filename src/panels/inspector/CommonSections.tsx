@@ -61,7 +61,7 @@ import {
   applyWrapperShadowPatch,
 } from './styleFields';
 import { createShadowFallback } from './contentSections/shared';
-import { GradientControl } from './contentSections/GradientControl';
+import { GradientAxisField, GradientControl } from './contentSections/GradientControl';
 import { createDefaultGradient, parseGradient, serializeGradient } from '../../api/documentViewApi';
 
 export type FocusedModeEntry = {
@@ -588,30 +588,31 @@ export function WrapperDesignSection({
               />
             ) : null}
             {gradient && gradientRepeats ? (
-              <FormField label="Size" layout="inline">
-                <div className="flex gap-1">
-                  <NumericUnitInlineField
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-medium">Size</Label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <GradientAxisField
+                    label="W"
                     value={backgroundSizeAxes[0] ?? ''}
                     units={['px', '%']}
-                    className="w-[4.5rem]"
-                    aria-label="Background size X"
+                    ariaLabel="Background size X"
                     placeholder="auto"
                     onChange={(next) =>
                       onWrapperStyleChange('backgroundSize', joinBackgroundSize(next, backgroundSizeAxes[1]))
                     }
                   />
-                  <NumericUnitInlineField
+                  <GradientAxisField
+                    label="H"
                     value={backgroundSizeAxes[1] ?? ''}
                     units={['px', '%']}
-                    className="w-[4.5rem]"
-                    aria-label="Background size Y"
+                    ariaLabel="Background size Y"
                     placeholder="auto"
                     onChange={(next) =>
                       onWrapperStyleChange('backgroundSize', joinBackgroundSize(backgroundSizeAxes[0], next))
                     }
                   />
                 </div>
-              </FormField>
+              </div>
             ) : null}
           </div>
         ) : null}
