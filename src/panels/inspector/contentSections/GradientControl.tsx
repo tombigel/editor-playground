@@ -1,7 +1,9 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { OptionsSelector } from '@/components/ui/options-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { FormField, HoverColorField, NumberInput, NumericUnitInlineField } from '../../InspectorControls';
 import {
   type GradientStop,
@@ -101,21 +103,13 @@ export function GradientControl({
         </Button>
       </div>
 
-      <FormField label="Repeat" layout="inline">
-        <Select
-          size="compact"
-          value={parsed.repeating ? 'on' : 'off'}
-          onValueChange={(next) => update({ ...parsed, repeating: next === 'on' })}
-        >
-          <SelectTrigger size="compact">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="off">Off</SelectItem>
-            <SelectItem value="on">On</SelectItem>
-          </SelectContent>
-        </Select>
-      </FormField>
+      <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
+        Repeat
+        <Switch
+          checked={parsed.repeating}
+          onCheckedChange={(checked) => update({ ...parsed, repeating: checked })}
+        />
+      </Label>
     </div>
   );
 }

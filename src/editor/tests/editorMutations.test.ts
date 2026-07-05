@@ -563,6 +563,34 @@ describe('editor/editorMutations', () => {
       }
     });
 
+    it('seeds a default background-size when a gradient first becomes repeating', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      const next = updateWrapperStyleField(state, section.id, 'backgroundGradient', 'repeating-linear-gradient(45deg, red 0px, blue 20px)');
+      const node = next.document.nodes[section.id];
+      expect(node.contentType === 'container' && node.style!.backgroundSize).toBe('40px 40px');
+    });
+
+    it('keeps an existing background-size when a gradient becomes repeating', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      const withSize = updateWrapperStyleField(state, section.id, 'backgroundSize', '10% 10%');
+      const next = updateWrapperStyleField(withSize, section.id, 'backgroundGradient', 'repeating-linear-gradient(red, blue)');
+      const node = next.document.nodes[section.id];
+      expect(node.contentType === 'container' && node.style!.backgroundSize).toBe('10% 10%');
+    });
+
+    it('does not seed a background-size for a non-repeating gradient', () => {
+      const state = createInitialState();
+      const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;
+
+      const next = updateWrapperStyleField(state, section.id, 'backgroundGradient', 'linear-gradient(red, blue)');
+      const node = next.document.nodes[section.id];
+      expect(node.contentType === 'container' && node.style!.backgroundSize).toBeUndefined();
+    });
+
     it('stores background-size permutations verbatim (single, two-value, percent, keyword)', () => {
       const state = createInitialState();
       const section = findNodeByRole(state, 'wrapper', 'section') as ContainerNode;

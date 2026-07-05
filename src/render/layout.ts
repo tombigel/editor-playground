@@ -99,13 +99,23 @@ export function getWrapperBorderDeclarations(node: ContainerNode): string[] {
  * Uses `backgroundColor` rather than the `background` shorthand so it never
  * conflicts with `backgroundClip` (from the border style) — React warns when a
  * shorthand and a longhand for the same property mix during rerender.
+ *
+ * background-size (and an explicit background-repeat) apply only while the
+ * gradient is a repeating-* function: sizing is what makes the tiling visible,
+ * and a stale stored size must not shrink a non-repeating gradient.
  */
 function getWrapperBackgroundStyle(node: ContainerNode): CSSProperties {
   const gradient = node.style?.backgroundGradient;
+  const repeating = gradient?.startsWith('repeating-') === true;
   return {
     ...(node.style?.background ? { backgroundColor: node.style.background } : {}),
     ...(gradient ? { backgroundImage: gradient } : {}),
-    ...(gradient && node.style?.backgroundSize ? { backgroundSize: node.style.backgroundSize } : {}),
+    ...(repeating
+      ? {
+          backgroundRepeat: 'repeat',
+          ...(node.style?.backgroundSize ? { backgroundSize: node.style.backgroundSize } : {}),
+        }
+      : {}),
   };
 }
 

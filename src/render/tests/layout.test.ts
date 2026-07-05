@@ -154,13 +154,29 @@ describe('render/layout', () => {
     const container = createContainerNode('container', 'root');
     container.style!.background = '#101828';
     container.style!.backgroundGradient = 'linear-gradient(45deg, red 0%, blue 100%)';
-    container.style!.backgroundSize = '20px 20px';
 
     expect(getContentWrapperSurfaceStyle(container)).toMatchObject({
       backgroundColor: '#101828',
       backgroundImage: 'linear-gradient(45deg, red 0%, blue 100%)',
-      backgroundSize: '20px 20px',
     });
+  });
+
+  it('emits repeat and size for repeating gradients and ignores stale size otherwise', () => {
+    const container = createContainerNode('container', 'root');
+    container.style!.backgroundGradient = 'repeating-linear-gradient(45deg, red 0px, blue 20px)';
+    container.style!.backgroundSize = '40px 40px';
+
+    expect(getContentWrapperSurfaceStyle(container)).toMatchObject({
+      backgroundImage: 'repeating-linear-gradient(45deg, red 0px, blue 20px)',
+      backgroundRepeat: 'repeat',
+      backgroundSize: '40px 40px',
+    });
+
+    // A stale stored size must not shrink a non-repeating gradient.
+    container.style!.backgroundGradient = 'linear-gradient(red, blue)';
+    const nonRepeating = getContentWrapperSurfaceStyle(container);
+    expect(nonRepeating).not.toHaveProperty('backgroundSize');
+    expect(nonRepeating).not.toHaveProperty('backgroundRepeat');
   });
 
   it('keeps the gradient background off the stage underlay but on the text-clip layer when clip-text is on', () => {
