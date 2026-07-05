@@ -13,6 +13,27 @@ describe('lib/svgSanitize', () => {
     expect(result?.innerMarkup).toContain('fill="red"');
   });
 
+  it('normalizes a malformed root svg namespace before sanitizing', () => {
+    const raw =
+      '<svg xmlns="http://w3.org" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="2" rx="2" ry="2"/><rect width="14" height="14" x="2" y="8" rx="2" ry="2" fill="currentColor"/></svg>';
+    const result = sanitizeSvgMarkup(raw);
+
+    expect(result).not.toBeNull();
+    expect(result?.sourceStatus).toBe('sanitized');
+    expect(result?.viewBox).toBe('0 0 24 24');
+    expect(result?.innerMarkup).toContain('<rect');
+    expect(result?.innerMarkup).toContain('fill="currentColor"');
+  });
+
+  it('keeps a correct root svg namespace clean', () => {
+    const result = sanitizeSvgMarkup(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><rect width="14" height="14"/></svg>',
+    );
+
+    expect(result).not.toBeNull();
+    expect(result?.sourceStatus).toBe('clean');
+  });
+
   it('strips scripts, event handlers, and javascript urls', () => {
     const result = sanitizeSvgMarkup(
       '<svg viewBox="0 0 10 10"><script>alert(1)</script><rect width="10" height="10" onclick="alert(2)"/><a href="javascript:alert(3)"><circle r="4"/></a></svg>',

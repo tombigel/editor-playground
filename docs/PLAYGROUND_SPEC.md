@@ -796,12 +796,12 @@ Accessibility:
 
 ViewBox:
 
-- The sanitizer extracts a valid `originalViewBox` from the source (deriving one from `width`/`height` when the source value is absent or malformed). Authors can override it (`svgViewBox`) through split Min X, Min Y, Width, and Height fields; pasting a complete viewBox string into any field fills all four parts. Authors can also use `Fit to content` (measures the on-stage `getBBox()`) or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
+- The sanitizer normalizes the root SVG namespace before DOMPurify runs, then extracts a valid `originalViewBox` from the source (deriving one from `width`/`height` when the source value is absent or malformed). Authors can override it (`svgViewBox`) through split Min X, Min Y, Width, and Height fields; pasting a complete viewBox string into any field fills all four parts. Authors can also use `Fit to content` (measures the on-stage `getBBox()`) or `Reset` to the original. Replacing markup resets the override. Invalid viewBox strings are rejected by the API.
 
 Color, stroke, and fit:
 
 - `Monochrome` forces all shape fills to a single color via a `sp-svg-mono` class rule (`fill: currentColor`) with the color carried inline on the root element; opacity rides on the color's own alpha channel (picker supports alpha), there is no separate opacity field. Enabling monochrome or stroke seeds real color/width values into the model so controls always reflect stored data.
-- `Stroke` applies global stroke styling via a `sp-svg-stroke` class rule and CSS custom properties. Stroke width and dash offset accept `px`/`em` lengths (unitless input is normalized to `px`); cap changes seed a matching default join (`round` → `round`, `square` → `bevel`, otherwise `miter`). Authors can also set dash pattern, dash offset, non-scaling stroke (`vector-effect: non-scaling-stroke`), and paint order.
+- `Stroke` applies global stroke styling via a `sp-svg-stroke` class rule and CSS custom properties. Stroke width and dash offset accept `px`/`em` lengths (unitless input is normalized to `px`); cap changes seed a matching default join (`round` → `round`, `square` → `bevel`, otherwise `miter`). Authors can also set dash pattern through six alternating dash/gap slots, dash offset, whether the stroke should scale with the shape (`vector-effect: non-scaling-stroke` when off), and paint order.
 - The shared Fit/Position controls map to `preserveAspectRatio`: `contain` → `meet`, `cover` → `slice`, `fill` → `none`, with the 9 position presets mapping to `xMinYMin`…`xMaxYMax` alignment.
 - The `SvgExtension` model is grouped so future capabilities (path editing, use-as-mask, animation targets) extend without reshaping the node.
 

@@ -86,6 +86,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - make gradient repeat produce visible tiling
 - harden viewbox handling
 - keep clip text with gradients
+- refine stroke inspector controls
 
 ---
 

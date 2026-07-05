@@ -1,6 +1,8 @@
 import DOMPurify from 'dompurify';
 import { isValidViewBox } from '../model/svg';
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
 export type SanitizedSvg = {
   /** Sanitized inner markup of the root svg element (root tag excluded). */
   innerMarkup: string;
@@ -26,11 +28,12 @@ export function sanitizeSvgMarkup(raw: string): SanitizedSvg | null {
   if (!trimmed) {
     return null;
   }
+  const normalizedSource = normalizeSvgRootNamespace(trimmed);
 
-  const clean = DOMPurify.sanitize(trimmed, {
+  const clean = DOMPurify.sanitize(normalizedSource, {
     USE_PROFILES: { svg: true, svgFilters: true },
     FORBID_TAGS: ['foreignObject', 'style'],
-    NAMESPACE: 'http://www.w3.org/2000/svg',
+    NAMESPACE: SVG_NAMESPACE,
   });
   if (!clean.trim()) {
     return null;
@@ -79,6 +82,29 @@ export function sanitizeStoredSvgInnerMarkup(innerMarkup: string): string | null
 }
 
 export { isValidViewBox };
+
+function normalizeSvgRootNamespace(source: string) {
+  const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
+  const root = doc.documentElement;
+  if (!root || root.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) {
+    return source;
+  }
+
+  if (root.getAttribute('xmlns') === SVG_NAMESPACE) {
+    return source;
+  }
+
+  const match = source.match(/<svg\b[^>]*>/i);
+  if (!match || match.index == null) {
+    return source;
+  }
+
+  const openTag = match[0];
+  const normalizedOpenTag = /\sxmlns\s*=/.test(openTag)
+    ? openTag.replace(/\sxmlns\s*=\s*(["']).*?\1/, ` xmlns="${SVG_NAMESPACE}"`)
+    : openTag.replace(/^<svg\b/i, `<svg xmlns="${SVG_NAMESPACE}"`);
+  return `${source.slice(0, match.index)}${normalizedOpenTag}${source.slice(match.index + openTag.length)}`;
+}
 
 function resolveViewBox(root: Element): string | undefined {
   const viewBox = root.getAttribute('viewBox')?.trim();

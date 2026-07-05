@@ -4,12 +4,11 @@ import { Check, Maximize2, RotateCcw, TriangleAlert, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { OptionsSelector, type OptionsSelectorOption } from '@/components/ui/options-selector';
+import { OptionsSelector } from '@/components/ui/options-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { InfoTooltip, InlineNotice } from '@/components/ui/settings-panel';
-import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
 import {
   FormField,
   HoverColorField,
@@ -30,6 +29,14 @@ import { applyLeafShadowPatch } from '../styleFields';
 import { createFocusedModeEntry, InspectorSectionCard } from '../CommonSections';
 import { type FocusModeCardProps, createShadowFallback } from './shared';
 import { MediaFitFields } from './mediaFitFields';
+import {
+  ScaleWithShapeControl,
+  SVG_STROKE_CAP_OPTIONS,
+  SVG_STROKE_JOIN_OPTIONS,
+  SvgDashPatternFields,
+  SvgStrokeLengthField,
+  deriveSvgStrokeJoinFromCap,
+} from './svgStrokeControls';
 
 const SVG_MARKUP_DEBOUNCE_MS = 300;
 
@@ -40,88 +47,15 @@ const VIEW_BOX_PARTS = [
   { key: 'height', label: 'Height' },
 ] as const;
 
-const SVG_STROKE_LENGTH_UNITS: ValueWithUnitOption[] = [
-  { type: 'option', value: 'px', label: 'px', inputMode: 'numeric' },
-  { type: 'option', value: 'em', label: 'em', inputMode: 'numeric' },
-];
-const SVG_STROKE_CAP_OPTIONS: OptionsSelectorOption[] = [
-  { value: 'butt', label: 'Butt', tooltip: 'Flat line ends.' },
-  { value: 'round', label: 'Round', tooltip: 'Rounded line ends and joins.' },
-  { value: 'square', label: 'Square', tooltip: 'Squared line ends with bevel joins.' },
-];
-const SVG_STROKE_JOIN_OPTIONS: OptionsSelectorOption[] = [
-  { value: 'miter', label: 'Miter', tooltip: 'Sharp path corners.' },
-  { value: 'round', label: 'Round', tooltip: 'Rounded path corners.' },
-  { value: 'bevel', label: 'Bevel', tooltip: 'Flattened path corners.' },
-];
 const SVG_STROKE_PAINT_ORDER_OPTIONS = [
   { value: 'normal', label: 'Normal' },
   { value: 'fill', label: 'Fill first' },
   { value: 'stroke', label: 'Stroke first' },
 ] as const;
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
 
 type ViewBoxPartKey = (typeof VIEW_BOX_PARTS)[number]['key'];
 type SvgMarkupStatus = ReturnType<typeof readSvgMarkupStatus>;
-
-function parseSvgStrokeLength(value: string | number | undefined, fallback: string) {
-  const raw = typeof value === 'number' ? `${value}px` : (value ?? fallback);
-  const trimmed = raw.trim();
-  const match = trimmed.match(/^(-?\d+(?:\.\d+)?)(px|em)?$/);
-  if (!match) {
-    return { value: fallback.replace(/(px|em)$/, ''), unit: fallback.endsWith('em') ? 'em' : 'px' };
-  }
-  return { value: match[1], unit: match[2] ?? 'px' };
-}
-
-function formatSvgStrokeLength(value: string | number | undefined, fallback = '1px') {
-  const parsed = parseSvgStrokeLength(value, fallback);
-  return `${parsed.value}${parsed.unit}`;
-}
-
-function deriveSvgStrokeJoinFromCap(cap: string | undefined) {
-  if (cap === 'round') {
-    return 'round';
-  }
-  if (cap === 'square') {
-    return 'bevel';
-  }
-  return 'miter';
-}
-
-function SvgStrokeLengthField({
-  value,
-  fallback = '1px',
-  min,
-  ariaLabel,
-  className = 'w-[5rem]',
-  onChange,
-}: {
-  value: string | number | undefined;
-  fallback?: string;
-  min?: number;
-  ariaLabel: string;
-  className?: string;
-  onChange: (value: string) => void;
-}) {
-  const parsed = parseSvgStrokeLength(value, fallback);
-
-  return (
-    <ValueWithUnit
-      mode="number-select"
-      value={formatSvgStrokeLength(value, fallback)}
-      options={SVG_STROKE_LENGTH_UNITS}
-      inputValue={parsed.value}
-      selectedOption={parsed.unit}
-      min={min}
-      step="any"
-      ariaLabel={ariaLabel}
-      className={className}
-      segmentWidth={34}
-      onChange={onChange}
-      onInputValueChange={(nextInput) => onChange(`${nextInput}${parsed.unit}`)}
-    />
-  );
-}
 
 function reconstructSvgSource(node: SvgInspectorNode): string {
   const svg = node.svg;
@@ -268,7 +202,7 @@ export function SvgContentSection({
         </FormField>
         {markupStatus.kind === 'fail' ? (
           <InlineNotice tone="danger">
-            The pasted markup has no usable SVG content after sanitization.
+            {markupStatus.description}
           </InlineNotice>
         ) : null}
       </InspectorFieldGroup>
@@ -390,7 +324,7 @@ function readSvgMarkupStatus(raw: string) {
     return {
       kind: 'fail' as const,
       label: 'Invalid',
-      description: 'No usable SVG content survived sanitization.',
+      description: readSvgMarkupFailureDescription(raw),
     };
   }
 
@@ -398,7 +332,7 @@ function readSvgMarkupStatus(raw: string) {
     return {
       kind: 'sanitized' as const,
       label: 'Sanitized',
-      description: 'DOMPurify changed the source before storage.',
+      description: readSvgNamespaceIssue(raw) ?? 'DOMPurify changed the source before storage.',
       result,
     };
   }
@@ -409,6 +343,26 @@ function readSvgMarkupStatus(raw: string) {
     description: 'DOMPurify returned the source unchanged.',
     result,
   };
+}
+
+function readSvgMarkupFailureDescription(raw: string) {
+  const generic = 'No usable SVG content survived sanitization.';
+  return readSvgNamespaceIssue(raw) ?? generic;
+}
+
+function readSvgNamespaceIssue(raw: string) {
+  const doc = new DOMParser().parseFromString(raw.trim(), 'image/svg+xml');
+  const root = doc.documentElement;
+  if (!root || root.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) {
+    return null;
+  }
+
+  const namespace = root.getAttribute('xmlns')?.trim();
+  if (namespace && namespace !== SVG_NAMESPACE) {
+    return `The SVG namespace was "${namespace}" and was normalized to "${SVG_NAMESPACE}".`;
+  }
+
+  return null;
 }
 
 function SvgMarkupStatusIndicator({ status }: { status: SvgMarkupStatus }) {
@@ -560,57 +514,57 @@ export function SvgDesignSection({
         </Label>
         {stroke?.enabled ? (
           <>
-            <FormField label="Color" layout="inline-group" controlClassName="gap-1.5">
-              <HoverColorField
-                value={stroke.color}
-                ariaLabel="SVG stroke color"
-                fallback={DEFAULT_TEXT_COLOR}
-                onChange={(value) => onTextChange('svgStrokeColor', value)}
-              />
+            <FormField label="Stroke size" layout="inline-group" controlClassName="w-full gap-2">
               <SvgStrokeLengthField
                 value={stroke.width}
                 min={0}
                 ariaLabel="SVG stroke width"
                 onChange={(value) => onTextChange('svgStrokeWidth', value)}
               />
+              <ScaleWithShapeControl
+                nonScaling={stroke.nonScaling}
+                onChange={(nextNonScaling) => onTextChange('svgStrokeNonScaling', nextNonScaling ? 'true' : 'false')}
+              />
+              <HoverColorField
+                value={stroke.color}
+                ariaLabel="SVG stroke color"
+                fallback={DEFAULT_TEXT_COLOR}
+                onChange={(value) => onTextChange('svgStrokeColor', value)}
+              />
             </FormField>
-            <FormField label="Line" layout="inline-group" controlClassName="gap-1.5">
+            <FormField label="Cap" layout="inline-group" controlClassName="gap-1.5">
               <OptionsSelector
                 value={strokeCap}
                 options={SVG_STROKE_CAP_OPTIONS}
+                display="icon"
                 size="compact"
                 ariaLabel="SVG stroke cap"
                 onValueChange={(value) => onTextChange('svgStrokeCap', value)}
               />
+            </FormField>
+            <FormField label="Join" layout="inline-group" controlClassName="gap-1.5">
               <OptionsSelector
                 value={strokeJoin}
                 options={SVG_STROKE_JOIN_OPTIONS}
+                display="icon"
                 size="compact"
                 ariaLabel="SVG stroke join"
                 onValueChange={(value) => onTextChange('svgStrokeJoin', value)}
               />
             </FormField>
-            <FormField label="Dash" layout="inline-group" controlClassName="gap-1.5">
-              <Input
-                value={stroke.dashArray ?? ''}
-                placeholder="4 2"
-                aria-label="SVG stroke dash pattern"
-                className="h-7 w-[5.5rem] px-2 text-[12px]"
-                onChange={(event) => onTextChange('svgStrokeDashArray', event.target.value)}
+            <FormField label="Dash" layout="stack">
+              <SvgDashPatternFields
+                value={stroke.dashArray}
+                onChange={(value) => onTextChange('svgStrokeDashArray', value)}
               />
+            </FormField>
+            <FormField label="Offset" layout="inline">
               <SvgStrokeLengthField
                 value={stroke.dashOffset}
                 fallback="0px"
                 ariaLabel="SVG stroke dash offset"
-                className="w-[4.75rem]"
+                className="w-[5rem]"
                 onChange={(value) => onTextChange('svgStrokeDashOffset', value)}
-              />
-            </FormField>
-            <FormField label="Non-scaling" layout="inline">
-              <Switch
-                checked={stroke.nonScaling ?? false}
-                aria-label="SVG non-scaling stroke"
-                onCheckedChange={(checked) => onTextChange('svgStrokeNonScaling', checked ? 'true' : 'false')}
               />
             </FormField>
             <FormField label="Paint" layout="inline">
