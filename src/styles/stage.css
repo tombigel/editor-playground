@@ -766,6 +766,12 @@
 .stage-svg.sp-svg-stroke :where(path, circle, ellipse, rect, polygon, polyline, line) {
   stroke: var(--sp-svg-stroke-color, currentColor);
   stroke-width: var(--sp-svg-stroke-width, 1);
+  stroke-linecap: var(--sp-svg-stroke-linecap, butt);
+  stroke-linejoin: var(--sp-svg-stroke-linejoin, miter);
+  stroke-dasharray: var(--sp-svg-stroke-dasharray, none);
+  stroke-dashoffset: var(--sp-svg-stroke-dashoffset, 0);
+  vector-effect: var(--sp-svg-stroke-vector-effect, initial);
+  paint-order: var(--sp-svg-stroke-paint-order, normal);
 }
 
 .stage-leaf.role-image.is-brand-mark .stage-image {

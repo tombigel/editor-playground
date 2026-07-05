@@ -83,6 +83,12 @@ export type SvgSettingField =
   | 'svgStrokeEnabled'
   | 'svgStrokeColor'
   | 'svgStrokeWidth'
+  | 'svgStrokeCap'
+  | 'svgStrokeJoin'
+  | 'svgStrokeDashArray'
+  | 'svgStrokeDashOffset'
+  | 'svgStrokeNonScaling'
+  | 'svgStrokePaintOrder'
   | 'svgViewBox';
 export type LeafTypographyField =
   | 'color'
@@ -617,7 +623,23 @@ export type SvgExtension = {
   a11y?: SvgA11y;
   /** Fill color carries its own alpha; there is no separate opacity field. */
   monochrome?: { enabled: boolean; fill?: string };
-  stroke?: { enabled: boolean; color?: string; width?: number };
+  stroke?: SvgStrokeStyle;
+};
+
+export type SvgStrokeCap = 'butt' | 'round' | 'square';
+export type SvgStrokeJoin = 'miter' | 'round' | 'bevel';
+export type SvgStrokePaintOrder = 'normal' | 'fill' | 'stroke';
+
+export type SvgStrokeStyle = {
+  enabled: boolean;
+  color?: string;
+  width?: string | number;
+  cap?: SvgStrokeCap;
+  join?: SvgStrokeJoin;
+  dashArray?: string;
+  dashOffset?: string;
+  nonScaling?: boolean;
+  paintOrder?: SvgStrokePaintOrder;
 };
 
 export type SvgA11y = {

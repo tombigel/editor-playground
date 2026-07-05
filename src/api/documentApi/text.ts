@@ -44,6 +44,9 @@ import type {
   RichTextLeaf,
   RichTextLink,
   ShadowStyleField,
+  SvgStrokeCap,
+  SvgStrokeJoin,
+  SvgStrokePaintOrder,
   SvgSettingField,
   TextDocumentContent,
   TextNode,
@@ -67,7 +70,9 @@ function isLinkableMediaNode(node: DocumentNode): node is MediaNode {
 
 const DEFAULT_SVG_MONOCHROME_FILL = '#16202a';
 const DEFAULT_SVG_STROKE_COLOR = '#16202a';
-const DEFAULT_SVG_STROKE_WIDTH = 1;
+const DEFAULT_SVG_STROKE_WIDTH = '1px';
+const DEFAULT_SVG_STROKE_CAP: SvgStrokeCap = 'butt';
+const DEFAULT_SVG_STROKE_PAINT_ORDER: SvgStrokePaintOrder = 'normal';
 
 const SVG_SETTING_FIELDS: readonly SvgSettingField[] = [
   'svgHidden',
@@ -78,11 +83,60 @@ const SVG_SETTING_FIELDS: readonly SvgSettingField[] = [
   'svgStrokeEnabled',
   'svgStrokeColor',
   'svgStrokeWidth',
+  'svgStrokeCap',
+  'svgStrokeJoin',
+  'svgStrokeDashArray',
+  'svgStrokeDashOffset',
+  'svgStrokeNonScaling',
+  'svgStrokePaintOrder',
   'svgViewBox',
 ];
 
 function isSvgSettingField(field: EditorTextField): field is SvgSettingField {
   return (SVG_SETTING_FIELDS as readonly string[]).includes(field);
+}
+
+function normalizeSvgStrokeLength(value: string, options: { fallback?: string; allowNegative?: boolean } = {}) {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const sign = options.allowNegative ? '-?' : '';
+  const match = trimmed.match(new RegExp(`^(${sign}\\d+(?:\\.\\d+)?)(px|em)?$`));
+  if (!match) {
+    return options.fallback;
+  }
+  return `${match[1]}${match[2] ?? 'px'}`;
+}
+
+function normalizeSvgStrokeDashArray(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === 'none') {
+    return undefined;
+  }
+  return /^\d+(?:\.\d+)?(?:px|em)?(?:[\s,]+\d+(?:\.\d+)?(?:px|em)?)*$/.test(trimmed) ? trimmed : undefined;
+}
+
+function normalizeSvgStrokeCap(value: string): SvgStrokeCap {
+  return value === 'round' || value === 'square' ? value : DEFAULT_SVG_STROKE_CAP;
+}
+
+function normalizeSvgStrokeJoin(value: string): SvgStrokeJoin {
+  return value === 'round' || value === 'bevel' ? value : 'miter';
+}
+
+function normalizeSvgStrokePaintOrder(value: string): SvgStrokePaintOrder {
+  return value === 'fill' || value === 'stroke' ? value : DEFAULT_SVG_STROKE_PAINT_ORDER;
+}
+
+function deriveSvgStrokeJoinFromCap(cap: SvgStrokeCap | undefined): SvgStrokeJoin {
+  if (cap === 'round') {
+    return 'round';
+  }
+  if (cap === 'square') {
+    return 'bevel';
+  }
+  return 'miter';
 }
 
 function syncTransitionalTextNodeFields(node: TextNode): void {
@@ -454,21 +508,81 @@ export function setTextNodeContentDoc(
       node.svg = {
         ...svg,
         stroke: {
+          ...svg.stroke,
           enabled,
           color: enabled ? (svg.stroke?.color ?? DEFAULT_SVG_STROKE_COLOR) : svg.stroke?.color,
           width: enabled ? (svg.stroke?.width ?? DEFAULT_SVG_STROKE_WIDTH) : svg.stroke?.width,
+          cap: enabled ? (svg.stroke?.cap ?? DEFAULT_SVG_STROKE_CAP) : svg.stroke?.cap,
+          join: enabled ? (svg.stroke?.join ?? deriveSvgStrokeJoinFromCap(svg.stroke?.cap ?? DEFAULT_SVG_STROKE_CAP)) : svg.stroke?.join,
+          paintOrder: enabled ? (svg.stroke?.paintOrder ?? DEFAULT_SVG_STROKE_PAINT_ORDER) : svg.stroke?.paintOrder,
         },
       };
     } else if (field === 'svgStrokeColor') {
       node.svg = { ...svg, stroke: { enabled: svg.stroke?.enabled ?? true, ...svg.stroke, color: value || undefined } };
     } else if (field === 'svgStrokeWidth') {
-      const width = Number.parseFloat(value);
+      const width = normalizeSvgStrokeLength(value);
       node.svg = {
         ...svg,
         stroke: {
           enabled: svg.stroke?.enabled ?? true,
           ...svg.stroke,
-          width: Number.isFinite(width) && width >= 0 ? width : undefined,
+          width,
+        },
+      };
+    } else if (field === 'svgStrokeCap') {
+      const cap = normalizeSvgStrokeCap(value);
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          cap,
+          join: deriveSvgStrokeJoinFromCap(cap),
+        },
+      };
+    } else if (field === 'svgStrokeJoin') {
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          join: normalizeSvgStrokeJoin(value),
+        },
+      };
+    } else if (field === 'svgStrokeDashArray') {
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          dashArray: normalizeSvgStrokeDashArray(value),
+        },
+      };
+    } else if (field === 'svgStrokeDashOffset') {
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          dashOffset: normalizeSvgStrokeLength(value, { allowNegative: true }),
+        },
+      };
+    } else if (field === 'svgStrokeNonScaling') {
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          nonScaling: value === 'true',
+        },
+      };
+    } else if (field === 'svgStrokePaintOrder') {
+      node.svg = {
+        ...svg,
+        stroke: {
+          enabled: svg.stroke?.enabled ?? true,
+          ...svg.stroke,
+          paintOrder: normalizeSvgStrokePaintOrder(value),
         },
       };
     } else if (field === 'svgViewBox') {

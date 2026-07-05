@@ -29,6 +29,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - split viewbox controls
 - split viewbox controls
 - debounce markup sanitization
+- expand stroke controls
 
 ### Changed
 

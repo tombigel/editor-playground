@@ -257,6 +257,12 @@ export function getSiteLeafBaseRules(selectors: {
       style: {
         stroke: 'var(--sp-svg-stroke-color, currentColor)',
         strokeWidth: 'var(--sp-svg-stroke-width, 1)',
+        strokeLinecap: 'var(--sp-svg-stroke-linecap, butt)',
+        strokeLinejoin: 'var(--sp-svg-stroke-linejoin, miter)',
+        strokeDasharray: 'var(--sp-svg-stroke-dasharray, none)',
+        strokeDashoffset: 'var(--sp-svg-stroke-dashoffset, 0)',
+        vectorEffect: 'var(--sp-svg-stroke-vector-effect, initial)',
+        paintOrder: 'var(--sp-svg-stroke-paint-order, normal)',
       },
     },
     {

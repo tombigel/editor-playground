@@ -900,6 +900,22 @@ type MediaNode = BaseNode & {
 ### SvgExtension
 
 ```typescript
+type SvgStrokeCap = 'butt' | 'round' | 'square';
+type SvgStrokeJoin = 'miter' | 'round' | 'bevel';
+type SvgStrokePaintOrder = 'normal' | 'fill' | 'stroke';
+
+type SvgStrokeStyle = {
+  enabled: boolean;
+  color?: string;
+  width?: string | number;
+  cap?: SvgStrokeCap;
+  join?: SvgStrokeJoin;
+  dashArray?: string;
+  dashOffset?: string;
+  nonScaling?: boolean;
+  paintOrder?: SvgStrokePaintOrder;
+};
+
 type SvgExtension = {
   renderMode: 'img' | 'inline';
   innerMarkup?: string;       // sanitized inner markup of the root <svg> (callers MUST sanitize via src/lib/svgSanitize.ts)
@@ -907,7 +923,7 @@ type SvgExtension = {
   viewBox?: string;           // author override (e.g. fitted to content bbox)
   a11y?: SvgA11y;             // hidden | title (aria-label) | desc (aria-describedby)
   monochrome?: { enabled: boolean; fill?: string };  // alpha rides on the color
-  stroke?: { enabled: boolean; color?: string; width?: number };
+  stroke?: SvgStrokeStyle;
 };
 ```
 
@@ -1015,7 +1031,9 @@ type EditorTextField =
   // SVG settings (SvgSettingField)
   | 'svgHidden' | 'svgTitle' | 'svgDesc'
   | 'svgMonochrome' | 'svgFill'
-  | 'svgStrokeEnabled' | 'svgStrokeColor' | 'svgStrokeWidth' | 'svgViewBox'
+  | 'svgStrokeEnabled' | 'svgStrokeColor' | 'svgStrokeWidth'
+  | 'svgStrokeCap' | 'svgStrokeJoin' | 'svgStrokeDashArray' | 'svgStrokeDashOffset'
+  | 'svgStrokeNonScaling' | 'svgStrokePaintOrder' | 'svgViewBox'
   // Block gap
   | 'blockGap';
 ```
@@ -1167,7 +1185,7 @@ This index keeps the split API reference synchronized with the public export sur
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
 - `LeafInsertionRole`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeTextField`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
-- `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgSettingField`
+- `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgStrokeCap`, `SvgStrokeJoin`, `SvgStrokePaintOrder`, `SvgStrokeStyle`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
 - `setPageAsHomeDoc`, `normalizeSlug`
 - `FocusedMode`, `LinkValidationError`, `StageProps`, `SiteRendererProps`, `SiteExportOptions`

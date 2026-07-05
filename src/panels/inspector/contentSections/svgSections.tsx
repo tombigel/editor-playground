@@ -4,14 +4,16 @@ import { Check, Maximize2, RotateCcw, TriangleAlert, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { OptionsSelector, type OptionsSelectorOption } from '@/components/ui/options-selector';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { InfoTooltip, InlineNotice } from '@/components/ui/settings-panel';
+import { ValueWithUnit, type ValueWithUnitOption } from '@/components/ui/value-with-unit';
 import {
   FormField,
   HoverColorField,
   InspectorFieldGroup,
-  NumberInput,
   ShadowControlGroup,
   readShadowFieldValues,
 } from '../../InspectorControls';
@@ -38,8 +40,88 @@ const VIEW_BOX_PARTS = [
   { key: 'height', label: 'Height' },
 ] as const;
 
+const SVG_STROKE_LENGTH_UNITS: ValueWithUnitOption[] = [
+  { type: 'option', value: 'px', label: 'px', inputMode: 'numeric' },
+  { type: 'option', value: 'em', label: 'em', inputMode: 'numeric' },
+];
+const SVG_STROKE_CAP_OPTIONS: OptionsSelectorOption[] = [
+  { value: 'butt', label: 'Butt', tooltip: 'Flat line ends.' },
+  { value: 'round', label: 'Round', tooltip: 'Rounded line ends and joins.' },
+  { value: 'square', label: 'Square', tooltip: 'Squared line ends with bevel joins.' },
+];
+const SVG_STROKE_JOIN_OPTIONS: OptionsSelectorOption[] = [
+  { value: 'miter', label: 'Miter', tooltip: 'Sharp path corners.' },
+  { value: 'round', label: 'Round', tooltip: 'Rounded path corners.' },
+  { value: 'bevel', label: 'Bevel', tooltip: 'Flattened path corners.' },
+];
+const SVG_STROKE_PAINT_ORDER_OPTIONS = [
+  { value: 'normal', label: 'Normal' },
+  { value: 'fill', label: 'Fill first' },
+  { value: 'stroke', label: 'Stroke first' },
+] as const;
+
 type ViewBoxPartKey = (typeof VIEW_BOX_PARTS)[number]['key'];
 type SvgMarkupStatus = ReturnType<typeof readSvgMarkupStatus>;
+
+function parseSvgStrokeLength(value: string | number | undefined, fallback: string) {
+  const raw = typeof value === 'number' ? `${value}px` : (value ?? fallback);
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^(-?\d+(?:\.\d+)?)(px|em)?$/);
+  if (!match) {
+    return { value: fallback.replace(/(px|em)$/, ''), unit: fallback.endsWith('em') ? 'em' : 'px' };
+  }
+  return { value: match[1], unit: match[2] ?? 'px' };
+}
+
+function formatSvgStrokeLength(value: string | number | undefined, fallback = '1px') {
+  const parsed = parseSvgStrokeLength(value, fallback);
+  return `${parsed.value}${parsed.unit}`;
+}
+
+function deriveSvgStrokeJoinFromCap(cap: string | undefined) {
+  if (cap === 'round') {
+    return 'round';
+  }
+  if (cap === 'square') {
+    return 'bevel';
+  }
+  return 'miter';
+}
+
+function SvgStrokeLengthField({
+  value,
+  fallback = '1px',
+  min,
+  ariaLabel,
+  className = 'w-[5rem]',
+  onChange,
+}: {
+  value: string | number | undefined;
+  fallback?: string;
+  min?: number;
+  ariaLabel: string;
+  className?: string;
+  onChange: (value: string) => void;
+}) {
+  const parsed = parseSvgStrokeLength(value, fallback);
+
+  return (
+    <ValueWithUnit
+      mode="number-select"
+      value={formatSvgStrokeLength(value, fallback)}
+      options={SVG_STROKE_LENGTH_UNITS}
+      inputValue={parsed.value}
+      selectedOption={parsed.unit}
+      min={min}
+      step="any"
+      ariaLabel={ariaLabel}
+      className={className}
+      segmentWidth={34}
+      onChange={onChange}
+      onInputValueChange={(nextInput) => onChange(`${nextInput}${parsed.unit}`)}
+    />
+  );
+}
 
 function reconstructSvgSource(node: SvgInspectorNode): string {
   const svg = node.svg;
@@ -253,16 +335,7 @@ export function SvgContentSection({
             })}
           </div>
         </FormField>
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={fitViewBoxToContent}
-          >
-            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
-            Fit to content
-          </Button>
+        <div className="flex items-center justify-between gap-2">
           <Button
             type="button"
             size="sm"
@@ -275,6 +348,15 @@ export function SvgContentSection({
           >
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
             Reset
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={fitViewBoxToContent}
+          >
+            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+            Fit to content
           </Button>
         </div>
         {viewBoxFitError ? (
@@ -430,7 +512,10 @@ export function SvgDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
   const monochrome = node.svg?.monochrome;
   const stroke = node.svg?.stroke;
-  const hasOpenSvgPaintSection = Boolean(monochrome?.enabled || stroke?.enabled);
+  const strokeCap = stroke?.cap ?? 'butt';
+  const strokeJoin = stroke?.join ?? deriveSvgStrokeJoinFromCap(strokeCap);
+  const strokePaintOrder = stroke?.paintOrder ?? 'normal';
+  const hasOpenStrokeSection = Boolean(stroke?.enabled);
 
   return (
     <InspectorSectionCard
@@ -465,7 +550,7 @@ export function SvgDesignSection({
           </FormField>
         ) : null}
       </InspectorFieldGroup>
-      <InspectorFieldGroup gap>
+      <InspectorFieldGroup gap separated={monochrome?.enabled ?? false}>
         <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
           Stroke
           <Switch
@@ -475,27 +560,80 @@ export function SvgDesignSection({
         </Label>
         {stroke?.enabled ? (
           <>
-            <FormField label="Color" layout="inline">
+            <FormField label="Color" layout="inline-group" controlClassName="gap-1.5">
               <HoverColorField
                 value={stroke.color}
                 ariaLabel="SVG stroke color"
                 fallback={DEFAULT_TEXT_COLOR}
                 onChange={(value) => onTextChange('svgStrokeColor', value)}
               />
-            </FormField>
-            <FormField label="Width" layout="inline">
-              <NumberInput
-                value={stroke.width ?? 1}
+              <SvgStrokeLengthField
+                value={stroke.width}
                 min={0}
-                max={100}
-                step={0.5}
-                onChange={(value) => onTextChange('svgStrokeWidth', String(value))}
+                ariaLabel="SVG stroke width"
+                onChange={(value) => onTextChange('svgStrokeWidth', value)}
               />
+            </FormField>
+            <FormField label="Line" layout="inline-group" controlClassName="gap-1.5">
+              <OptionsSelector
+                value={strokeCap}
+                options={SVG_STROKE_CAP_OPTIONS}
+                size="compact"
+                ariaLabel="SVG stroke cap"
+                onValueChange={(value) => onTextChange('svgStrokeCap', value)}
+              />
+              <OptionsSelector
+                value={strokeJoin}
+                options={SVG_STROKE_JOIN_OPTIONS}
+                size="compact"
+                ariaLabel="SVG stroke join"
+                onValueChange={(value) => onTextChange('svgStrokeJoin', value)}
+              />
+            </FormField>
+            <FormField label="Dash" layout="inline-group" controlClassName="gap-1.5">
+              <Input
+                value={stroke.dashArray ?? ''}
+                placeholder="4 2"
+                aria-label="SVG stroke dash pattern"
+                className="h-7 w-[5.5rem] px-2 text-[12px]"
+                onChange={(event) => onTextChange('svgStrokeDashArray', event.target.value)}
+              />
+              <SvgStrokeLengthField
+                value={stroke.dashOffset}
+                fallback="0px"
+                ariaLabel="SVG stroke dash offset"
+                className="w-[4.75rem]"
+                onChange={(value) => onTextChange('svgStrokeDashOffset', value)}
+              />
+            </FormField>
+            <FormField label="Non-scaling" layout="inline">
+              <Switch
+                checked={stroke.nonScaling ?? false}
+                aria-label="SVG non-scaling stroke"
+                onCheckedChange={(checked) => onTextChange('svgStrokeNonScaling', checked ? 'true' : 'false')}
+              />
+            </FormField>
+            <FormField label="Paint" layout="inline">
+              <Select
+                value={strokePaintOrder}
+                onValueChange={(value) => onTextChange('svgStrokePaintOrder', value)}
+              >
+                <SelectTrigger size="compact" aria-label="SVG stroke paint order" className="w-28">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SVG_STROKE_PAINT_ORDER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </FormField>
           </>
         ) : null}
       </InspectorFieldGroup>
-      <div className={`space-y-1.5 ${hasOpenSvgPaintSection ? 'editor-border-subtle border-t pt-2.5' : ''}`}>
+      <div className={`space-y-1.5 ${hasOpenStrokeSection ? 'editor-border-subtle border-t pt-2.5' : ''}`}>
         <ShadowControlGroup
           color={shadow.color}
           blur={shadow.blur}

@@ -25,6 +25,8 @@ import type {
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
+  SvgStrokeCap,
+  SvgStrokeJoin,
   TextNode,
 } from '../model/types';
 import { highlightCode, normalizeCodeLanguage } from './codeHighlight';
@@ -65,6 +67,26 @@ export function getNodeAriaLabel(node: StageOrSiteNode) {
 
 function escapeXmlText(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function deriveSvgStrokeJoinFromCap(cap: SvgStrokeCap | undefined): SvgStrokeJoin {
+  if (cap === 'round') {
+    return 'round';
+  }
+  if (cap === 'square') {
+    return 'bevel';
+  }
+  return 'miter';
+}
+
+function resolveSvgStrokePaintOrder(value: string | undefined) {
+  if (value === 'stroke') {
+    return 'stroke fill markers';
+  }
+  if (value === 'fill') {
+    return 'fill stroke markers';
+  }
+  return 'normal';
 }
 
 export function getNodeTextContent(node: LeafNode): string {
@@ -687,6 +709,18 @@ export function renderLeafContent(
           if (stroke.width !== undefined) {
             svgStyle['--sp-svg-stroke-width'] = stroke.width;
           }
+          svgStyle['--sp-svg-stroke-linecap'] = stroke.cap ?? 'butt';
+          svgStyle['--sp-svg-stroke-linejoin'] = stroke.join ?? deriveSvgStrokeJoinFromCap(stroke.cap);
+          if (stroke.dashArray) {
+            svgStyle['--sp-svg-stroke-dasharray'] = stroke.dashArray;
+          }
+          if (stroke.dashOffset) {
+            svgStyle['--sp-svg-stroke-dashoffset'] = stroke.dashOffset;
+          }
+          if (stroke.nonScaling) {
+            svgStyle['--sp-svg-stroke-vector-effect'] = 'non-scaling-stroke';
+          }
+          svgStyle['--sp-svg-stroke-paint-order'] = resolveSvgStrokePaintOrder(stroke.paintOrder);
         }
         const accessibleMarkup =
           (describedById ? `<desc id="${describedById}">${escapeXmlText(a11y?.desc ?? '')}</desc>` : '') +

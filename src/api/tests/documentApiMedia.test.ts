@@ -185,10 +185,24 @@ describe('api/documentApi svg operations', () => {
 
     next = setTextNodeContentDoc(next, svg.id, 'svgDesc', 'A five-pointed star');
     next = setTextNodeContentDoc(next, svg.id, 'svgStrokeWidth', '2');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeCap', 'round');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeDashArray', '4 2');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeDashOffset', '0.5em');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeNonScaling', 'true');
+    next = setTextNodeContentDoc(next, svg.id, 'svgStrokePaintOrder', 'stroke');
 
     const node = getMediaNode(next, svg.id);
     expect(node.svg?.a11y?.desc).toBe('A five-pointed star');
-    expect(node.svg?.stroke).toMatchObject({ enabled: true, width: 2 });
+    expect(node.svg?.stroke).toMatchObject({
+      enabled: true,
+      width: '2px',
+      cap: 'round',
+      join: 'round',
+      dashArray: '4 2',
+      dashOffset: '0.5em',
+      nonScaling: true,
+      paintOrder: 'stroke',
+    });
   });
 
   it('seeds a real fill color when monochrome is enabled and rides alpha on the color', () => {
@@ -213,7 +227,10 @@ describe('api/documentApi svg operations', () => {
     const stroke = getMediaNode(enabled, svg.id).svg?.stroke;
     expect(stroke?.enabled).toBe(true);
     expect(stroke?.color).toBeTruthy();
-    expect(stroke?.width).toBeGreaterThan(0);
+    expect(stroke?.width).toBe('1px');
+    expect(stroke?.cap).toBe('butt');
+    expect(stroke?.join).toBe('miter');
+    expect(stroke?.paintOrder).toBe('normal');
   });
 });
 

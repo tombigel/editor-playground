@@ -801,7 +801,7 @@ ViewBox:
 Color, stroke, and fit:
 
 - `Monochrome` forces all shape fills to a single color via a `sp-svg-mono` class rule (`fill: currentColor`) with the color carried inline on the root element; opacity rides on the color's own alpha channel (picker supports alpha), there is no separate opacity field. Enabling monochrome or stroke seeds real color/width values into the model so controls always reflect stored data.
-- `Stroke` applies a global stroke color/width via a `sp-svg-stroke` class rule and CSS custom properties.
+- `Stroke` applies global stroke styling via a `sp-svg-stroke` class rule and CSS custom properties. Stroke width and dash offset accept `px`/`em` lengths (unitless input is normalized to `px`); cap changes seed a matching default join (`round` → `round`, `square` → `bevel`, otherwise `miter`). Authors can also set dash pattern, dash offset, non-scaling stroke (`vector-effect: non-scaling-stroke`), and paint order.
 - The shared Fit/Position controls map to `preserveAspectRatio`: `contain` → `meet`, `cover` → `slice`, `fill` → `none`, with the 9 position presets mapping to `xMinYMin`…`xMaxYMax` alignment.
 - The `SvgExtension` model is grouped so future capabilities (path editing, use-as-mask, animation targets) extend without reshaping the node.
 

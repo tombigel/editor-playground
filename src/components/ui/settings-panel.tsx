@@ -483,11 +483,19 @@ export function NumericRow({
 	);
 }
 
-export function InfoTooltip({ children }: { children: ReactNode }) {
+export function InfoTooltip({
+	children,
+	side = "top",
+	align = "center",
+}: {
+	children: ReactNode;
+	side?: "top" | "right" | "bottom";
+	align?: "start" | "center" | "end";
+}) {
 	return (
 		<PopoverTooltip
-			side="bottom"
-			align="end"
+			side={side}
+			align={align}
 			className="editor-tooltip-panel w-80 max-w-[calc(100vw-1.5rem)] rounded-lg border px-3 py-2 text-xs font-normal leading-5 whitespace-normal [overflow-wrap:anywhere]"
 			content={children}
 		>

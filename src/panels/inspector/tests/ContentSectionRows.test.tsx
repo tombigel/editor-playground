@@ -153,6 +153,7 @@ describe("panels/inspector/content section rows", () => {
 		expect(markup).toContain("lucide-check");
 		expect(markup).toContain("lucide-maximize-2");
 		expect(markup).toContain("lucide-rotate-ccw");
+		expect(markup.indexOf(">Reset<")).toBeLessThan(markup.indexOf(">Fit to content<"));
 	});
 
 	it("composes SVG viewBox edits and accepts pasted viewBox strings", () => {
@@ -161,18 +162,42 @@ describe("panels/inspector/content section rows", () => {
 		expect(readNextSvgViewBoxValue("", "width", "32")).toBeNull();
 	});
 
-	it("separates open SVG paint controls from shadow controls", () => {
+	it("renders expanded SVG stroke controls and separators", () => {
 		const svgNode = createMediaNode("svg", "root");
 		if (svgNode.subtype !== "svg" || !svgNode.svg) {
 			throw new Error("Expected SVG media node");
 		}
 		svgNode.svg.monochrome = { enabled: true, fill: "#112233" };
+		svgNode.svg.stroke = {
+			enabled: true,
+			color: "#445566",
+			width: "2px",
+			cap: "round",
+			join: "round",
+			dashArray: "4 2",
+			dashOffset: "1em",
+			nonScaling: true,
+			paintOrder: "stroke",
+		};
 
 		const markup = renderToStaticMarkup(
 			<SvgDesignSection node={svgNode} onTextChange={() => {}} />,
 		);
 
 		expect(markup).toContain(">Monochrome<");
+		expect(markup).toContain(">Stroke<");
+		expect(markup).toContain('data-separated="true"');
+		expect(markup).toContain('aria-label="SVG stroke width"');
+		expect(markup).toContain(">SVG stroke cap<");
+		expect(markup).toContain(">SVG stroke join<");
+		expect(markup).toContain(">Butt<");
+		expect(markup).toContain(">Round<");
+		expect(markup).toContain(">Bevel<");
+		expect(markup).toContain('aria-label="SVG stroke dash pattern"');
+		expect(markup).toContain('aria-label="SVG stroke dash offset"');
+		expect(markup).toContain(">Non-scaling<");
+		expect(markup).toContain('aria-label="SVG non-scaling stroke"');
+		expect(markup).toContain('aria-label="SVG stroke paint order"');
 		expect(markup).toContain("editor-border-subtle border-t pt-2.5");
 	});
 });

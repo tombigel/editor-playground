@@ -212,7 +212,16 @@ describe('render/nodePresentation', () => {
       viewBox: '2 2 6 6',
       a11y: { title: 'Company logo', desc: 'A <blue> square mark' },
       monochrome: { enabled: true, fill: 'rgba(255,0,0,0.5)' },
-      stroke: { enabled: true, color: '#00ff00', width: 2 },
+      stroke: {
+        enabled: true,
+        color: '#00ff00',
+        width: '2px',
+        cap: 'round',
+        dashArray: '4 2',
+        dashOffset: '1em',
+        nonScaling: true,
+        paintOrder: 'stroke',
+      },
     };
 
     const markup = renderToStaticMarkup(renderLeafContent(svg, { svgClassName: 'sp-svg' }));
@@ -227,7 +236,13 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('color:rgba(255,0,0,0.5)');
     expect(markup).not.toContain('--sp-svg-fill-opacity');
     expect(markup).toContain('--sp-svg-stroke-color:#00ff00');
-    expect(markup).toContain('--sp-svg-stroke-width:2');
+    expect(markup).toContain('--sp-svg-stroke-width:2px');
+    expect(markup).toContain('--sp-svg-stroke-linecap:round');
+    expect(markup).toContain('--sp-svg-stroke-linejoin:round');
+    expect(markup).toContain('--sp-svg-stroke-dasharray:4 2');
+    expect(markup).toContain('--sp-svg-stroke-dashoffset:1em');
+    expect(markup).toContain('--sp-svg-stroke-vector-effect:non-scaling-stroke');
+    expect(markup).toContain('--sp-svg-stroke-paint-order:stroke fill markers');
   });
 
   it('never emits aria-hidden together with an accessible name', () => {
