@@ -30,6 +30,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - split viewbox controls
 - debounce markup sanitization
 - expand stroke controls
+- add accessible video defaults and API fields
 
 ### Changed
 

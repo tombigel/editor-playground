@@ -18,6 +18,10 @@ export const DEFAULT_IMAGE_SHADOW_OFFSET_Y_PX = 12;
 
 export const DEFAULT_VIDEO_ASPECT_RATIO = 16 / 9;
 export const DEFAULT_VIDEO_ASPECT_HEIGHT = 'aspect-ratio(16/9)';
+export const DEFAULT_VIDEO_SRC = 'https://archive.org/download/BigBuckBunny_328/BigBuckBunny_512kb.mp4';
+export const DEFAULT_VIDEO_POSTER = 'https://archive.org/download/BigBuckBunny_328/__ia_thumb.jpg';
+export const DEFAULT_VIDEO_TITLE = 'Big Buck Bunny sample video';
+export const DEFAULT_VIDEO_DESCRIPTION = 'A short animated sample video from the Blender Foundation open movie Big Buck Bunny.';
 export const DEFAULT_MEDIA_OBJECT_FIT_IMAGE = 'cover';
 export const DEFAULT_MEDIA_OBJECT_FIT_VIDEO = 'contain';
 export const DEFAULT_MEDIA_OBJECT_POSITION = 'center center';

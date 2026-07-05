@@ -879,9 +879,20 @@ type MediaNode = BaseNode & {
     autoplay?: boolean;
     loop?: boolean;
     muted?: boolean;
-    controls?: boolean;
+    controls?: boolean;          // always rendered on preview/export for a11y
     poster?: string;
     preload?: VideoPreload;      // 'auto' | 'metadata' | 'none'
+    title?: string;
+    titleHidden?: boolean;
+    titleTag?: HeadingTag;       // h1-h6 for visible title overlays
+    description?: string;        // aria-describedby text
+    captions?: {
+      src?: string;              // WebVTT (.vtt)
+      label?: string;
+      srclang?: string;
+      default?: boolean;
+    };
+    transcriptSrc?: string;
     intrinsicRatio?: number;     // measured from loaded metadata
   };
   svg?: SvgExtension;
@@ -1028,6 +1039,9 @@ type EditorTextField =
   | 'objectFit' | 'objectPosition'
   // Video settings (VideoSettingField)
   | 'videoAutoplay' | 'videoMuted' | 'videoControls' | 'videoLoop' | 'videoPoster' | 'videoPreload'
+  | 'videoTitle' | 'videoTitleHidden' | 'videoTitleTag' | 'videoDescription'
+  | 'videoCaptionsSrc' | 'videoCaptionsLabel' | 'videoCaptionsLang' | 'videoCaptionsDefault'
+  | 'videoTranscriptSrc'
   // SVG settings (SvgSettingField)
   | 'svgHidden' | 'svgTitle' | 'svgDesc'
   | 'svgMonochrome' | 'svgFill'

@@ -468,7 +468,20 @@ export function setTextNodeContentDoc(
 
   if ((field === 'videoAutoplay' || field === 'videoMuted' || field === 'videoControls' || field === 'videoLoop') && isMediaNode(node) && node.subtype === 'video') {
     const flag = field === 'videoAutoplay' ? 'autoplay' : field === 'videoMuted' ? 'muted' : field === 'videoControls' ? 'controls' : 'loop';
-    node.video = { ...node.video, [flag]: value === 'true' };
+    const enabled = value === 'true';
+    if (flag === 'autoplay') {
+      node.video = { ...node.video, autoplay: enabled, muted: enabled ? true : node.video?.muted };
+      return next;
+    }
+    if (flag === 'muted' && node.video?.autoplay === true && !enabled) {
+      node.video = { ...node.video, muted: true };
+      return next;
+    }
+    if (flag === 'controls' && !enabled) {
+      node.video = { ...node.video, controls: true };
+      return next;
+    }
+    node.video = { ...node.video, [flag]: enabled };
     return next;
   }
 
@@ -482,6 +495,56 @@ export function setTextNodeContentDoc(
       ...node.video,
       preload: value === 'metadata' || value === 'none' ? value : 'auto',
     };
+    return next;
+  }
+
+  if (field === 'videoTitle' && isMediaNode(node) && node.subtype === 'video') {
+    const title = value.trim();
+    node.video = { ...node.video, title: title || undefined };
+    node.alt = title || undefined;
+    return next;
+  }
+
+  if (field === 'videoTitleHidden' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, titleHidden: value === 'true' };
+    return next;
+  }
+
+  if (field === 'videoTitleTag' && isMediaNode(node) && node.subtype === 'video') {
+    const titleTag = value === 'h1' || value === 'h2' || value === 'h3' || value === 'h4' || value === 'h5' || value === 'h6'
+      ? value
+      : 'h3';
+    node.video = { ...node.video, titleTag };
+    return next;
+  }
+
+  if (field === 'videoDescription' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, description: value.trim() || undefined };
+    return next;
+  }
+
+  if (field === 'videoCaptionsSrc' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, captions: { ...node.video?.captions, src: value.trim() || undefined } };
+    return next;
+  }
+
+  if (field === 'videoCaptionsLabel' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, captions: { ...node.video?.captions, label: value.trim() || undefined } };
+    return next;
+  }
+
+  if (field === 'videoCaptionsLang' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, captions: { ...node.video?.captions, srclang: value.trim() || undefined } };
+    return next;
+  }
+
+  if (field === 'videoCaptionsDefault' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, captions: { ...node.video?.captions, default: value === 'true' } };
+    return next;
+  }
+
+  if (field === 'videoTranscriptSrc' && isMediaNode(node) && node.subtype === 'video') {
+    node.video = { ...node.video, transcriptSrc: value.trim() || undefined };
     return next;
   }
 

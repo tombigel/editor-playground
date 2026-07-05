@@ -73,7 +73,16 @@ export type VideoSettingField =
   | 'videoControls'
   | 'videoLoop'
   | 'videoPoster'
-  | 'videoPreload';
+  | 'videoPreload'
+  | 'videoTitle'
+  | 'videoTitleHidden'
+  | 'videoTitleTag'
+  | 'videoDescription'
+  | 'videoCaptionsSrc'
+  | 'videoCaptionsLabel'
+  | 'videoCaptionsLang'
+  | 'videoCaptionsDefault'
+  | 'videoTranscriptSrc';
 export type SvgSettingField =
   | 'svgHidden'
   | 'svgTitle'
@@ -594,6 +603,17 @@ export type MediaNode = BaseNode & {
     controls?: boolean;
     poster?: string;
     preload?: VideoPreload;
+    title?: string;
+    titleHidden?: boolean;
+    titleTag?: HeadingTag;
+    description?: string;
+    captions?: {
+      src?: string;
+      label?: string;
+      srclang?: string;
+      default?: boolean;
+    };
+    transcriptSrc?: string;
     /** Intrinsic width/height ratio measured from loaded metadata; drives auto aspect adoption. */
     intrinsicRatio?: number;
   };

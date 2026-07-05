@@ -49,9 +49,39 @@ describe('api/documentApi media fields', () => {
 
     expect(getMediaNode(next, video.id).video).toMatchObject({
       autoplay: true,
-      muted: false,
-      controls: false,
+      muted: true,
+      controls: true,
       loop: true,
+    });
+  });
+
+  it('updates video accessibility metadata through text fields', () => {
+    const document = structuredClone(createInitialDocument());
+    const video = addVideoNode(document);
+
+    let next = setTextNodeContentDoc(document, video.id, 'videoTitle', 'Launch demo');
+    next = setTextNodeContentDoc(next, video.id, 'videoTitleHidden', 'false');
+    next = setTextNodeContentDoc(next, video.id, 'videoTitleTag', 'h2');
+    next = setTextNodeContentDoc(next, video.id, 'videoDescription', 'A product walkthrough.');
+    next = setTextNodeContentDoc(next, video.id, 'videoCaptionsSrc', '/captions/demo.vtt');
+    next = setTextNodeContentDoc(next, video.id, 'videoCaptionsLabel', 'English CC');
+    next = setTextNodeContentDoc(next, video.id, 'videoCaptionsLang', 'en');
+    next = setTextNodeContentDoc(next, video.id, 'videoCaptionsDefault', 'true');
+    next = setTextNodeContentDoc(next, video.id, 'videoTranscriptSrc', '/transcripts/demo.html');
+
+    expect(getMediaNode(next, video.id).alt).toBe('Launch demo');
+    expect(getMediaNode(next, video.id).video).toMatchObject({
+      title: 'Launch demo',
+      titleHidden: false,
+      titleTag: 'h2',
+      description: 'A product walkthrough.',
+      captions: {
+        src: '/captions/demo.vtt',
+        label: 'English CC',
+        srclang: 'en',
+        default: true,
+      },
+      transcriptSrc: '/transcripts/demo.html',
     });
   });
 

@@ -39,6 +39,10 @@ import {
   DEFAULT_MEDIA_OBJECT_POSITION,
   DEFAULT_TEXT_COLOR,
   DEFAULT_VIDEO_ASPECT_HEIGHT,
+  DEFAULT_VIDEO_DESCRIPTION,
+  DEFAULT_VIDEO_POSTER,
+  DEFAULT_VIDEO_SRC,
+  DEFAULT_VIDEO_TITLE,
 } from './styleDefaults';
 import { parseFontSizeValue, parseHeightValue, parseSpacingValue, parseUnitValue, parseWidthValue } from './units';
 import { TEXT_NODE_DEFAULTS } from './textNodeDefaults';
@@ -393,7 +397,20 @@ export function createMediaNode(subtype: MediaSubtype, parentId: NodeId): MediaN
       visible: true,
       locked: false,
       rect: createDefaultRect('32px', '32px', '320px', DEFAULT_VIDEO_ASPECT_HEIGHT),
-      video: { autoplay: false, loop: false, muted: true, controls: true, preload: 'auto' },
+      src: DEFAULT_VIDEO_SRC,
+      alt: DEFAULT_VIDEO_TITLE,
+      video: {
+        autoplay: false,
+        loop: false,
+        muted: true,
+        controls: true,
+        poster: DEFAULT_VIDEO_POSTER,
+        preload: 'auto',
+        title: DEFAULT_VIDEO_TITLE,
+        titleHidden: false,
+        titleTag: 'h3',
+        description: DEFAULT_VIDEO_DESCRIPTION,
+      },
       style: { objectFit: DEFAULT_MEDIA_OBJECT_FIT_VIDEO, objectPosition: DEFAULT_MEDIA_OBJECT_POSITION },
     };
   }
