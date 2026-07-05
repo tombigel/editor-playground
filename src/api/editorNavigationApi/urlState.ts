@@ -180,6 +180,7 @@ function isEditorPanelId(value: unknown): value is EditorPanelId {
 		value === "pages" ||
 		value === "sectionTemplates" ||
 		value === "textTypes" ||
+		value === "mediaTypes" ||
 		value === "ai"
 	);
 }

@@ -587,7 +587,7 @@ Supported editor URL query params:
 | `page` | `activePageId` | Active editor page id |
 | `select` | `selectedNodeId` | Selected node id |
 | `focus-mode` | `focusedMode` | Active focused mode id; `none` or `normal` clears focused mode |
-| `panel` | `panel` | One of `settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes` |
+| `panel` | `panel` | One of `settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes`, `mediaTypes` |
 | `settings` | `settingsSection` | One of `display`, `pages`, `defaults`, `fonts`, `transfer`, `advanced`, `shortcuts` |
 | `help` | `helpEntryId` | Help/documentation entry id |
 | `page-target` | `pageTargetId` | Target page id for page panel flows |

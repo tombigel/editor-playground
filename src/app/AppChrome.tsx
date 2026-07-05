@@ -1,5 +1,5 @@
 import type { CSSProperties, ComponentType, ReactNode, Ref } from 'react';
-import { AlignLeft, Code2, Heading2, FileText, ListOrdered, Rows3, Type } from 'lucide-react';
+import { AlignLeft, Clapperboard, Code2, FileText, Heading2, ImageIcon, ListOrdered, Rows3, Shapes, TvMinimalPlay, Type } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
 import { Button } from '@/components/ui/button';
 import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
@@ -162,6 +162,7 @@ export function SectionTemplatePopover({
 }
 
 type TextTypeRole = 'heading' | 'text' | 'list' | 'code' | 'richtext';
+type MediaTypeRole = 'image' | 'video' | 'svg';
 
 const TEXT_TYPE_OPTIONS: {
   role: TextTypeRole;
@@ -241,7 +242,83 @@ export function TextTypePopover({
   );
 }
 
-export type { TextTypeRole };
+const MEDIA_TYPE_OPTIONS: {
+  role: MediaTypeRole;
+  label: string;
+  description: string;
+  icon: ComponentType<{ className?: string; size?: number }>;
+}[] = [
+  { role: 'image', label: 'Image', description: 'Seeded visual', icon: ImageIcon },
+  { role: 'video', label: 'Video', description: 'Embedded player', icon: TvMinimalPlay },
+  { role: 'svg', label: 'SVG', description: 'Inline vector graphic', icon: Shapes },
+];
+
+export function MediaTypePopover({
+  panelRef,
+  open,
+  onOpenChange,
+  onClose,
+  onInsert,
+  suppressPopover = false,
+  style,
+}: {
+  panelRef?: Ref<HTMLDivElement>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
+  onInsert: (role: MediaTypeRole) => void;
+  suppressPopover?: boolean;
+  style?: CSSProperties;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <FloatingPanelShell
+      ref={panelRef}
+      open={open}
+      onOpenChange={onOpenChange}
+      positionMode="absolute"
+      suppressPopover={suppressPopover}
+      className="w-[220px]"
+      style={style}
+      header={(
+        <EditorPanelHeader
+          icon={Clapperboard}
+          title="Insert media"
+          description="Choose a media type."
+          closeLabel="Close media type panel"
+          onClose={onClose}
+        />
+      )}
+      bodyClassName="p-2"
+    >
+      <div className="flex flex-col gap-1">
+        {MEDIA_TYPE_OPTIONS.map(({ role, label, description, icon: Icon }) => (
+          <button
+            key={role}
+            type="button"
+            data-media-type-role={role}
+            className="editor-template-card flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--editor-focus-ring-offset)]"
+            onClick={() => {
+              onInsert(role);
+              onClose();
+            }}
+          >
+            <Icon size={16} className="editor-text-muted shrink-0" />
+            <div>
+              <span className="editor-text-strong block text-xs font-semibold">{label}</span>
+              <span className="editor-text-muted mt-0.5 block text-[10px]">{description}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </FloatingPanelShell>
+  );
+}
+
+export type { MediaTypeRole, TextTypeRole };
 
 export function RailToggleButton({
   icon: Icon,

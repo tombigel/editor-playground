@@ -18,6 +18,7 @@ function createCallbacks(): PanelRequestCallbacks {
 		onPagesPositionChange: vi.fn(),
 		onSectionTemplatesOpenChange: vi.fn(),
 		onTextTypesOpenChange: vi.fn(),
+		onMediaTypesOpenChange: vi.fn(),
 		onAiOpenChange: vi.fn(),
 		onSettingsSectionTargetChange: vi.fn(),
 		onHelpEntryTargetChange: vi.fn(),

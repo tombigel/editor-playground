@@ -28,7 +28,7 @@ import {
 	PagesPanel,
 	SettingsPanel,
 } from "./AppShell.lazyPanels";
-import { SectionTemplatePopover, TextTypePopover } from "./AppChrome";
+import { MediaTypePopover, SectionTemplatePopover, TextTypePopover } from "./AppChrome";
 import { openManageFontsWithOptions } from "./manageFontsActions";
 import { ShowcaseTourOverlay } from "./showcaseTour/ShowcaseTourOverlay";
 import { SHOWCASE_TOUR_CONFIG } from "./showcaseTour/showcaseTourConfig";
@@ -43,6 +43,7 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 	const {
 		sectionTemplateOpen,
 		textTypeOpen,
+		mediaTypeOpen,
 		setRequestedPageSettingsId,
 		setHelpEntryTarget,
 		state,
@@ -70,6 +71,7 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		aiPanelRef,
 		sectionTemplatePanelRef,
 		textTypePanelRef,
+		mediaTypePanelRef,
 		documentJson,
 		dispatch,
 		onLayersOpenChange,
@@ -85,6 +87,9 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		onTextTypeOpenChange,
 		onCloseTextTypes,
 		onInsertTextType,
+		onMediaTypeOpenChange,
+		onCloseMediaTypes,
+		onInsertMediaType,
 		onSettingsOpenChange,
 		onManageFontsOpenChange,
 		onHelpOpenChange,
@@ -311,6 +316,18 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 				onInsert={(role) => {
 					onInsertTextType(role);
 					onCloseTextTypes();
+				}}
+			/>
+
+			<MediaTypePopover
+				panelRef={mediaTypePanelRef}
+				open={mediaTypeOpen}
+				style={{ top: "76px", left: "80px" }}
+				onOpenChange={onMediaTypeOpenChange}
+				onClose={onCloseMediaTypes}
+				onInsert={(role) => {
+					onInsertMediaType(role);
+					onCloseMediaTypes();
 				}}
 			/>
 

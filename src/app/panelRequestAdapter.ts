@@ -19,6 +19,7 @@ export type PanelRequestCallbacks = {
 	onPagesPositionChange: (position: EditorPanelPosition) => void;
 	onSectionTemplatesOpenChange: (open: boolean) => void;
 	onTextTypesOpenChange: (open: boolean) => void;
+	onMediaTypesOpenChange: (open: boolean) => void;
 	onAiOpenChange: (open: boolean) => void;
 	onSettingsSectionTargetChange: (section: EditorSettingsSectionId) => void;
 	onHelpEntryTargetChange: (entryId: string | undefined) => void;
@@ -72,6 +73,9 @@ export function applyPanelRequestWithCallbacks(
 	}
 	if (next.textTypeOpen !== current.textTypeOpen) {
 		callbacks.onTextTypesOpenChange(next.textTypeOpen);
+	}
+	if (next.mediaTypeOpen !== current.mediaTypeOpen) {
+		callbacks.onMediaTypesOpenChange(next.mediaTypeOpen);
 	}
 	if (next.aiOpen !== current.aiOpen) {
 		callbacks.onAiOpenChange(next.aiOpen);

@@ -1642,7 +1642,7 @@ Naming and title behavior:
 - `focus-mode` URL overrides apply to editor UI initialization only. Supported values are `layout`, `sticky`, `content`, `design`, and `normal` / `none` for no focused mode.
 - Editor navigation and deep-link state are headless API concerns in `src/api/editorNavigationApi.ts`. URL parsing/building, node target resolution, editor view flags, and transient panel requests must flow through that API before a feature-specific UI consumes them.
 - Editor URL navigation uses `#/edit?...` and supports active page, selected node id, focused mode, panel target, settings/help/page targets, tour topic/step, sticky/debug/grid/animation preview flags, and spacer visibility. Invalid URL values are ignored instead of forcing malformed editor state.
-- Transient panel navigation uses typed panel ids (`settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes`, `ai`) and panel requests. All panel request consumers resolve request semantics through the pure `applyEditorPanelRequest` helper: `useAppPanels` applies it to its `EditorPanelState` directly, and the app shell's `applyPanelRequestWithCallbacks` adapter (`src/app/panelRequestAdapter.ts`) diffs the pure result onto the floating-panel React setters for the showcase tour. `closeAll` closes every transient panel, including the AI panel.
+- Transient panel navigation uses typed panel ids (`settings`, `manageFonts`, `help`, `shortcuts`, `about`, `components`, `pages`, `sectionTemplates`, `textTypes`, `mediaTypes`, `ai`) and panel requests. All panel request consumers resolve request semantics through the pure `applyEditorPanelRequest` helper: `useAppPanels` applies it to its `EditorPanelState` directly, and the app shell's `applyPanelRequestWithCallbacks` adapter (`src/app/panelRequestAdapter.ts`) diffs the pure result onto the floating-panel React setters for the showcase tour. `closeAll` closes every transient panel, including the AI panel.
 - Feature walkthroughs and scripted navigation must not click editor DOM controls as a workaround for missing editor capabilities. If a step needs editor movement that is not expressible through `editorNavigationApi`, the editor API should be extended first.
 
 ### Showcase Tour
@@ -1663,6 +1663,7 @@ Naming and title behavior:
 - Highlight labels flip below top-edge targets and clamp their max width so target labels stay visible in the viewport.
 - Settings workflow story steps highlight left settings nav routes such as `data-settings-nav="display"`, `data-settings-nav="fonts"`, or `data-settings-nav="transfer"` instead of the settings body section, because the body can scroll while the nav item remains a stable wayfinding target.
 - Text-editor story steps can open the text type picker through the typed `textTypes` panel request and anchor specific options through `data-text-type-role`, including the Rich text option used to introduce Slate editing and merge/split workflows.
+- Scripted insertion flows can open the media type picker through the typed `mediaTypes` panel request and anchor options through `data-media-type-role`.
 - Animation story steps target the `animation-behavior` inspector block while enabling animation preview through URL-backed editor navigation state.
 - Tour URL sync rewrites known editor-navigation params for the active step instead of preserving stale panel/help/page/view params from prior steps; unrelated query params remain intact.
 - Closing the tour restores the captured pre-tour editor view flags, including debug, sticky preview, animation preview, spacer visibility, grid, hidden-node display, and focus mode. Tours opened from an editor control restore the previous search string; tours opened from a deep link remove tour/editor-navigation params while preserving unrelated query params.
@@ -1736,6 +1737,27 @@ Adding a text node opens a text-type picker instead of inserting immediately.
 | List      | standalone list | —               | `list`    |
 | Code      | code text     | —                 | `code`    |
 | Rich text | rich text     | —                 | `rich`    |
+
+## Media Type Picker
+
+Adding media opens a media-type picker instead of exposing separate left-rail insert buttons for each media subtype.
+
+### Insertion flow
+
+- The picker opens from the left-rail `Media` add button, which uses the clapperboard icon.
+- It renders as a compact left-side pop panel at the shared top-left resting position below the top bar.
+- It shows three options in a vertical list: **Image**, **Video**, **SVG**.
+- The Video option uses the `tv-minimal-play` icon.
+- Clicking an option inserts the corresponding media node and closes the picker.
+- **Known gap**: the picker does not yet close on outside-click (no `useDismissFloatingPanels` integration for this panel).
+
+### Media type options
+
+| Option | Inserted node | `subtype` |
+| ------ | ------------- | --------- |
+| Image  | media         | `image`   |
+| Video  | media         | `video`   |
+| SVG    | media         | `svg`     |
 
 ### Inspector subtype switcher
 

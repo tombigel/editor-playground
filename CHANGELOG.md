@@ -16,6 +16,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add overflow control
 - default radial size to manual
 - refine media control panels
+- group media inserts in picker
 
 ### Changed
 

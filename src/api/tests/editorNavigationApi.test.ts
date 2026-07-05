@@ -169,6 +169,7 @@ describe("api/editorNavigationApi/panelState", () => {
 			pagesOpen: false,
 			sectionTemplateOpen: false,
 			textTypeOpen: false,
+			mediaTypeOpen: false,
 			aiOpen: false,
 			componentsPosition: { top: 76, left: 80 },
 			pagesPosition: { top: 76, left: 416 },
@@ -200,6 +201,7 @@ describe("api/editorNavigationApi/panelState", () => {
 			true,
 		);
 		expect(applyEditorPanelRequest(state, { type: "open", panel: "textTypes" }).textTypeOpen).toBe(true);
+		expect(applyEditorPanelRequest(state, { type: "open", panel: "mediaTypes" }).mediaTypeOpen).toBe(true);
 		expect(applyEditorPanelRequest(state, { type: "open", panel: "ai" }).aiOpen).toBe(true);
 	});
 
@@ -244,6 +246,7 @@ describe("api/editorNavigationApi/panelState", () => {
 			["pages", "pagesOpen"],
 			["sectionTemplates", "sectionTemplateOpen"],
 			["textTypes", "textTypeOpen"],
+			["mediaTypes", "mediaTypeOpen"],
 			["ai", "aiOpen"],
 		] as const;
 
@@ -297,6 +300,7 @@ describe("api/editorNavigationApi/panelState", () => {
 			"pages",
 			"sectionTemplates",
 			"textTypes",
+			"mediaTypes",
 			"ai",
 		] as const) {
 			state = applyEditorPanelRequest(state, { type: "open", panel });
@@ -313,6 +317,7 @@ describe("api/editorNavigationApi/panelState", () => {
 			pagesOpen: false,
 			sectionTemplateOpen: false,
 			textTypeOpen: false,
+			mediaTypeOpen: false,
 			aiOpen: false,
 		});
 	});

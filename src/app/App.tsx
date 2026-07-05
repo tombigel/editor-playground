@@ -485,9 +485,11 @@ export function App({
 			pagesPanelRef={panels.pagesPanelRef}
 			sectionTemplateOpen={panels.sectionTemplateOpen}
 			textTypeOpen={panels.textTypeOpen}
+			mediaTypeOpen={panels.mediaTypeOpen}
 			settingsPanelRef={panels.settingsPanelRef}
 			sectionTemplatePanelRef={panels.sectionTemplatePanelRef}
 			textTypePanelRef={panels.textTypePanelRef}
+			mediaTypePanelRef={panels.mediaTypePanelRef}
 			documentJson={viewModel.documentJson}
 			dispatch={dispatch}
 			onStickyGeometryChange={setStickyGeometry}
@@ -511,6 +513,10 @@ export function App({
 			onTextTypeOpenChange={panels.handleTextTypeOpenChange}
 			onCloseTextTypes={panels.closeTextTypePopover}
 			onInsertTextType={(role) => dispatch({ type: "insertLeaf", role })}
+			onOpenMediaTypes={panels.openMediaTypePopover}
+			onMediaTypeOpenChange={panels.handleMediaTypeOpenChange}
+			onCloseMediaTypes={panels.closeMediaTypePopover}
+			onInsertMediaType={(role) => dispatch({ type: "insertLeaf", role })}
 			onSettingsOpenChange={panels.setSettingsOpen}
 			onManageFontsOpenChange={panels.setManageFontsOpen}
 			onHelpOpenChange={panels.setHelpOpen}

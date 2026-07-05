@@ -24,6 +24,7 @@ export function createDefaultEditorPanelState(
 		pagesOpen: false,
 		sectionTemplateOpen: false,
 		textTypeOpen: false,
+		mediaTypeOpen: false,
 		aiOpen: false,
 		componentsPosition: options.componentsPosition,
 		pagesPosition: options.pagesPosition,
@@ -100,6 +101,7 @@ function closeAllPanels(state: EditorPanelState): EditorPanelState {
 		pagesOpen: false,
 		sectionTemplateOpen: false,
 		textTypeOpen: false,
+		mediaTypeOpen: false,
 		aiOpen: false,
 	};
 }
@@ -140,6 +142,8 @@ function openPanel(
 			return { ...state, sectionTemplateOpen: true };
 		case "textTypes":
 			return { ...state, textTypeOpen: true };
+		case "mediaTypes":
+			return { ...state, mediaTypeOpen: true };
 		case "ai":
 			return { ...state, aiOpen: true };
 		default:
@@ -167,6 +171,8 @@ function closePanel(state: EditorPanelState, panel: EditorPanelId): EditorPanelS
 			return { ...state, sectionTemplateOpen: false };
 		case "textTypes":
 			return { ...state, textTypeOpen: false };
+		case "mediaTypes":
+			return { ...state, mediaTypeOpen: false };
 		case "ai":
 			return { ...state, aiOpen: false };
 		default:

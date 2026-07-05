@@ -34,6 +34,7 @@ export function useAppPanels() {
 	const pagesPanelRef = useRef<HTMLDivElement | null>(null);
 	const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
 	const textTypePanelRef = useRef<HTMLDivElement | null>(null);
+	const mediaTypePanelRef = useRef<HTMLDivElement | null>(null);
 	const aiPanelRef = useRef<HTMLDivElement | null>(null);
 	const [aiPosition, setAiPosition] = useState<EditorPanelPosition>(
 		getDefaultLeftFloatingPanelPosition,
@@ -135,6 +136,18 @@ export function useAppPanels() {
 		setPanelOpen("textTypes", open);
 	}
 
+	function openMediaTypePopover(_trigger: HTMLElement) {
+		applyPanelRequest({ type: "open", panel: "mediaTypes" });
+	}
+
+	function closeMediaTypePopover() {
+		applyPanelRequest({ type: "close", panel: "mediaTypes" });
+	}
+
+	function handleMediaTypeOpenChange(open: boolean) {
+		setPanelOpen("mediaTypes", open);
+	}
+
 	useDismissFloatingPanels({
 		settingsOpen: panelState.settingsOpen,
 		settingsPanelRef,
@@ -195,6 +208,11 @@ export function useAppPanels() {
 		openTextTypePopover,
 		closeTextTypePopover,
 		handleTextTypeOpenChange,
+		mediaTypeOpen: panelState.mediaTypeOpen,
+		mediaTypePanelRef,
+		openMediaTypePopover,
+		closeMediaTypePopover,
+		handleMediaTypeOpenChange,
 		closeTransientPanels,
 		hasDismissiblePanels:
 			panelState.settingsOpen ||
@@ -206,6 +224,7 @@ export function useAppPanels() {
 			panelState.pagesOpen ||
 			panelState.sectionTemplateOpen ||
 			panelState.textTypeOpen ||
+			panelState.mediaTypeOpen ||
 			panelState.aiOpen,
 	};
 }
@@ -230,6 +249,8 @@ function getPanelOpenState(state: EditorPanelState, panel: EditorPanelId) {
 			return state.sectionTemplateOpen;
 		case "textTypes":
 			return state.textTypeOpen;
+		case "mediaTypes":
+			return state.mediaTypeOpen;
 		case "ai":
 			return state.aiOpen;
 	}

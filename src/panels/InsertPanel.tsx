@@ -1,24 +1,24 @@
 import {
 	BookOpenText,
 	Clapperboard,
-	ImageIcon,
 	Layers3,
 	Link2,
 	RectangleEllipsis,
 	Rows3,
-	Shapes,
 	Sparkles,
 	SquareStack,
 	Type,
 } from "lucide-react";
-type LeafItemKind = 'image' | 'video' | 'svg' | 'link' | 'button';
 import { Button } from "@/components/ui/button";
 import { PopoverTooltip } from "@/components/ui/popover";
+
+type LeafItemKind = 'image' | 'video' | 'svg' | 'link' | 'button';
 
 type Props = {
 	onInsertWrapper: (role: "container") => void;
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
 	onOpenTextTypes: (trigger: HTMLElement) => void;
+	onOpenMediaTypes: (trigger: HTMLElement) => void;
 	onInsertLeaf: (role: LeafItemKind) => void;
 	layersOpen?: boolean;
 	onOpenLayers?: (trigger: HTMLElement) => void;
@@ -52,25 +52,10 @@ const INSERT_ITEMS = [
 		hint: "Paragraph, heading, rich text…",
 	},
 	{
-		kind: "leaf" as const,
-		role: "image" as const,
-		icon: ImageIcon,
-		label: "Image",
-		hint: "Seeded visual",
-	},
-	{
-		kind: "leaf" as const,
-		role: "video" as const,
+		kind: "mediaType" as const,
 		icon: Clapperboard,
-		label: "Video",
-		hint: "Embedded player",
-	},
-	{
-		kind: "leaf" as const,
-		role: "svg" as const,
-		icon: Shapes,
-		label: "SVG",
-		hint: "Inline vector graphic",
+		label: "Media",
+		hint: "Image, video, SVG…",
 	},
 	{
 		kind: "leaf" as const,
@@ -92,6 +77,7 @@ export function InsertPanel({
 	onInsertWrapper,
 	onOpenSectionTemplates,
 	onOpenTextTypes,
+	onOpenMediaTypes,
 	onInsertLeaf,
 	layersOpen = false,
 	onOpenLayers = () => undefined,
@@ -137,6 +123,8 @@ export function InsertPanel({
 									? "section-templates"
 									: item.kind === "textType"
 										? "text-types"
+										: item.kind === "mediaType"
+											? "media-types"
 										: undefined
 							}
 							variant="outline"
@@ -154,6 +142,10 @@ export function InsertPanel({
 								}
 								if (item.kind === "textType") {
 									onOpenTextTypes(event.currentTarget);
+									return;
+								}
+								if (item.kind === "mediaType") {
+									onOpenMediaTypes(event.currentTarget);
 									return;
 								}
 								onInsertLeaf(item.role);

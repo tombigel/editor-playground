@@ -52,7 +52,7 @@ import {
 } from "../panels/inspectorLayout";
 import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { ActionResult } from "../panels/settingsTransfer";
-import type { TextTypeRole } from "./AppChrome";
+import type { MediaTypeRole, TextTypeRole } from "./AppChrome";
 import { AppShellEditorMain } from "./AppShellEditorMain";
 import { AppShellOverlays } from "./AppShellOverlays";
 import { PreviewMode } from "./AppShellPreview";
@@ -93,12 +93,14 @@ type Props = {
 	pagesPosition?: { top: number; left: number };
 	sectionTemplateOpen: boolean;
 	textTypeOpen: boolean;
+	mediaTypeOpen: boolean;
 	settingsPanelRef: Ref<HTMLDivElement>;
 	layersPanelRef?: Ref<HTMLDivElement>;
 	pagesPanelRef?: Ref<HTMLDivElement>;
 	aiPanelRef?: Ref<HTMLDivElement>;
 	sectionTemplatePanelRef: Ref<HTMLDivElement>;
 	textTypePanelRef: Ref<HTMLDivElement>;
+	mediaTypePanelRef: Ref<HTMLDivElement>;
 	documentJson: string;
 	dispatch: Dispatch<HistoryAction>;
 	onStickyGeometryChange: (geometry: StickyGeometrySnapshot) => void;
@@ -121,6 +123,10 @@ type Props = {
 	onTextTypeOpenChange: (open: boolean) => void;
 	onCloseTextTypes: () => void;
 	onInsertTextType: (role: TextTypeRole) => void;
+	onOpenMediaTypes: (trigger: HTMLElement) => void;
+	onMediaTypeOpenChange: (open: boolean) => void;
+	onCloseMediaTypes: () => void;
+	onInsertMediaType: (role: MediaTypeRole) => void;
 	onSettingsOpenChange: (open: boolean) => void;
 	onManageFontsOpenChange?: (open: boolean) => void;
 	onHelpOpenChange: (open: boolean) => void;
@@ -163,12 +169,14 @@ export function AppShell({
 	aiPosition = { top: 76, left: 80 },
 	sectionTemplateOpen,
 	textTypeOpen,
+	mediaTypeOpen,
 	settingsPanelRef,
 	layersPanelRef,
 	pagesPanelRef,
 	aiPanelRef,
 	sectionTemplatePanelRef,
 	textTypePanelRef,
+	mediaTypePanelRef,
 	documentJson,
 	dispatch,
 	onStickyGeometryChange,
@@ -189,6 +197,10 @@ export function AppShell({
 	onTextTypeOpenChange,
 	onCloseTextTypes,
 	onInsertTextType,
+	onOpenMediaTypes,
+	onMediaTypeOpenChange,
+	onCloseMediaTypes,
+	onInsertMediaType,
 	onSettingsOpenChange,
 	onManageFontsOpenChange = () => undefined,
 	onHelpOpenChange,
@@ -248,6 +260,7 @@ export function AppShell({
 			pagesOpen,
 			sectionTemplateOpen,
 			textTypeOpen,
+			mediaTypeOpen,
 			aiOpen,
 			componentsPosition: layersPosition,
 			pagesPosition,
@@ -270,6 +283,7 @@ export function AppShell({
 			pagesOpen,
 			sectionTemplateOpen,
 			textTypeOpen,
+			mediaTypeOpen,
 			aiOpen,
 			layersPosition,
 			pagesPosition,
@@ -302,6 +316,7 @@ export function AppShell({
 					onPagesPositionChange,
 					onSectionTemplatesOpenChange: onSectionTemplateOpenChange,
 					onTextTypesOpenChange: onTextTypeOpenChange,
+					onMediaTypesOpenChange: onMediaTypeOpenChange,
 					onAiOpenChange,
 					onSettingsSectionTargetChange: (section) =>
 						setSettingsSectionTarget(section as SettingsSectionId),
@@ -324,6 +339,7 @@ export function AppShell({
 			onPagesPositionChange,
 			onSectionTemplateOpenChange,
 			onTextTypeOpenChange,
+			onMediaTypeOpenChange,
 			onAiOpenChange,
 		],
 	);
@@ -780,6 +796,7 @@ export function AppShell({
 		linkPopupVisible,
 		sectionTemplateOpen,
 		textTypeOpen,
+		mediaTypeOpen,
 		setRequestedPageSettingsId,
 		setHelpEntryTarget,
 		historyState,
@@ -808,6 +825,7 @@ export function AppShell({
 		aiPanelRef,
 		sectionTemplatePanelRef,
 		textTypePanelRef,
+		mediaTypePanelRef,
 		documentJson,
 		dispatch,
 		onStickyGeometryChange,
@@ -832,6 +850,10 @@ export function AppShell({
 		onTextTypeOpenChange,
 		onCloseTextTypes,
 		onInsertTextType,
+		onOpenMediaTypes,
+		onMediaTypeOpenChange,
+		onCloseMediaTypes,
+		onInsertMediaType,
 		onSettingsOpenChange,
 		onManageFontsOpenChange,
 		onHelpOpenChange,

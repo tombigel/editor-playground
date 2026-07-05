@@ -42,6 +42,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		onCloseLayers,
 		onOpenSectionTemplates,
 		onOpenTextTypes,
+		onOpenMediaTypes,
 		onManageFontsOpenChange,
 		onHelpOpenChange,
 		onShortcutsOpenChange,
@@ -207,6 +208,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						<InsertPanel
 							onOpenSectionTemplates={onOpenSectionTemplates}
 							onOpenTextTypes={onOpenTextTypes}
+							onOpenMediaTypes={onOpenMediaTypes}
 							onInsertWrapper={(role) =>
 								dispatch({ type: "insertWrapper", role })
 							}

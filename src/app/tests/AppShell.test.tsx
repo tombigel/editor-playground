@@ -32,9 +32,11 @@ function createProps(): ComponentProps<typeof AppShell> {
 		helpOpen: false,
 		sectionTemplateOpen: false,
 		textTypeOpen: false,
+		mediaTypeOpen: false,
 		settingsPanelRef: null,
 		sectionTemplatePanelRef: null,
 		textTypePanelRef: null,
+		mediaTypePanelRef: null,
 		documentJson: "{}",
 		dispatch: () => undefined,
 		onStickyGeometryChange: () => undefined,
@@ -45,6 +47,10 @@ function createProps(): ComponentProps<typeof AppShell> {
 		onTextTypeOpenChange: () => undefined,
 		onCloseTextTypes: () => undefined,
 		onInsertTextType: () => undefined,
+		onOpenMediaTypes: () => undefined,
+		onMediaTypeOpenChange: () => undefined,
+		onCloseMediaTypes: () => undefined,
+		onInsertMediaType: () => undefined,
 		onSettingsOpenChange: () => undefined,
 		onHelpOpenChange: () => undefined,
 		onImportDocument: async () => ({ ok: true, message: "Imported." }),
@@ -123,6 +129,7 @@ describe("app/AppShell", () => {
 		expect(markup).toContain('data-panel-trigger="components"');
 		expect(markup).toContain('data-panel-trigger="pages"');
 		expect(markup).toContain('data-panel-trigger="ai"');
+		expect(markup).toContain('data-panel-trigger="media-types"');
 		expect(markup).toContain('aria-label="Components"');
 		expect(markup).toContain('aria-label="Pages"');
 		expect(markup).toContain('aria-label="AI Assistant"');
@@ -161,6 +168,19 @@ describe("app/AppShell", () => {
 		expect(markup).toContain(">List<");
 		expect(markup).toContain("Standalone list block");
 		expect(markup).toContain('data-text-type-role="richtext"');
+	});
+
+	it("renders media choices in the media type popover", () => {
+		const props = createProps();
+		props.mediaTypeOpen = true;
+
+		const markup = renderToStaticMarkup(<AppShell {...props} />);
+
+		expect(markup).toContain("Insert media");
+		expect(markup).toContain(">Image<");
+		expect(markup).toContain(">Video<");
+		expect(markup).toContain(">SVG<");
+		expect(markup).toContain('data-media-type-role="video"');
 	});
 
 	it("renders the top bar as a single-row menubar with a centered pages switcher", () => {
