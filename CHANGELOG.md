@@ -11,6 +11,11 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 
 ## [Unreleased]
 
+---
+
+## [0.13.0] — 2026-07-05
+Document: 1.8.0 · API: 2.6.0 · Editor: 0.20.0
+
 ### Added
 
 - improve assistant panel responses
