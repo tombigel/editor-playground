@@ -11,15 +11,15 @@ const SVG_STROKE_LENGTH_UNITS: ValueWithUnitOption[] = [
 const SVG_DASH_SLOT_COUNT = 6;
 
 export const SVG_STROKE_CAP_OPTIONS: OptionsSelectorOption[] = [
-  { value: 'butt', label: 'Butt cap', icon: <StrokeCapIcon cap="butt" />, tooltip: 'Butt cap: flat line ends.' },
-  { value: 'round', label: 'Round cap', icon: <StrokeCapIcon cap="round" />, tooltip: 'Round cap: rounded line ends.' },
-  { value: 'square', label: 'Square cap', icon: <StrokeCapIcon cap="square" />, tooltip: 'Square cap: squared line ends.' },
+  { value: 'butt', label: 'Butt', tooltip: 'Flat line ends.' },
+  { value: 'round', label: 'Round', tooltip: 'Rounded line ends.' },
+  { value: 'square', label: 'Square', tooltip: 'Squared line ends.' },
 ];
 
 export const SVG_STROKE_JOIN_OPTIONS: OptionsSelectorOption[] = [
-  { value: 'miter', label: 'Miter join', icon: <StrokeJoinIcon join="miter" />, tooltip: 'Miter join: sharp path corners.' },
-  { value: 'round', label: 'Round join', icon: <StrokeJoinIcon join="round" />, tooltip: 'Round join: rounded path corners.' },
-  { value: 'bevel', label: 'Bevel join', icon: <StrokeJoinIcon join="bevel" />, tooltip: 'Bevel join: flattened path corners.' },
+  { value: 'miter', label: 'Miter', tooltip: 'Sharp path corners.' },
+  { value: 'round', label: 'Round', tooltip: 'Rounded path corners.' },
+  { value: 'bevel', label: 'Bevel', tooltip: 'Flattened path corners.' },
 ];
 
 function parseSvgStrokeLength(value: string | number | undefined, fallback: string) {
@@ -45,35 +45,6 @@ export function deriveSvgStrokeJoinFromCap(cap: string | undefined) {
     return 'bevel';
   }
   return 'miter';
-}
-
-function StrokeCapIcon({ cap }: { cap: 'butt' | 'round' | 'square' }) {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-      <path d="M6 12h12" fill="none" stroke="currentColor" strokeLinecap={cap} strokeWidth="3" />
-      {cap === 'butt' ? (
-        <path d="M6 7v10M18 7v10" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      ) : null}
-      {cap === 'square' ? (
-        <path d="M4.5 9.5h3v5h-3zM16.5 9.5h3v5h-3z" fill="currentColor" opacity="0.28" />
-      ) : null}
-    </svg>
-  );
-}
-
-function StrokeJoinIcon({ join }: { join: 'miter' | 'round' | 'bevel' }) {
-  return (
-    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" aria-hidden="true">
-      <path
-        d="M5 18 12 7l7 11"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="butt"
-        strokeLinejoin={join}
-        strokeWidth="3"
-      />
-    </svg>
-  );
 }
 
 export function SvgStrokeLengthField({
@@ -111,7 +82,18 @@ export function SvgStrokeLengthField({
   );
 }
 
-export function ScaleWithShapeControl({
+export function ScaleWithShapeLabel() {
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1">
+      Scale with shape
+      <InfoTooltip>
+        When on, stroke width scales as the SVG is resized. Turn it off to keep the stroke width constant.
+      </InfoTooltip>
+    </span>
+  );
+}
+
+export function ScaleWithShapeSwitch({
   nonScaling,
   onChange,
 }: {
@@ -119,19 +101,11 @@ export function ScaleWithShapeControl({
   onChange: (nextNonScaling: boolean) => void;
 }) {
   return (
-    <span className="inline-flex min-w-0 items-center gap-1.5">
-      <span className="flex min-w-0 items-center gap-1 text-[11px] font-medium whitespace-nowrap">
-        Scale with shape
-        <InfoTooltip>
-          When on, stroke width scales as the SVG is resized. Turn it off to keep the stroke width constant.
-        </InfoTooltip>
-      </span>
-      <Switch
-        checked={!(nonScaling ?? false)}
-        aria-label="Scale stroke with shape"
-        onCheckedChange={(checked) => onChange(!checked)}
-      />
-    </span>
+    <Switch
+      checked={!(nonScaling ?? false)}
+      aria-label="Scale stroke with shape"
+      onCheckedChange={(checked) => onChange(!checked)}
+    />
   );
 }
 
@@ -166,25 +140,36 @@ export function SvgDashPatternFields({
 }) {
   const slots = readSvgDashSlots(value);
   return (
-    <div className="grid grid-cols-6 gap-1">
+    <div className="grid w-full grid-cols-6 gap-0.5">
       {slots.map((slot, index) => {
         const dashIndex = Math.floor(index / 2) + 1;
         const isDash = index % 2 === 0;
         const label = isDash ? `SVG dash ${dashIndex} length` : `SVG gap ${dashIndex} length`;
         return (
-          <Input
-            key={label}
-            value={slot}
-            inputMode="decimal"
-            placeholder="0"
-            aria-label={label}
-            className="h-7 w-7 px-1 text-center text-[12px]"
-            onChange={(event) => {
-              const next = [...slots];
-              next[index] = event.target.value;
-              onChange(composeSvgDashSlots(next));
-            }}
-          />
+          <div key={label} className="min-w-0">
+            <Input
+              value={slot}
+              inputMode="decimal"
+              placeholder="0"
+              aria-label={label}
+              className="h-7 w-full px-1 text-center text-[12px]"
+              onChange={(event) => {
+                const next = [...slots];
+                next[index] = event.target.value;
+                onChange(composeSvgDashSlots(next));
+              }}
+            />
+            <div className="mt-1 flex h-1.5 items-center justify-center" aria-hidden="true">
+              {isDash ? (
+                <span className="editor-border-subtle w-full border-t" />
+              ) : (
+                <span className="flex w-full items-center justify-between gap-1">
+                  <span className="editor-border-subtle w-1.5 border-t" />
+                  <span className="editor-border-subtle w-1.5 border-t" />
+                </span>
+              )}
+            </div>
+          </div>
         );
       })}
     </div>

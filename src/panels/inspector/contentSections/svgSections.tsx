@@ -30,7 +30,8 @@ import { createFocusedModeEntry, InspectorSectionCard } from '../CommonSections'
 import { type FocusModeCardProps, createShadowFallback } from './shared';
 import { MediaFitFields } from './mediaFitFields';
 import {
-  ScaleWithShapeControl,
+  ScaleWithShapeLabel,
+  ScaleWithShapeSwitch,
   SVG_STROKE_CAP_OPTIONS,
   SVG_STROKE_JOIN_OPTIONS,
   SvgDashPatternFields,
@@ -514,17 +515,21 @@ export function SvgDesignSection({
         </Label>
         {stroke?.enabled ? (
           <>
-            <FormField label="Stroke size" layout="inline-group" controlClassName="w-full gap-2">
+            <FormField label="Width" layout="inline">
               <SvgStrokeLengthField
                 value={stroke.width}
                 min={0}
                 ariaLabel="SVG stroke width"
                 onChange={(value) => onTextChange('svgStrokeWidth', value)}
               />
-              <ScaleWithShapeControl
+            </FormField>
+            <FormField label={<ScaleWithShapeLabel />} layout="inline">
+              <ScaleWithShapeSwitch
                 nonScaling={stroke.nonScaling}
                 onChange={(nextNonScaling) => onTextChange('svgStrokeNonScaling', nextNonScaling ? 'true' : 'false')}
               />
+            </FormField>
+            <FormField label="Color" layout="inline" controlClassName="gap-2">
               <HoverColorField
                 value={stroke.color}
                 ariaLabel="SVG stroke color"
@@ -532,21 +537,21 @@ export function SvgDesignSection({
                 onChange={(value) => onTextChange('svgStrokeColor', value)}
               />
             </FormField>
-            <FormField label="Cap" layout="inline-group" controlClassName="gap-1.5">
+            <FormField label="Cap" layout="inline">
               <OptionsSelector
                 value={strokeCap}
                 options={SVG_STROKE_CAP_OPTIONS}
-                display="icon"
+                display="label"
                 size="compact"
                 ariaLabel="SVG stroke cap"
                 onValueChange={(value) => onTextChange('svgStrokeCap', value)}
               />
             </FormField>
-            <FormField label="Join" layout="inline-group" controlClassName="gap-1.5">
+            <FormField label="Join" layout="inline">
               <OptionsSelector
                 value={strokeJoin}
                 options={SVG_STROKE_JOIN_OPTIONS}
-                display="icon"
+                display="label"
                 size="compact"
                 ariaLabel="SVG stroke join"
                 onValueChange={(value) => onTextChange('svgStrokeJoin', value)}
@@ -556,15 +561,6 @@ export function SvgDesignSection({
               <SvgDashPatternFields
                 value={stroke.dashArray}
                 onChange={(value) => onTextChange('svgStrokeDashArray', value)}
-              />
-            </FormField>
-            <FormField label="Offset" layout="inline">
-              <SvgStrokeLengthField
-                value={stroke.dashOffset}
-                fallback="0px"
-                ariaLabel="SVG stroke dash offset"
-                className="w-[5rem]"
-                onChange={(value) => onTextChange('svgStrokeDashOffset', value)}
               />
             </FormField>
             <FormField label="Paint" layout="inline">
