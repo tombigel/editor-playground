@@ -61,6 +61,7 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('>Spread<');
     expect(markup).toContain('>Distance<');
     expect(markup).toContain('>Angle<');
+    expect(markup).toContain('text-[11px] font-medium');
     expect(markup.match(/>px</g)?.length).toBe(3);
     expect(markup).toContain('>°<');
   });

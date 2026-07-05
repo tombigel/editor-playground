@@ -6,6 +6,8 @@ export type SanitizedSvg = {
   innerMarkup: string;
   /** viewBox from the source, or one derived from width/height when absent. */
   viewBox?: string;
+  /** Whether DOMPurify returned the original source unchanged or stripped/rewrote it. */
+  sourceStatus: 'clean' | 'sanitized';
 };
 
 /**
@@ -49,7 +51,11 @@ export function sanitizeSvgMarkup(raw: string): SanitizedSvg | null {
     return null;
   }
 
-  return { innerMarkup, viewBox: resolveViewBox(root) };
+  return {
+    innerMarkup,
+    viewBox: resolveViewBox(root),
+    sourceStatus: isEquivalentSvgSource(trimmed, clean) ? 'clean' : 'sanitized',
+  };
 }
 
 /**
@@ -87,4 +93,31 @@ function resolveViewBox(root: Element): string | undefined {
   }
 
   return undefined;
+}
+
+function isEquivalentSvgSource(before: string, after: string) {
+  const beforeRoot = parseSvgRoot(before);
+  const afterRoot = parseSvgRoot(after);
+  if (!beforeRoot || !afterRoot) {
+    return false;
+  }
+
+  return serializeSvgRootForComparison(beforeRoot) === serializeSvgRootForComparison(afterRoot);
+}
+
+function parseSvgRoot(source: string) {
+  const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
+  const root = doc.documentElement;
+  if (!root || root.nodeName.toLowerCase() !== 'svg' || doc.querySelector('parsererror')) {
+    return null;
+  }
+  return root;
+}
+
+function serializeSvgRootForComparison(root: Element) {
+  const clone = root.cloneNode(true) as Element;
+  clone.removeAttribute('xmlns');
+  return new XMLSerializer()
+    .serializeToString(clone)
+    .replace(/\sxmlns="http:\/\/www\.w3\.org\/2000\/svg"/, '');
 }

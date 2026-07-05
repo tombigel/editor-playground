@@ -72,7 +72,7 @@ export function LabeledFieldStack({
 }) {
 	return (
 		<div className={cn("space-y-0.5", className)} data-ui="labeled-field-stack">
-			<Label className={cn("text-[12px] font-medium", labelClassName)}>
+			<Label className={cn("text-[11px] font-medium", labelClassName)}>
 				{label}
 			</Label>
 			{children}

@@ -8,6 +8,7 @@ describe('lib/svgSanitize', () => {
     const result = sanitizeSvgMarkup('<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="red"/></svg>');
     expect(result).not.toBeNull();
     expect(result?.viewBox).toBe('0 0 24 24');
+    expect(result?.sourceStatus).toBe('clean');
     expect(result?.innerMarkup).toContain('<path');
     expect(result?.innerMarkup).toContain('fill="red"');
   });
@@ -17,6 +18,7 @@ describe('lib/svgSanitize', () => {
       '<svg viewBox="0 0 10 10"><script>alert(1)</script><rect width="10" height="10" onclick="alert(2)"/><a href="javascript:alert(3)"><circle r="4"/></a></svg>',
     );
     expect(result).not.toBeNull();
+    expect(result?.sourceStatus).toBe('sanitized');
     expect(result?.innerMarkup).not.toContain('script');
     expect(result?.innerMarkup).not.toContain('onclick');
     expect(result?.innerMarkup).not.toContain('javascript:');

@@ -1,11 +1,12 @@
-import { useEffect, useId, useState } from 'react';
-import { Check, Maximize2, RotateCcw } from 'lucide-react';
+import { useEffect, useId, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { Check, Maximize2, RotateCcw, TriangleAlert, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { InlineNotice } from '@/components/ui/settings-panel';
+import { InfoTooltip, InlineNotice } from '@/components/ui/settings-panel';
 import {
   FormField,
   HoverColorField,
@@ -17,6 +18,7 @@ import {
 import {
   DEFAULT_IMAGE_SHADOW_COLOR,
   DEFAULT_MEDIA_OBJECT_FIT_VIDEO,
+  DEFAULT_TEXT_COLOR,
 } from '../../../api/documentViewApi';
 import { sanitizeSvgMarkup } from '../../../lib/svgSanitize';
 import type { SvgInspectorNode } from '../types';
@@ -27,6 +29,8 @@ import { createFocusedModeEntry, InspectorSectionCard } from '../CommonSections'
 import { type FocusModeCardProps, createShadowFallback } from './shared';
 import { MediaFitFields } from './mediaFitFields';
 
+const SVG_MARKUP_DEBOUNCE_MS = 300;
+
 const VIEW_BOX_PARTS = [
   { key: 'minX', label: 'Min X' },
   { key: 'minY', label: 'Min Y' },
@@ -35,6 +39,7 @@ const VIEW_BOX_PARTS = [
 ] as const;
 
 type ViewBoxPartKey = (typeof VIEW_BOX_PARTS)[number]['key'];
+type SvgMarkupStatus = ReturnType<typeof readSvgMarkupStatus>;
 
 function reconstructSvgSource(node: SvgInspectorNode): string {
   const svg = node.svg;
@@ -59,37 +64,54 @@ export function SvgContentSection({
   onTextChange: (field: EditorTextField, value: string) => void;
   onSetSvgMarkup: (nodeId: string, payload: SvgMarkupPayload) => void;
 } & FocusModeCardProps) {
-  const [draftMarkup, setDraftMarkup] = useState(() => reconstructSvgSource(node));
-  const [markupError, setMarkupError] = useState(false);
+  const initialMarkupSource = reconstructSvgSource(node);
+  const [draftMarkup, setDraftMarkup] = useState(() => initialMarkupSource);
+  const [markupStatus, setMarkupStatus] = useState(() => readSvgMarkupStatus(initialMarkupSource));
   const [viewBoxFitError, setViewBoxFitError] = useState(false);
+  const lastSubmittedMarkupRef = useRef<string | null>(initialMarkupSource);
   const viewBoxFieldId = useId();
+  const currentMarkupSource = reconstructSvgSource(node);
   const viewBoxSource = node.svg?.viewBox ?? node.svg?.originalViewBox ?? '';
   const [viewBoxPartsDraft, setViewBoxPartsDraft] = useState(() => parseViewBoxParts(viewBoxSource));
 
   // Re-seed the editor when a different node is selected.
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset draft only when the node identity changes
   useEffect(() => {
-    setDraftMarkup(reconstructSvgSource(node));
-    setMarkupError(false);
+    const nextSource = reconstructSvgSource(node);
+    setDraftMarkup(nextSource);
+    setMarkupStatus(readSvgMarkupStatus(nextSource));
+    lastSubmittedMarkupRef.current = nextSource;
     setViewBoxFitError(false);
     setViewBoxPartsDraft(parseViewBoxParts(node.svg?.viewBox ?? node.svg?.originalViewBox ?? ''));
   }, [node.id]);
 
   useEffect(() => {
-    setViewBoxPartsDraft(parseViewBoxParts(viewBoxSource));
-  }, [viewBoxSource]);
-
-  const applyMarkup = () => {
-    const sanitized = sanitizeSvgMarkup(draftMarkup);
-    if (!sanitized) {
-      setMarkupError(true);
+    const nextStatus = readSvgMarkupStatus(draftMarkup);
+    setMarkupStatus(nextStatus);
+    if (
+      draftMarkup === currentMarkupSource ||
+      draftMarkup === lastSubmittedMarkupRef.current ||
+      nextStatus.kind === 'fail'
+    ) {
       return;
     }
-    setMarkupError(false);
-    setViewBoxFitError(false);
-    setViewBoxPartsDraft(parseViewBoxParts(sanitized.viewBox ?? ''));
-    onSetSvgMarkup(node.id, { innerMarkup: sanitized.innerMarkup, originalViewBox: sanitized.viewBox });
-  };
+
+    const timeout = window.setTimeout(() => {
+      lastSubmittedMarkupRef.current = draftMarkup;
+      setViewBoxFitError(false);
+      setViewBoxPartsDraft(parseViewBoxParts(nextStatus.result.viewBox ?? ''));
+      onSetSvgMarkup(node.id, {
+        innerMarkup: nextStatus.result.innerMarkup,
+        originalViewBox: nextStatus.result.viewBox,
+      });
+    }, SVG_MARKUP_DEBOUNCE_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [currentMarkupSource, draftMarkup, node.id, onSetSvgMarkup]);
+
+  useEffect(() => {
+    setViewBoxPartsDraft(parseViewBoxParts(viewBoxSource));
+  }, [viewBoxSource]);
 
   const fitViewBoxToContent = () => {
     setViewBoxFitError(false);
@@ -139,7 +161,14 @@ export function SvgContentSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'content', onEnterFocusedMode)}
     >
       <InspectorFieldGroup>
-        <FormField label="Markup">
+        <FormField
+          label={(
+            <span className="flex w-full min-w-0 items-center justify-between gap-2">
+              <span>Markup</span>
+              <SvgMarkupStatusIndicator status={markupStatus} />
+            </span>
+          )}
+        >
           <Textarea
             value={draftMarkup}
             rows={5}
@@ -149,26 +178,25 @@ export function SvgContentSection({
             onChange={(e) => setDraftMarkup(e.target.value)}
           />
         </FormField>
-        <div className="flex items-center justify-end gap-2">
-          <Button type="button" size="sm" variant="outline" onClick={applyMarkup}>
-            <Check className="h-3.5 w-3.5" aria-hidden="true" />
-            Apply markup
-          </Button>
-        </div>
-        {markupError ? (
-          <InlineNotice tone="warning">
+        {markupStatus.kind === 'fail' ? (
+          <InlineNotice tone="danger">
             The pasted markup has no usable SVG content after sanitization.
           </InlineNotice>
         ) : null}
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
-        <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
-          Decorative (hidden from screen readers)
+        <div className="flex items-center justify-between gap-2 text-[11px] font-medium">
+          <span className="flex min-w-0 items-center gap-1">
+            Decorative
+            <InfoTooltip>
+              Hidden from screen readers. Turn this off when the SVG needs a title or description.
+            </InfoTooltip>
+          </span>
           <Switch
             checked={a11y?.hidden ?? false}
             onCheckedChange={(checked) => onTextChange('svgHidden', checked ? 'true' : 'false')}
           />
-        </Label>
+        </div>
         {a11y?.hidden ? null : (
           <>
             <FormField label="Title">
@@ -188,8 +216,17 @@ export function SvgContentSection({
           </>
         )}
       </InspectorFieldGroup>
-      <InspectorFieldGroup gap>
-        <FormField label="ViewBox">
+      <InspectorFieldGroup separated gap>
+        <FormField
+          label={(
+            <span className="flex min-w-0 items-center gap-1">
+              ViewBox
+              <InfoTooltip>
+                Controls the visible coordinate area for the inline SVG. Paste four values to fill all fields.
+              </InfoTooltip>
+            </span>
+          )}
+        >
           <div className="grid grid-cols-4 gap-1.5">
             {VIEW_BOX_PARTS.map((part) => {
               const inputId = `${viewBoxFieldId}-${part.key}`;
@@ -241,6 +278,78 @@ export function SvgContentSection({
         ) : null}
       </InspectorFieldGroup>
     </InspectorSectionCard>
+  );
+}
+
+function readSvgMarkupStatus(raw: string) {
+  if (typeof DOMParser === 'undefined' || typeof XMLSerializer === 'undefined') {
+    return raw.trim().startsWith('<svg')
+      ? {
+        kind: 'clean' as const,
+        label: 'Clean',
+        description: 'SVG source is ready for browser sanitization.',
+        result: { innerMarkup: '', sourceStatus: 'clean' as const },
+      }
+      : {
+        kind: 'fail' as const,
+        label: 'Invalid',
+        description: 'No usable SVG content survived sanitization.',
+      };
+  }
+
+  const result = sanitizeSvgMarkup(raw);
+  if (!result) {
+    return {
+      kind: 'fail' as const,
+      label: 'Invalid',
+      description: 'No usable SVG content survived sanitization.',
+    };
+  }
+
+  if (result.sourceStatus === 'sanitized') {
+    return {
+      kind: 'sanitized' as const,
+      label: 'Sanitized',
+      description: 'DOMPurify changed the source before storage.',
+      result,
+    };
+  }
+
+  return {
+    kind: 'clean' as const,
+    label: 'Clean',
+    description: 'DOMPurify returned the source unchanged.',
+    result,
+  };
+}
+
+function SvgMarkupStatusIndicator({ status }: { status: SvgMarkupStatus }) {
+  const toneClass =
+    status.kind === 'clean'
+      ? 'editor-success-text'
+      : status.kind === 'sanitized'
+        ? 'editor-warning-text'
+        : 'editor-danger-text';
+  const iconClassName = 'h-3.5 w-3.5 shrink-0';
+  const icon: ReactNode =
+    status.kind === 'clean' ? (
+      <Check className={iconClassName} aria-hidden="true" />
+    ) : status.kind === 'sanitized' ? (
+      <TriangleAlert className={iconClassName} aria-hidden="true" />
+    ) : (
+      <X className={iconClassName} aria-hidden="true" />
+    );
+
+  return (
+    <span
+      role="status"
+      className={`${toneClass} inline-flex shrink-0 items-center gap-1 text-[11px] font-medium`}
+      aria-label={`SVG source ${status.label.toLowerCase()}: ${status.description}`}
+      title={status.description}
+    >
+      {icon}
+      <span>{status.label}</span>
+    </span>
   );
 }
 
@@ -315,6 +424,7 @@ export function SvgDesignSection({
   const shadow = readShadowFieldValues(node.style, shadowFallback);
   const monochrome = node.svg?.monochrome;
   const stroke = node.svg?.stroke;
+  const hasOpenSvgPaintSection = Boolean(monochrome?.enabled || stroke?.enabled);
 
   return (
     <InspectorSectionCard
@@ -343,7 +453,7 @@ export function SvgDesignSection({
             <HoverColorField
               value={monochrome.fill}
               ariaLabel="SVG fill color"
-              fallback="#16202a"
+              fallback={DEFAULT_TEXT_COLOR}
               onChange={(value) => onTextChange('svgFill', value)}
             />
           </FormField>
@@ -363,7 +473,7 @@ export function SvgDesignSection({
               <HoverColorField
                 value={stroke.color}
                 ariaLabel="SVG stroke color"
-                fallback="#16202a"
+                fallback={DEFAULT_TEXT_COLOR}
                 onChange={(value) => onTextChange('svgStrokeColor', value)}
               />
             </FormField>
@@ -379,7 +489,7 @@ export function SvgDesignSection({
           </>
         ) : null}
       </InspectorFieldGroup>
-      <div className="space-y-1.5">
+      <div className={`space-y-1.5 ${hasOpenSvgPaintSection ? 'editor-border-subtle border-t pt-2.5' : ''}`}>
         <ShadowControlGroup
           color={shadow.color}
           blur={shadow.blur}

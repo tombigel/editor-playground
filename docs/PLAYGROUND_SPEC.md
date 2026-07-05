@@ -785,7 +785,7 @@ Object fit and position:
 Content and sanitization:
 
 - The SVG component stores **sanitized inline markup** on `MediaNode.svg.innerMarkup` (inner content of the root `<svg>` element). All input paths run DOMPurify with the SVG profiles plus a `foreignObject`/`style` ban before storage, so the model — and every render/export path — never contains scripts, event handlers, or `javascript:` URLs.
-- Markup sources: pasting markup into the inspector `Markup` field (applied via the `Apply markup` button), and a `Convert to inline SVG` action on image nodes whose `src` ends in `.svg` (fetches, sanitizes, and switches the node subtype in place, preserving layout/sticky/animation and turning `alt` into the accessible label).
+- Markup sources: pasting or typing markup into the inspector `Markup` field (debounced and sanitized automatically with a clean/sanitized/invalid source indicator), and a `Convert to inline SVG` action on image nodes whose `src` ends in `.svg` (fetches, sanitizes, and switches the node subtype in place, preserving layout/sticky/animation and turning `alt` into the accessible label).
 - Documents can also enter the model as raw JSON (import, localStorage restore), bypassing input-time sanitization. To keep the "stored model is safe" invariant true at every entry point, `normalizeDocument` re-sanitizes every inline SVG node's `innerMarkup` at ingestion before it can reach the render sink or static export; markup that fails sanitization is dropped.
 - Image nodes continue to support `.svg` URLs as a plain `src` (rendered as `<img>`); `svg.renderMode: 'img'` remains supported for that path.
 

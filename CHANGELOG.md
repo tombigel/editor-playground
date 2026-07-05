@@ -28,6 +28,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - gradient backgrounds for containers and sections
 - split viewbox controls
 - split viewbox controls
+- debounce markup sanitization
 
 ### Changed
 

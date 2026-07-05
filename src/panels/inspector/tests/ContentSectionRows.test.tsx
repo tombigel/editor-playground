@@ -9,6 +9,7 @@ import {
 import { ButtonDesignSection } from "../contentSections/buttonSections";
 import {
 	SvgContentSection,
+	SvgDesignSection,
 	readNextSvgViewBoxValue,
 } from "../contentSections/svgSections";
 import {
@@ -131,6 +132,14 @@ describe("panels/inspector/content section rows", () => {
 		);
 
 		expect(markup).toContain("font-mono");
+		expect(markup).toContain("SVG source clean");
+		expect(markup).toContain("Clean");
+		expect(markup).not.toContain("Apply markup");
+		expect(markup).toContain(">Decorative<");
+		expect(markup).not.toContain("Decorative (hidden from screen readers)");
+		expect(markup).toContain("Hidden from screen readers");
+		expect(markup).toContain("Controls the visible coordinate area");
+		expect(markup).toContain('data-separated="true"');
 		expect(markup).toContain('aria-label="SVG viewBox Min X"');
 		expect(markup).toContain('aria-label="SVG viewBox Min Y"');
 		expect(markup).toContain('aria-label="SVG viewBox Width"');
@@ -148,5 +157,20 @@ describe("panels/inspector/content section rows", () => {
 		expect(readNextSvgViewBoxValue("0 0 24 24", "width", "32")).toBe("0 0 32 24");
 		expect(readNextSvgViewBoxValue("0 0 24 24", "minX", "1 2 30 40")).toBe("1 2 30 40");
 		expect(readNextSvgViewBoxValue("", "width", "32")).toBeNull();
+	});
+
+	it("separates open SVG paint controls from shadow controls", () => {
+		const svgNode = createMediaNode("svg", "root");
+		if (svgNode.subtype !== "svg" || !svgNode.svg) {
+			throw new Error("Expected SVG media node");
+		}
+		svgNode.svg.monochrome = { enabled: true, fill: "#112233" };
+
+		const markup = renderToStaticMarkup(
+			<SvgDesignSection node={svgNode} onTextChange={() => {}} />,
+		);
+
+		expect(markup).toContain(">Monochrome<");
+		expect(markup).toContain("editor-border-subtle border-t pt-2.5");
 	});
 });
