@@ -132,6 +132,8 @@ describe("panels/inspector/content section rows", () => {
 		);
 
 		expect(markup).toContain("font-mono");
+		expect(markup).toContain("space-y-1.5");
+		expect(markup).toContain("SVG markup is sanitized before it is stored");
 		expect(markup).toContain("SVG source clean");
 		expect(markup).toContain("Clean");
 		expect(markup).not.toContain("Apply markup");

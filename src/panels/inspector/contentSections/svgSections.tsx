@@ -162,9 +162,15 @@ export function SvgContentSection({
     >
       <InspectorFieldGroup>
         <FormField
+          className="space-y-1.5"
           label={(
             <span className="flex w-full min-w-0 items-center justify-between gap-2">
-              <span>Markup</span>
+              <span className="flex min-w-0 items-center gap-1">
+                Markup
+                <InfoTooltip>
+                  SVG markup is sanitized before it is stored, rendered, or exported.
+                </InfoTooltip>
+              </span>
               <SvgMarkupStatusIndicator status={markupStatus} />
             </span>
           )}

@@ -65,6 +65,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - simplify video render props
 - tidy gradient controls
 - separate playback controls
+- clarify markup sanitization
 
 ### Fixed
 
