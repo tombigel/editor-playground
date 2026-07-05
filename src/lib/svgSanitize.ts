@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify';
+import { isValidViewBox } from '../model/svg';
 
 export type SanitizedSvg = {
   /** Sanitized inner markup of the root svg element (root tag excluded). */
@@ -71,11 +72,11 @@ export function sanitizeStoredSvgInnerMarkup(innerMarkup: string): string | null
   return result ? result.innerMarkup : null;
 }
 
-export { isValidViewBox } from '../model/svg';
+export { isValidViewBox };
 
 function resolveViewBox(root: Element): string | undefined {
   const viewBox = root.getAttribute('viewBox')?.trim();
-  if (viewBox) {
+  if (viewBox && isValidViewBox(viewBox)) {
     return viewBox;
   }
 

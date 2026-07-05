@@ -78,6 +78,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - refine gradient controls, background-size, and clip-text edit mode
 - use background-color longhand for button and code leaves
 - make gradient repeat produce visible tiling
+- harden viewbox handling
 
 ---
 

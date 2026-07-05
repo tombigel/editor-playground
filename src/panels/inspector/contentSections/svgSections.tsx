@@ -51,12 +51,14 @@ export function SvgContentSection({
 } & FocusModeCardProps) {
   const [draftMarkup, setDraftMarkup] = useState(() => reconstructSvgSource(node));
   const [markupError, setMarkupError] = useState(false);
+  const [viewBoxFitError, setViewBoxFitError] = useState(false);
 
   // Re-seed the editor when a different node is selected.
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset draft only when the node identity changes
   useEffect(() => {
     setDraftMarkup(reconstructSvgSource(node));
     setMarkupError(false);
+    setViewBoxFitError(false);
   }, [node.id]);
 
   const applyMarkup = () => {
@@ -66,7 +68,26 @@ export function SvgContentSection({
       return;
     }
     setMarkupError(false);
+    setViewBoxFitError(false);
     onSetSvgMarkup(node.id, { innerMarkup: sanitized.innerMarkup, originalViewBox: sanitized.viewBox });
+  };
+
+  const fitViewBoxToContent = () => {
+    setViewBoxFitError(false);
+    const element = globalThis.document
+      ?.getElementById(`stage-node-${node.id}`)
+      ?.querySelector<SVGSVGElement>('svg');
+
+    try {
+      const bbox = element?.getBBox();
+      if (bbox && bbox.width > 0 && bbox.height > 0) {
+        onTextChange('svgViewBox', formatViewBox(bbox));
+        return;
+      }
+    } catch {
+      // getBBox can throw for detached, hidden, or otherwise unmeasurable SVGs.
+    }
+    setViewBoxFitError(true);
   };
 
   const a11y = node.svg?.a11y;
@@ -140,23 +161,34 @@ export function SvgContentSection({
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => {
-              const element = globalThis.document?.querySelector<SVGSVGElement>(`#stage-node-${node.id} svg`);
-              const bbox = element?.getBBox();
-              if (bbox && bbox.width > 0 && bbox.height > 0) {
-                onTextChange('svgViewBox', `${round2(bbox.x)} ${round2(bbox.y)} ${round2(bbox.width)} ${round2(bbox.height)}`);
-              }
-            }}
+            onClick={fitViewBoxToContent}
           >
             Fit to content
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => onTextChange('svgViewBox', '')}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setViewBoxFitError(false);
+              onTextChange('svgViewBox', '');
+            }}
+          >
             Reset
           </Button>
         </div>
+        {viewBoxFitError ? (
+          <InlineNotice tone="warning">
+            The SVG content could not be measured for an automatic viewBox.
+          </InlineNotice>
+        ) : null}
       </InspectorFieldGroup>
     </InspectorSectionCard>
   );
+}
+
+function formatViewBox(bbox: DOMRect) {
+  return `${round2(bbox.x)} ${round2(bbox.y)} ${round2(bbox.width)} ${round2(bbox.height)}`;
 }
 
 function round2(value: number) {

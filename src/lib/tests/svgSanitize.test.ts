@@ -37,6 +37,14 @@ describe('lib/svgSanitize', () => {
     expect(result?.viewBox).toBe('0 0 100 50');
   });
 
+  it('does not keep malformed source viewBox values', () => {
+    const derived = sanitizeSvgMarkup('<svg viewBox="0 0 0 10" width="100" height="50"><rect width="100" height="50"/></svg>');
+    expect(derived?.viewBox).toBe('0 0 100 50');
+
+    const missing = sanitizeSvgMarkup('<svg viewBox="not a viewbox"><circle r="5"/></svg>');
+    expect(missing?.viewBox).toBeUndefined();
+  });
+
   it('rejects markup without usable svg content', () => {
     expect(sanitizeSvgMarkup('')).toBeNull();
     expect(sanitizeSvgMarkup('<div>not svg</div>')).toBeNull();
