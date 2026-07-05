@@ -159,15 +159,8 @@ export function SvgDashPatternFields({
                 onChange(composeSvgDashSlots(next));
               }}
             />
-            <div className="mt-1 flex h-1.5 items-center justify-center" aria-hidden="true">
-              {isDash ? (
-                <span className="editor-border-subtle w-full border-t" />
-              ) : (
-                <span className="flex w-full items-center justify-between gap-1">
-                  <span className="editor-border-subtle w-1.5 border-t" />
-                  <span className="editor-border-subtle w-1.5 border-t" />
-                </span>
-              )}
+            <div className="editor-text-muted mt-1 text-center text-[9px] leading-none" aria-hidden="true">
+              {isDash ? `Dash ${dashIndex}` : `Space ${dashIndex}`}
             </div>
           </div>
         );

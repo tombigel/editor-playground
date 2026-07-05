@@ -209,8 +209,11 @@ describe("panels/inspector/content section rows", () => {
 		expect(markup).toContain('aria-label="SVG dash 3 length"');
 		expect(markup).toContain('aria-label="SVG gap 3 length"');
 		expect(markup).toContain("grid w-full grid-cols-6 gap-0.5");
+		expect(markup).toContain(">Dash 1</div>");
+		expect(markup).toContain(">Space 1</div>");
 		expect(markup).not.toContain(">Offset<");
 		expect(markup).not.toContain('aria-label="SVG stroke dash offset"');
+		expect(markup).toContain(">Paint order<");
 		expect(markup).toContain('aria-label="SVG stroke paint order"');
 		expect(markup).toContain("editor-border-subtle border-t pt-2.5");
 	});

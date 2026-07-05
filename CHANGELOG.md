@@ -88,6 +88,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - keep clip text with gradients
 - refine stroke inspector controls
 - simplify stroke inspector layout
+- polish dash and paint order controls
 
 ---
 

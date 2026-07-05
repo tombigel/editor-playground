@@ -563,7 +563,7 @@ export function SvgDesignSection({
                 onChange={(value) => onTextChange('svgStrokeDashArray', value)}
               />
             </FormField>
-            <FormField label="Paint" layout="inline">
+            <FormField label="Paint order" layout="inline">
               <Select
                 value={strokePaintOrder}
                 onValueChange={(value) => onTextChange('svgStrokePaintOrder', value)}
