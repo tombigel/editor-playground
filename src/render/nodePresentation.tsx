@@ -15,6 +15,7 @@ import type {
   DocumentModel,
   ListContent,
   LinkExtension,
+  MediaNode,
   RichBlock,
   RichBlockStyle,
   RichCodeBlock,
@@ -512,6 +513,30 @@ export function isBrandMark(node: LeafNode) {
   return isMediaNode(node) && node.subtype === 'image' && node.name === 'Brand Mark';
 }
 
+function getVideoPlaybackProps(video: MediaNode['video'], previewOnly: boolean) {
+  if (previewOnly) {
+    return {
+      controls: false,
+      autoPlay: false,
+      muted: true,
+      loop: false,
+      preload: 'metadata' as const,
+    };
+  }
+
+  return {
+    controls: video?.controls !== false,
+    autoPlay: video?.autoplay === true,
+    muted: video?.muted !== false,
+    loop: video?.loop === true,
+    preload: video?.preload ?? 'auto',
+  };
+}
+
+function getVideoStyle(style: CSSProperties | undefined, previewOnly: boolean): CSSProperties | undefined {
+  return previewOnly ? { ...style, pointerEvents: 'none' } : style;
+}
+
 function getExternalNavigationProps(node: LeafNode) {
   if (!node.link) {
     return {};
@@ -603,22 +628,18 @@ export function renderLeafContent(
           );
         }
         const video = node.video;
+        const playbackProps = getVideoPlaybackProps(video, videoPreviewOnly);
         return (
-          // biome-ignore lint/a11y/useMediaCaption: caption tracks are not part of the authoring model yet
           <video
             className={videoClassName}
             data-node-id={standalone ? dataNodeId : undefined}
             src={node.src}
             poster={video?.poster || undefined}
-            controls={videoPreviewOnly ? false : video?.controls !== false}
-            autoPlay={videoPreviewOnly ? false : video?.autoplay === true}
-            muted={videoPreviewOnly ? true : video?.muted !== false}
-            loop={videoPreviewOnly ? false : video?.loop === true}
-            preload={videoPreviewOnly ? 'metadata' : video?.preload ?? 'auto'}
+            {...playbackProps}
             playsInline
             aria-label={node.alt || undefined}
             tabIndex={tabIndex}
-            style={videoPreviewOnly ? { ...elementStyle, pointerEvents: 'none' } : elementStyle}
+            style={getVideoStyle(elementStyle, videoPreviewOnly)}
             onLoadedMetadata={
               onVideoIntrinsicRatio
                 ? (event) => {
