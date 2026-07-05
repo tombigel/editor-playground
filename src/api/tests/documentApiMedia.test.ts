@@ -173,28 +173,47 @@ describe('api/documentApi svg operations', () => {
     expect(node.subtype).toBe('svg');
     expect(node.src).toBeUndefined();
     expect(node.svg?.renderMode).toBe('inline');
-    expect(node.svg?.a11y?.label).toBe('Star logo');
+    expect(node.svg?.a11y?.title).toBe('Star logo');
   });
 
   it('updates a11y, monochrome, and stroke settings through text fields', () => {
     const document = structuredClone(createInitialDocument());
     const svg = addSvgNode(document);
 
-    let next = setTextNodeContentDoc(document, svg.id, 'svgLabel', 'Decorative star');
-    expect(getMediaNode(next, svg.id).svg?.a11y?.label).toBe('Decorative star');
-    expect(getMediaNode(next, svg.id).svg?.a11y?.hidden).toBe(false);
+    let next = setTextNodeContentDoc(document, svg.id, 'svgTitle', 'Decorative star');
+    expect(getMediaNode(next, svg.id).svg?.a11y?.title).toBe('Decorative star');
 
-    next = setTextNodeContentDoc(next, svg.id, 'svgTitle', 'Star');
-    next = setTextNodeContentDoc(next, svg.id, 'svgMonochrome', 'true');
-    next = setTextNodeContentDoc(next, svg.id, 'svgFill', '#ff0000');
-    next = setTextNodeContentDoc(next, svg.id, 'svgFillOpacity', '1.5');
-    next = setTextNodeContentDoc(next, svg.id, 'svgStrokeEnabled', 'true');
+    next = setTextNodeContentDoc(next, svg.id, 'svgDesc', 'A five-pointed star');
     next = setTextNodeContentDoc(next, svg.id, 'svgStrokeWidth', '2');
 
     const node = getMediaNode(next, svg.id);
-    expect(node.svg?.a11y?.title).toBe('Star');
-    expect(node.svg?.monochrome).toMatchObject({ enabled: true, fill: '#ff0000', opacity: 1 });
+    expect(node.svg?.a11y?.desc).toBe('A five-pointed star');
     expect(node.svg?.stroke).toMatchObject({ enabled: true, width: 2 });
+  });
+
+  it('seeds a real fill color when monochrome is enabled and rides alpha on the color', () => {
+    const document = structuredClone(createInitialDocument());
+    const svg = addSvgNode(document);
+
+    const enabled = setTextNodeContentDoc(document, svg.id, 'svgMonochrome', 'true');
+    expect(getMediaNode(enabled, svg.id).svg?.monochrome).toMatchObject({ enabled: true });
+    // Control is always backed by real data: fill is seeded on enable.
+    expect(getMediaNode(enabled, svg.id).svg?.monochrome?.fill).toBeTruthy();
+    expect('opacity' in (getMediaNode(enabled, svg.id).svg?.monochrome ?? {})).toBe(false);
+
+    const colored = setTextNodeContentDoc(enabled, svg.id, 'svgFill', 'rgba(255,0,0,0.5)');
+    expect(getMediaNode(colored, svg.id).svg?.monochrome?.fill).toBe('rgba(255,0,0,0.5)');
+  });
+
+  it('seeds a real stroke color and width when stroke is enabled', () => {
+    const document = structuredClone(createInitialDocument());
+    const svg = addSvgNode(document);
+
+    const enabled = setTextNodeContentDoc(document, svg.id, 'svgStrokeEnabled', 'true');
+    const stroke = getMediaNode(enabled, svg.id).svg?.stroke;
+    expect(stroke?.enabled).toBe(true);
+    expect(stroke?.color).toBeTruthy();
+    expect(stroke?.width).toBeGreaterThan(0);
   });
 });
 

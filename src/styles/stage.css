@@ -730,7 +730,6 @@
 
 .stage-svg.sp-svg-mono :where(path, circle, ellipse, rect, polygon, polyline, line) {
   fill: currentColor;
-  fill-opacity: var(--sp-svg-fill-opacity, 1);
 }
 
 .stage-svg.sp-svg-stroke :where(path, circle, ellipse, rect, polygon, polyline, line) {

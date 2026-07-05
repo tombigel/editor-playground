@@ -108,26 +108,24 @@ export function SvgContentSection({
             onCheckedChange={(checked) => onTextChange('svgHidden', checked ? 'true' : 'false')}
           />
         </Label>
-        <FormField label="Label">
-          <Input
-            value={a11y?.label ?? ''}
-            placeholder="Accessible name (role=img)"
-            onChange={(e) => onTextChange('svgLabel', e.target.value)}
-          />
-        </FormField>
-        <FormField label="Labelled by">
-          <Input
-            value={a11y?.labelledBy ?? ''}
-            placeholder="Id of a labelling element"
-            onChange={(e) => onTextChange('svgLabelledBy', e.target.value)}
-          />
-        </FormField>
-        <FormField label="Title">
-          <Input value={a11y?.title ?? ''} onChange={(e) => onTextChange('svgTitle', e.target.value)} />
-        </FormField>
-        <FormField label="Description">
-          <Input value={a11y?.desc ?? ''} onChange={(e) => onTextChange('svgDesc', e.target.value)} />
-        </FormField>
+        {a11y?.hidden ? null : (
+          <>
+            <FormField label="Title">
+              <Input
+                value={a11y?.title ?? ''}
+                placeholder="Accessible name (aria-label)"
+                onChange={(e) => onTextChange('svgTitle', e.target.value)}
+              />
+            </FormField>
+            <FormField label="Description">
+              <Input
+                value={a11y?.desc ?? ''}
+                placeholder="Long description (aria-describedby)"
+                onChange={(e) => onTextChange('svgDesc', e.target.value)}
+              />
+            </FormField>
+          </>
+        )}
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
         <FormField label="ViewBox">
@@ -205,24 +203,14 @@ export function SvgDesignSection({
           />
         </Label>
         {monochrome?.enabled ? (
-          <>
-            <FormField label="Fill" layout="inline">
-              <HoverColorField
-                value={monochrome.fill ?? '#16202a'}
-                ariaLabel="SVG fill color"
-                onChange={(value) => onTextChange('svgFill', value)}
-              />
-            </FormField>
-            <FormField label="Opacity" layout="inline">
-              <NumberInput
-                value={monochrome.opacity ?? 1}
-                min={0}
-                max={1}
-                step={0.05}
-                onChange={(value) => onTextChange('svgFillOpacity', String(value))}
-              />
-            </FormField>
-          </>
+          <FormField label="Fill" layout="inline">
+            <HoverColorField
+              value={monochrome.fill}
+              ariaLabel="SVG fill color"
+              fallback="#16202a"
+              onChange={(value) => onTextChange('svgFill', value)}
+            />
+          </FormField>
         ) : null}
       </InspectorFieldGroup>
       <InspectorFieldGroup gap>
@@ -237,8 +225,9 @@ export function SvgDesignSection({
           <>
             <FormField label="Color" layout="inline">
               <HoverColorField
-                value={stroke.color ?? '#16202a'}
+                value={stroke.color}
                 ariaLabel="SVG stroke color"
+                fallback="#16202a"
                 onChange={(value) => onTextChange('svgStrokeColor', value)}
               />
             </FormField>

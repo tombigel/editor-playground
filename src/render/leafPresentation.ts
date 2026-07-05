@@ -250,7 +250,6 @@ export function getSiteLeafBaseRules(selectors: {
       selector: `${selectors.svg}.sp-svg-mono :where(path, circle, ellipse, rect, polygon, polyline, line)`,
       style: {
         fill: 'currentColor',
-        fillOpacity: 'var(--sp-svg-fill-opacity, 1)',
       },
     },
     {

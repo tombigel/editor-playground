@@ -771,9 +771,8 @@ Content and sanitization:
 
 Accessibility:
 
-- New SVG nodes default to **decorative**: `aria-hidden="true"`, no role, `focusable="false"`.
-- Setting a `Label` (`aria-label`) or `Labelled by` (`aria-labelledby`) turns off decorative mode and exports `role="img"`.
-- Optional `Title` and `Description` fields inject leading `<title>`/`<desc>` elements (XML-escaped).
+- New SVG nodes default to **decorative**: `aria-hidden="true"`, no role, `focusable="false"`. Decorative and an accessible name are mutually exclusive — while decorative is on, the Title/Description fields are hidden and never exported.
+- When not decorative, the node exports `role="img"`; `Title` becomes `aria-label`, and `Description` is injected as a leading `<desc id>` element referenced via `aria-describedby` (XML-escaped).
 
 ViewBox:
 
@@ -781,7 +780,7 @@ ViewBox:
 
 Color, stroke, and fit:
 
-- `Monochrome` forces all shape fills to a single color + opacity via a `sp-svg-mono` class rule (`fill: currentColor`) with the color carried inline on the root element.
+- `Monochrome` forces all shape fills to a single color via a `sp-svg-mono` class rule (`fill: currentColor`) with the color carried inline on the root element; opacity rides on the color's own alpha channel (picker supports alpha), there is no separate opacity field. Enabling monochrome or stroke seeds real color/width values into the model so controls always reflect stored data.
 - `Stroke` applies a global stroke color/width via a `sp-svg-stroke` class rule and CSS custom properties.
 - The shared Fit/Position controls map to `preserveAspectRatio`: `contain` → `meet`, `cover` → `slice`, `fill` → `none`, with the 9 position presets mapping to `xMinYMin`…`xMaxYMax` alignment.
 - The `SvgExtension` model is grouped so future capabilities (path editing, use-as-mask, animation targets) extend without reshaping the node.

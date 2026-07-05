@@ -77,7 +77,7 @@ export function convertImageToInlineSvgDoc(
     renderMode: 'inline',
     innerMarkup: payload.innerMarkup,
     originalViewBox: payload.originalViewBox,
-    a11y: target.alt ? { label: target.alt } : { hidden: true },
+    a11y: target.alt ? { title: target.alt } : { hidden: true },
   };
   return next;
 }

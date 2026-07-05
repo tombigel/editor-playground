@@ -905,8 +905,8 @@ type SvgExtension = {
   innerMarkup?: string;       // sanitized inner markup of the root <svg> (callers MUST sanitize via src/lib/svgSanitize.ts)
   originalViewBox?: string;   // parsed from the imported markup
   viewBox?: string;           // author override (e.g. fitted to content bbox)
-  a11y?: SvgA11y;             // hidden | label | labelledBy | title | desc
-  monochrome?: { enabled: boolean; fill?: string; opacity?: number };
+  a11y?: SvgA11y;             // hidden | title (aria-label) | desc (aria-describedby)
+  monochrome?: { enabled: boolean; fill?: string };  // alpha rides on the color
   stroke?: { enabled: boolean; color?: string; width?: number };
 };
 ```
@@ -1013,8 +1013,8 @@ type EditorTextField =
   // Video settings (VideoSettingField)
   | 'videoAutoplay' | 'videoMuted' | 'videoControls' | 'videoLoop' | 'videoPoster' | 'videoPreload'
   // SVG settings (SvgSettingField)
-  | 'svgHidden' | 'svgLabel' | 'svgLabelledBy' | 'svgTitle' | 'svgDesc'
-  | 'svgMonochrome' | 'svgFill' | 'svgFillOpacity'
+  | 'svgHidden' | 'svgTitle' | 'svgDesc'
+  | 'svgMonochrome' | 'svgFill'
   | 'svgStrokeEnabled' | 'svgStrokeColor' | 'svgStrokeWidth' | 'svgViewBox'
   // Block gap
   | 'blockGap';

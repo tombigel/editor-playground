@@ -76,13 +76,10 @@ export type VideoSettingField =
   | 'videoPreload';
 export type SvgSettingField =
   | 'svgHidden'
-  | 'svgLabel'
-  | 'svgLabelledBy'
   | 'svgTitle'
   | 'svgDesc'
   | 'svgMonochrome'
   | 'svgFill'
-  | 'svgFillOpacity'
   | 'svgStrokeEnabled'
   | 'svgStrokeColor'
   | 'svgStrokeWidth'
@@ -605,20 +602,17 @@ export type SvgExtension = {
   /** Author viewBox override (e.g. fitted to content bbox). */
   viewBox?: string;
   a11y?: SvgA11y;
-  monochrome?: { enabled: boolean; fill?: string; opacity?: number };
+  /** Fill color carries its own alpha; there is no separate opacity field. */
+  monochrome?: { enabled: boolean; fill?: string };
   stroke?: { enabled: boolean; color?: string; width?: number };
 };
 
 export type SvgA11y = {
-  /** Decorative: exports `aria-hidden="true"` and no role. Default for new nodes. */
+  /** Decorative: exports `aria-hidden="true"` and no accessible name. Default for new nodes. */
   hidden?: boolean;
-  /** Exports `role="img"` + `aria-label`. */
-  label?: string;
-  /** Exports `role="img"` + `aria-labelledby`. */
-  labelledBy?: string;
-  /** Injected as a leading `<title>` element. */
+  /** The accessible name; exported as `role="img"` + `aria-label` when not decorative. */
   title?: string;
-  /** Injected as a leading `<desc>` element. */
+  /** Long description; injected as `<desc id>` and referenced via `aria-describedby`. */
   desc?: string;
 };
 

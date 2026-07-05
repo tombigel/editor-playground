@@ -648,15 +648,16 @@ export function renderLeafContent(
         }
 
         const a11y = svg.a11y;
-        const labelled = !a11y?.hidden && Boolean(a11y?.label || a11y?.labelledBy);
+        // Decorative (aria-hidden) and an accessible name are mutually exclusive:
+        // aria-hidden cannot coexist with role="img" + aria-label.
+        const decorative = a11y?.hidden === true;
+        const describedById = !decorative && a11y?.desc ? `sp-svg-desc-${node.id}` : undefined;
         const monochrome = svg.monochrome?.enabled ? svg.monochrome : undefined;
         const stroke = svg.stroke?.enabled ? svg.stroke : undefined;
         const svgStyle: CSSProperties & Record<string, string | number> = { ...elementStyle };
-        if (monochrome) {
-          svgStyle.color = monochrome.fill ?? 'currentColor';
-          if (monochrome.opacity !== undefined) {
-            svgStyle['--sp-svg-fill-opacity'] = monochrome.opacity;
-          }
+        if (monochrome?.fill) {
+          // Alpha rides on the color itself; there is no separate fill-opacity.
+          svgStyle.color = monochrome.fill;
         }
         if (stroke) {
           if (stroke.color) {
@@ -667,8 +668,7 @@ export function renderLeafContent(
           }
         }
         const accessibleMarkup =
-          (a11y?.title ? `<title>${escapeXmlText(a11y.title)}</title>` : '') +
-          (a11y?.desc ? `<desc>${escapeXmlText(a11y.desc)}</desc>` : '') +
+          (describedById ? `<desc id="${describedById}">${escapeXmlText(a11y?.desc ?? '')}</desc>` : '') +
           svg.innerMarkup;
 
         return (
@@ -681,12 +681,12 @@ export function renderLeafContent(
             viewBox={svg.viewBox ?? svg.originalViewBox}
             preserveAspectRatio={mediaFitToPreserveAspectRatio(node.style?.objectFit, node.style?.objectPosition)}
             focusable="false"
-            {...(a11y?.hidden || !labelled
+            {...(decorative
               ? { 'aria-hidden': true }
               : {
                   role: 'img',
-                  ...(a11y?.label ? { 'aria-label': a11y.label } : {}),
-                  ...(a11y?.labelledBy ? { 'aria-labelledby': a11y.labelledBy } : {}),
+                  ...(a11y?.title ? { 'aria-label': a11y.title } : {}),
+                  ...(describedById ? { 'aria-describedby': describedById } : {}),
                 })}
             style={svgStyle}
             // biome-ignore lint/security/noDangerouslySetInnerHtml: markup is DOMPurify-sanitized at input time before storage
