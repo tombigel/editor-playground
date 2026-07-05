@@ -922,7 +922,7 @@ type SvgExtension = {
   originalViewBox?: string;   // parsed from the imported markup
   viewBox?: string;           // author override (e.g. fitted to content bbox)
   a11y?: SvgA11y;             // hidden | title (aria-label) | desc (aria-describedby)
-  monochrome?: { enabled: boolean; fill?: string };  // alpha rides on the color
+  monochrome?: { enabled: boolean; fill?: string };  // alpha rides on the color; explicit no-paint SVG fills remain untouched
   stroke?: SvgStrokeStyle;
 };
 ```

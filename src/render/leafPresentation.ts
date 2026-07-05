@@ -8,6 +8,25 @@ import { buildBorderStyle, buildBoxShadow, buildFilterShadow } from './styleHelp
 import type { SharedCssRule, StyleRecord } from './types';
 export type { SharedCssRule, StyleRecord, StyleValue } from './types';
 
+export const SVG_MONOCHROME_FILL_TARGET_SELECTOR =
+  ':where(path, circle, ellipse, rect, polygon, polyline, line)' +
+  ':not([fill="none" i])' +
+  ':not([fill="transparent" i])' +
+  ':not([color="none" i])' +
+  ':not([color="transparent" i])' +
+  ':not([fill-opacity="0"])' +
+  ':not([fill-opacity="0.0"])' +
+  ':not([style*="fill:none" i])' +
+  ':not([style*="fill: none" i])' +
+  ':not([style*="fill:transparent" i])' +
+  ':not([style*="fill: transparent" i])' +
+  ':not([style*="color:none" i])' +
+  ':not([style*="color: none" i])' +
+  ':not([style*="color:transparent" i])' +
+  ':not([style*="color: transparent" i])' +
+  ':not([style*="fill-opacity:0" i])' +
+  ':not([style*="fill-opacity: 0" i])';
+
 type LeafNode = TextNode | MediaNode;
 
 export function getLeafInlineStyle(node: LeafNode): StyleRecord {
@@ -247,9 +266,10 @@ export function getSiteLeafBaseRules(selectors: {
       },
     },
     {
-      selector: `${selectors.svg}.sp-svg-mono :where(path, circle, ellipse, rect, polygon, polyline, line)`,
+      selector: `${selectors.svg}.sp-svg-mono ${SVG_MONOCHROME_FILL_TARGET_SELECTOR}`,
       style: {
-        fill: 'currentColor',
+        color: 'inherit !important',
+        fill: 'currentColor !important',
       },
     },
     {

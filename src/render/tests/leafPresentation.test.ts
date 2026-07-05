@@ -2,9 +2,45 @@ import { describe, expect, it } from 'vitest';
 import { createButtonTextNode, createMediaNode, createTextNode } from '../../model/defaults';
 import { CODE_THEME_SURFACE } from '../../model/textNodeDefaults';
 import { parseUnitValue } from '../../model/units';
-import { getButtonLeafStyle, getCodeLeafStyle, getImageLeafStyle, getLeafInlineStyle, getStandaloneCodePreStyle } from '../leafPresentation';
+import {
+  SVG_MONOCHROME_FILL_TARGET_SELECTOR,
+  getButtonLeafStyle,
+  getCodeLeafStyle,
+  getImageLeafStyle,
+  getLeafInlineStyle,
+  getSiteLeafBaseRules,
+  getStandaloneCodePreStyle,
+} from '../leafPresentation';
 
 describe('render/leafPresentation', () => {
+  it('keeps SVG monochrome fill overrides away from explicit no-fill shapes', () => {
+    const rules = getSiteLeafBaseRules({
+      text: '.text',
+      blockquoteText: '.blockquote-text',
+      linkAnchor: '.link-anchor',
+      imageLink: '.image-link',
+      image: '.image',
+      brandMarkImage: '.brand-mark-image',
+      imagePlaceholder: '.image-placeholder',
+      video: '.video',
+      svg: '.svg',
+      button: '.button',
+    });
+    const monochromeRule = rules.find((rule) => rule.selector.includes('.sp-svg-mono'));
+
+    expect(monochromeRule?.selector).toBe(`.svg.sp-svg-mono ${SVG_MONOCHROME_FILL_TARGET_SELECTOR}`);
+    expect(monochromeRule?.selector).toContain(':not([fill="none" i])');
+    expect(monochromeRule?.selector).toContain(':not([fill="transparent" i])');
+    expect(monochromeRule?.selector).toContain(':not([color="none" i])');
+    expect(monochromeRule?.selector).toContain(':not([color="transparent" i])');
+    expect(monochromeRule?.selector).toContain(':not([fill-opacity="0"])');
+    expect(monochromeRule?.selector).toContain(':not([style*="fill: none" i])');
+    expect(monochromeRule?.selector).toContain(':not([style*="color: transparent" i])');
+    expect(monochromeRule?.selector).toContain(':not([style*="fill-opacity: 0" i])');
+    expect(monochromeRule?.style.color).toBe('inherit !important');
+    expect(monochromeRule?.style.fill).toBe('currentColor !important');
+  });
+
   it('uses shared default button presentation even without authored border or shadow overrides', () => {
     const button = createButtonTextNode('root');
     if (button.subtype !== 'block') {
