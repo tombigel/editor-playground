@@ -56,6 +56,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - centralize panel requests through shared adapter
 - allow preview dev server to use an auto-assigned port
 - mark inline SVG shipped under RI-11
+- refine gradient control and clip-text behavior notes
 
 ### Fixed
 
