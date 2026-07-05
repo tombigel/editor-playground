@@ -40,6 +40,7 @@ This spec is implementation-oriented. For the quickest path through it:
 - [Animation Model](#animation-model)
 - [Editor UX](#editor-ux)
 - [Architecture Boundaries](#architecture-boundaries)
+- [Dependency Policy](#dependency-policy)
 - [Section Templates](#section-templates)
 - [Default Seed Content](#default-seed-content)
 - [Validation Policy](#validation-policy)
@@ -1661,6 +1662,52 @@ Naming and title behavior:
 - Closing the tour restores the captured pre-tour editor view flags, including debug, sticky preview, animation preview, spacer visibility, grid, hidden-node display, and focus mode. Tours opened from an editor control restore the previous search string; tours opened from a deep link remove tour/editor-navigation params while preserving unrelated query params.
 - Steps can display route chips and an action. External actions, such as the design-system showcase and preview mode, open in a new tab so the tour flow remains intact.
 - Visual differentiation is controlled by a typed `ShowcaseTourSkin` layer. The default `showcase` skin reuses editor tokens while exposing configurable accent, surface, highlight, typography, backdrop, radius, shadow, and z-index variables. The subtle product-native default skin is the final phase-1 treatment; no separate portfolio/presenter skin is planned (decided 2026-07-04).
+
+## Dependency Policy
+
+`package.json` and `pnpm-lock.yaml` are the dependency source of truth. This registry records first-class dependency decisions and the architectural boundaries that matter when code crosses model, editor, renderer, export, and test layers.
+
+Rules:
+
+- Every production dependency needs an owning subsystem and a reason it belongs in runtime dependencies.
+- Prefer platform APIs and existing local helpers before adding a package.
+- Keep pure model and document API code free of browser-only, React-only, network, storage, and dynamic-import dependencies.
+- Lazy-load dependencies used only by optional authoring workflows or infrequent tools.
+- Exported-site dependencies must state whether they are bundled, inlined, or loaded separately.
+- Security-sensitive flows must name the trust boundary explicitly. Optimizers, parsers, and render helpers can prepare data, but cleanup is not sanitization.
+- Type-only packages belong in `devDependencies` unless there is a documented runtime packaging reason; existing exceptions should be treated as cleanup candidates.
+- Dependency upgrades that affect model semantics, public API, rendering, export, or security require focused tests and spec updates.
+
+### Runtime dependency registry
+
+| Package | Owner | Load path | Runtime/export impact | Notes |
+|---|---|---|---|---|
+| `react`, `react-dom` | Editor shell, panels, stage, shared render components | Initial app bundle and feature chunks | Editor/runtime only; exported site HTML is rendered from shared site renderer output, not a React runtime requirement. | Pure model and document API helpers remain React-free. |
+| `slate`, `slate-history`, `slate-react` | Rich text editing | Rich/stage editing surfaces | Editor runtime only. Persisted documents store the playground rich-content model, not arbitrary Slate state. | Slate is an editing island; API boundaries normalize into serializable document content. |
+| `dompurify` | SVG sanitization | SVG input, conversion, ingestion guards | Runtime and export safety boundary before inline SVG reaches render sinks. | Final trust boundary for scripts, handlers, `javascript:` URLs, `foreignObject`, and style-tag removal. |
+| `svgo` | SVG authoring cleanup | Lazy `import('svgo/browser')` from SVG source cleanup | Author-input cleanup only; not used by document ingestion normalization. | Runs before DOMPurify to optimize source and prefix/minify IDs. DOMPurify remains the sanitizer. |
+| `fflate` | Import/export transfer | Transfer/archive helpers | Runtime utility for compressed document/site artifacts. | Callers keep document semantics explicit before compression and after decompression. |
+| `@wix/motion`, `@wix/motion-presets` | Animation model and runtime | Animation authoring/runtime paths | Animation behavior flows through animation API/model. Site export also pins runtime delivery separately, so npm and export runtime versions must stay aligned. | No direct panel-only animation mutations. |
+| `@wix/interact` | Editor interaction support | Editor interaction paths | Editor-only; must not leak into pure model logic or exported site requirements. | Keep gesture behavior behind stage/editor abstractions. |
+| `prismjs` | Code highlighting | Render boundary for code nodes | Runtime highlight HTML is recomputed from raw code and normalized language. | Persisted `highlightedHtml` is untrusted legacy cache data and is stripped during normalization. |
+| `react-markdown`, `remark-gfm` | Help and markdown surfaces | Help/AI markdown rendering paths | App/help runtime only; exported sites do not depend on the markdown renderer. | Keep markdown rendering out of model and export semantics. |
+| Radix UI packages | Shared editor UI primitives | `src/components/ui/*` wrappers | Editor UI runtime only. | Use shared wrappers and inspector primitives rather than ad hoc Radix imports in feature panels. |
+| `lucide-react` | Editor iconography | Editor UI components | Editor UI runtime only. | Prefer existing icons for tool buttons and inspector affordances before creating bespoke SVGs. |
+| `hdr-color-input` | Color picker | Shared color picker path | Editor authoring runtime only. | Feature panels consume shared color controls rather than package APIs directly. |
+| `class-variance-authority`, `clsx`, `tailwind-merge` | UI class composition | Shared UI/design-system plumbing | Editor UI/build output only. | Avoid spreading one-off class composition patterns into model or API code. |
+
+### Development and build dependency registry
+
+| Package | Owner | Load path | Runtime/export impact | Notes |
+|---|---|---|---|---|
+| `vite`, `@vitejs/plugin-react`, `typescript`, `tailwindcss`, `@tailwindcss/vite`, `tw-animate-css` | Build, typecheck, and styling toolchain | `pnpm run dev`, `pnpm run build`, design-system build | Build-time only. | `pnpm run build` is the release gate and includes lint, typecheck, coverage, API docs, architecture checks, smoke E2E, and production build. |
+| `vitest`, `@vitest/coverage-v8`, `jsdom`, `playwright`, `@axe-core/playwright` | Unit, coverage, DOM, E2E, and accessibility checks | Test scripts | Test-time only. | Keep focused tests close to changed behavior; run full build for substantial or multi-file changes. |
+| `@biomejs/biome` | Source linting | `pnpm run lint` | Tooling only. | Lint rules apply to `src`; docs use local Markdown conventions. |
+| `simple-git-hooks`, `@commitlint/cli`, `@commitlint/config-conventional` | Commit automation | Git hooks | Tooling only. | Commit messages stay conventional; hooks patch-bump versions and changelog metadata. |
+| `semver` | Version automation | Version scripts | Tooling only. | Runtime code imports version constants from `src/lib/version.ts`. |
+| `rollup-plugin-visualizer` | Bundle inspection | Optional build analysis | Tooling only. | Use when bundle composition needs inspection. |
+| `shadcn` | UI scaffolding | Manual UI generation workflow | Tooling only. | Generated/shared primitives must be reconciled with the editor style guide before use. |
+| `@types/node`, `@types/react`, `@types/react-dom` | Type support | TypeScript compilation | Type-only tooling. | Additional `@types/*` packages should default here unless a package-specific reason says otherwise. |
 
 ## Text Type Picker
 
