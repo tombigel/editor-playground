@@ -56,7 +56,7 @@ const SELECT_PROPS: PropDefinition[] = [
 		name: "size",
 		type: "'default' | 'compact' | 'small'",
 		default: "'default'",
-		description: "Propagated to SelectItem via context — sets item text size to match the trigger density (text-sm / text-xs / text-[11px]).",
+		description: "Propagated to SelectItem via context — default and compact use text-xs; small uses text-[11px].",
 	},
 	{ name: "open", type: "boolean", description: "Open state (controlled)." },
 	{ name: "defaultOpen", type: "boolean", description: "Default open state." },
@@ -186,7 +186,7 @@ function SelectDemo() {
 			{/* Default size */}
 			<div>
 				<div className="editor-text-muted mb-2 text-[11px] font-medium">
-					Default — h-7, text-sm
+					Default — h-7, text-xs
 				</div>
 				<div className="w-[200px]">
 					<Select value={value} onValueChange={setValue}>

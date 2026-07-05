@@ -62,7 +62,7 @@ describe('api/documentApi media fields', () => {
     let next = setTextNodeContentDoc(document, video.id, 'videoTitle', 'Launch demo');
     next = setTextNodeContentDoc(next, video.id, 'videoTitleHidden', 'false');
     next = setTextNodeContentDoc(next, video.id, 'videoTitleTag', 'h2');
-    next = setTextNodeContentDoc(next, video.id, 'videoDescription', 'A product walkthrough.');
+    next = setTextNodeContentDoc(next, video.id, 'videoDescription', 'A product walkthrough.\nIncludes setup notes. ');
     next = setTextNodeContentDoc(next, video.id, 'videoCaptionsSrc', '/captions/demo.vtt');
     next = setTextNodeContentDoc(next, video.id, 'videoCaptionsLabel', 'English CC');
     next = setTextNodeContentDoc(next, video.id, 'videoCaptionsLang', 'en');
@@ -74,7 +74,7 @@ describe('api/documentApi media fields', () => {
       title: 'Launch demo',
       titleHidden: false,
       titleTag: 'h2',
-      description: 'A product walkthrough.',
+      description: 'A product walkthrough.\nIncludes setup notes. ',
       captions: {
         src: '/captions/demo.vtt',
         label: 'English CC',
@@ -83,6 +83,9 @@ describe('api/documentApi media fields', () => {
       },
       transcriptSrc: '/transcripts/demo.html',
     });
+
+    const cleared = setTextNodeContentDoc(next, video.id, 'videoDescription', '');
+    expect(getMediaNode(cleared, video.id).video?.description).toBeUndefined();
   });
 
   it('sets and clears the poster url', () => {

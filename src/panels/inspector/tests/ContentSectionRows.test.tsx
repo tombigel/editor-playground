@@ -16,6 +16,7 @@ import {
 	CodeDesignSection,
 	CodeTextStyleSection,
 } from "../contentSections/textSections";
+import { VideoContentSection } from "../contentSections/videoSections";
 import {
 	NavigationFields,
 	OpenInNewTabField,
@@ -113,6 +114,28 @@ describe("panels/inspector/content section rows", () => {
 		expect(openInNewTabMarkup).toContain('aria-label="Open in a new tab"');
 	});
 
+	it("explains why muted is locked when autoplay is enabled", () => {
+		const videoNode = createMediaNode("video", "root");
+		if (videoNode.subtype !== "video" || !videoNode.video) {
+			throw new Error("Expected video media node");
+		}
+
+		videoNode.video.autoplay = true;
+		const lockedMarkup = renderToStaticMarkup(
+			<VideoContentSection node={videoNode} onTextChange={() => {}} />,
+		);
+
+		expect(lockedMarkup).toContain(">Muted<");
+		expect(lockedMarkup).toContain("Videos that autoplay must be muted.");
+
+		videoNode.video.autoplay = false;
+		const unlockedMarkup = renderToStaticMarkup(
+			<VideoContentSection node={videoNode} onTextChange={() => {}} />,
+		);
+
+		expect(unlockedMarkup).not.toContain("Videos that autoplay must be muted.");
+	});
+
 	it("renders SVG markup as mono text and splits viewBox controls", () => {
 		const svgNode = createMediaNode("svg", "root");
 		if (svgNode.subtype !== "svg") {
@@ -185,7 +208,7 @@ describe("panels/inspector/content section rows", () => {
 		);
 
 		expect(markup).toContain(">Monochrome<");
-		expect(markup).toContain(">Stroke<");
+		expect(markup).toContain(">Global stroke<");
 		expect(markup).toContain('data-separated="true"');
 		expect(markup).toContain(">Width<");
 		expect(markup).toContain('aria-label="SVG stroke width"');

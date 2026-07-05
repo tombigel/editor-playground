@@ -269,7 +269,7 @@ describe('panels/inspector/CommonSections', () => {
     expect(markup).not.toContain('>Border<');
   });
 
-  it('keeps clip text inside active gradient controls after color stops', () => {
+  it('keeps clip text inside the active gradient switch block', () => {
     const node = createContainerNode('section', 'root');
 
     const withoutGradientMarkup = renderToStaticMarkup(
@@ -298,10 +298,12 @@ describe('panels/inspector/CommonSections', () => {
     const angleIndex = markup.indexOf('>Angle<');
     const clipIndex = markup.indexOf('Clip background to text');
 
+    expect(clipIndex).toBeGreaterThan(-1);
+    expect(markup).toContain('lucide-type-outline');
     expect(typeIndex).toBeGreaterThan(-1);
+    expect(clipIndex).toBeLessThan(typeIndex);
     expect(stopsIndex).toBeGreaterThan(typeIndex);
     expect(angleIndex).toBeGreaterThan(stopsIndex);
-    expect(clipIndex).toBeGreaterThan(angleIndex);
   });
 
   it('uses FormField inline-group for the layout order row', () => {

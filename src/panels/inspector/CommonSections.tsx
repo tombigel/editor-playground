@@ -7,8 +7,10 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUp,
+  PaintBucket,
   PencilLine,
   SquareArrowOutUpRight,
+  TypeOutline,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { DocumentModel, FocusedMode } from '../../api/editorApi';
@@ -47,6 +49,7 @@ import {
   ShadowControlGroup,
   SizeInlineField,
   SpacingField,
+  SwitchBlock,
   WrapperActions,
   readShadowFieldValues,
   readUnifiedBorderColor,
@@ -558,51 +561,71 @@ export function WrapperDesignSection({
         </FormField>
 
         {supportsGradient ? (
-          <div className="space-y-1.5">
-            <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
-              Gradient
-              <Switch
-                checked={Boolean(gradient)}
-                onCheckedChange={(checked) =>
-                  onWrapperStyleChange('backgroundGradient', checked ? serializeGradient(createDefaultGradient()) : '')
-                }
-              />
-            </Label>
+          <>
+            <SwitchBlock
+              icon={
+                <PaintBucket
+                  className={`h-3.5 w-3.5 shrink-0 ${gradient ? 'editor-text-accent' : 'editor-text-muted'}`}
+                />
+              }
+              title="Background gradient"
+              description="Add a gradient layer."
+              checked={Boolean(gradient)}
+              onCheckedChange={(checked) =>
+                onWrapperStyleChange('backgroundGradient', checked ? serializeGradient(createDefaultGradient()) : '')
+              }
+            >
+              {gradient ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <TypeOutline
+                      className={`h-3.5 w-3.5 shrink-0 ${node.style?.backgroundClipText ? 'editor-text-accent' : 'editor-text-muted'}`}
+                    />
+                    <div>
+                      <div className="editor-text-strong text-xs font-medium">Clip background to text</div>
+                      <div className="editor-text-muted text-[11px]">Paint text with the gradient.</div>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={node.style?.backgroundClipText ?? false}
+                    onCheckedChange={(checked) => onWrapperStyleChange('backgroundClipText', checked ? 'true' : '')}
+                  />
+                </div>
+              ) : null}
+            </SwitchBlock>
             {gradient ? (
-              <GradientControl
-                value={gradient}
-                onChange={(next) => onWrapperStyleChange('backgroundGradient', next)}
-                clipBackgroundToText={node.style?.backgroundClipText ?? false}
-                onClipBackgroundToTextChange={(checked) =>
-                  onWrapperStyleChange('backgroundClipText', checked ? 'true' : '')
-                }
-              />
-            ) : null}
-            {gradient && gradientRepeats ? (
-              <GradientAxisGroup label="Size">
-                <GradientAxisField
-                  label="W"
-                  value={backgroundSizeAxes[0] ?? ''}
-                  units={['px', '%']}
-                  ariaLabel="Background size X"
-                  placeholder="auto"
-                  onChange={(next) =>
-                    onWrapperStyleChange('backgroundSize', joinBackgroundSize(next, backgroundSizeAxes[1]))
-                  }
+              <div className="space-y-1.5">
+                <GradientControl
+                  value={gradient}
+                  onChange={(next) => onWrapperStyleChange('backgroundGradient', next)}
                 />
-                <GradientAxisField
-                  label="H"
-                  value={backgroundSizeAxes[1] ?? ''}
-                  units={['px', '%']}
-                  ariaLabel="Background size Y"
-                  placeholder="auto"
-                  onChange={(next) =>
-                    onWrapperStyleChange('backgroundSize', joinBackgroundSize(backgroundSizeAxes[0], next))
-                  }
-                />
-              </GradientAxisGroup>
+                {gradientRepeats ? (
+                  <GradientAxisGroup label="Size">
+                    <GradientAxisField
+                      label="W"
+                      value={backgroundSizeAxes[0] ?? ''}
+                      units={['px', '%']}
+                      ariaLabel="Background size X"
+                      placeholder="auto"
+                      onChange={(next) =>
+                        onWrapperStyleChange('backgroundSize', joinBackgroundSize(next, backgroundSizeAxes[1]))
+                      }
+                    />
+                    <GradientAxisField
+                      label="H"
+                      value={backgroundSizeAxes[1] ?? ''}
+                      units={['px', '%']}
+                      ariaLabel="Background size Y"
+                      placeholder="auto"
+                      onChange={(next) =>
+                        onWrapperStyleChange('backgroundSize', joinBackgroundSize(backgroundSizeAxes[0], next))
+                      }
+                    />
+                  </GradientAxisGroup>
+                ) : null}
+              </div>
             ) : null}
-          </div>
+          </>
         ) : null}
 
         {supportsGradient ? <div className="editor-border-subtle border-b" aria-hidden="true" /> : null}

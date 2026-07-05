@@ -885,7 +885,7 @@ type MediaNode = BaseNode & {
     title?: string;
     titleHidden?: boolean;
     titleTag?: HeadingTag;       // h1-h6 for visible title overlays
-    description?: string;        // aria-describedby text
+    description?: string;        // aria-describedby text, preserves authored whitespace
     captions?: {
       src?: string;              // WebVTT (.vtt)
       label?: string;

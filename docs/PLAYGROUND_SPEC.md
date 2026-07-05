@@ -768,7 +768,7 @@ Content and playback:
 - Video accessibility metadata lives on `MediaNode.video`: `title`, `titleHidden`, `titleTag`, optional `description`, optional caption track metadata (`captions.src`, `captions.srclang`, `captions.label`, `captions.default`), and optional `transcriptSrc`.
 - The legacy `alt` field remains a fallback for the video accessible title. The inspector writes the Title field to both `video.title` and `alt` for compatibility.
 - Hidden titles export as `aria-label` on the `<video>`. Visible titles render as a heading (`h1`-`h6`) and label the player with `aria-labelledby`; in site output the heading is a top-left overlay that fades in on hover/focus and while paused when the browser exposes paused media state.
-- Long descriptions render as visually hidden text referenced by `aria-describedby`. Caption URLs render as WebVTT `<track kind="captions">`; transcript URLs render in the native video fallback paragraph.
+- Long descriptions preserve authored whitespace and render as visually hidden text referenced by `aria-describedby`. Caption URLs render as WebVTT `<track kind="captions">`; transcript URLs render in the native video fallback paragraph.
 - Videos cannot be links: the player is always the interactive element, and nesting it inside an anchor would create conflicting interactive controls (a11y). The API ignores link fields on video nodes and the renderer never anchor-wraps a video.
 
 Stage vs preview/export:

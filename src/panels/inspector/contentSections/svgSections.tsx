@@ -1,9 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Check, Maximize2, RotateCcw, TriangleAlert, X } from 'lucide-react';
+import { Check, Droplet, LineStyle, Maximize2, RotateCcw, TriangleAlert, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { OptionsSelector } from '@/components/ui/options-selector';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
@@ -14,6 +13,7 @@ import {
   HoverColorField,
   InspectorFieldGroup,
   ShadowControlGroup,
+  SwitchBlock,
   readShadowFieldValues,
 } from '../../InspectorControls';
 import {
@@ -548,32 +548,41 @@ export function SvgDesignSection({
         onTextChange={onTextChange}
       />
       <InspectorFieldGroup gap>
-        <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
-          Monochrome
-          <Switch
-            checked={monochrome?.enabled ?? false}
-            onCheckedChange={(checked) => onTextChange('svgMonochrome', checked ? 'true' : 'false')}
-          />
-        </Label>
-        {monochrome?.enabled ? (
-          <FormField label="Fill" layout="inline">
-            <HoverColorField
-              value={monochrome.fill}
-              ariaLabel="SVG fill color"
-              fallback={DEFAULT_TEXT_COLOR}
-              onChange={(value) => onTextChange('svgFill', value)}
+        <SwitchBlock
+          icon={
+            <Droplet
+              className={`h-3.5 w-3.5 shrink-0 ${monochrome?.enabled ? 'editor-text-accent' : 'editor-text-muted'}`}
             />
-          </FormField>
-        ) : null}
+          }
+          title="Monochrome"
+          description="Use one fill color."
+          checked={monochrome?.enabled ?? false}
+          onCheckedChange={(checked) => onTextChange('svgMonochrome', checked ? 'true' : 'false')}
+        >
+          {monochrome?.enabled ? (
+            <FormField label="Fill" layout="inline">
+              <HoverColorField
+                value={monochrome.fill}
+                ariaLabel="SVG fill color"
+                fallback={DEFAULT_TEXT_COLOR}
+                onChange={(value) => onTextChange('svgFill', value)}
+              />
+            </FormField>
+          ) : null}
+        </SwitchBlock>
       </InspectorFieldGroup>
       <InspectorFieldGroup gap separated={monochrome?.enabled ?? false}>
-        <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
-          Stroke
-          <Switch
-            checked={stroke?.enabled ?? false}
-            onCheckedChange={(checked) => onTextChange('svgStrokeEnabled', checked ? 'true' : 'false')}
-          />
-        </Label>
+        <SwitchBlock
+          icon={
+            <LineStyle
+              className={`h-3.5 w-3.5 shrink-0 ${stroke?.enabled ? 'editor-text-accent' : 'editor-text-muted'}`}
+            />
+          }
+          title="Global stroke"
+          description="Use one outline style."
+          checked={stroke?.enabled ?? false}
+          onCheckedChange={(checked) => onTextChange('svgStrokeEnabled', checked ? 'true' : 'false')}
+        />
         {stroke?.enabled ? (
           <>
             <FormField label="Width" layout="inline">

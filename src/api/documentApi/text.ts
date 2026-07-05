@@ -520,7 +520,7 @@ export function setTextNodeContentDoc(
   }
 
   if (field === 'videoDescription' && isMediaNode(node) && node.subtype === 'video') {
-    node.video = { ...node.video, description: value.trim() || undefined };
+    node.video = { ...node.video, description: value === '' ? undefined : value };
     return next;
   }
 

@@ -57,13 +57,9 @@ const STOP_ACTION_ICON_CLASS = 'h-3.5 w-3.5';
 export function GradientControl({
   value,
   onChange,
-  clipBackgroundToText,
-  onClipBackgroundToTextChange,
 }: {
   value: string;
   onChange: (nextGradientText: string) => void;
-  clipBackgroundToText?: boolean;
-  onClipBackgroundToTextChange?: (checked: boolean) => void;
 }) {
   const parsed = parseGradient(value);
 
@@ -78,10 +74,6 @@ export function GradientControl({
             onChange={(e) => onChange(e.target.value)}
           />
         </FormField>
-        <ClipBackgroundToTextControl
-          checked={clipBackgroundToText ?? false}
-          onCheckedChange={onClipBackgroundToTextChange}
-        />
       </div>
     );
   }
@@ -129,30 +121,7 @@ export function GradientControl({
           onCheckedChange={(checked) => update({ ...parsed, repeating: checked })}
         />
       </Label>
-      <ClipBackgroundToTextControl
-        checked={clipBackgroundToText ?? false}
-        onCheckedChange={onClipBackgroundToTextChange}
-      />
     </div>
-  );
-}
-
-function ClipBackgroundToTextControl({
-  checked,
-  onCheckedChange,
-}: {
-  checked: boolean;
-  onCheckedChange?: (checked: boolean) => void;
-}) {
-  if (!onCheckedChange) {
-    return null;
-  }
-
-  return (
-    <Label className="flex items-center justify-between gap-2 text-[11px] font-medium">
-      Clip background to text
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
-    </Label>
   );
 }
 

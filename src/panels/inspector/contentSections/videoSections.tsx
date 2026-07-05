@@ -4,13 +4,15 @@ import { PopoverTooltip } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InfoTooltip } from '@/components/ui/settings-panel';
 import { Switch } from '@/components/ui/switch';
-import { CheckCircle2, CircleAlert, Loader2, SlidersHorizontal } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { CheckCircle2, CircleAlert, ClosedCaption, Loader2, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   BorderControlGroup,
   FormField,
   InspectorFieldGroup,
   ShadowControlGroup,
+  SwitchBlock,
   readShadowFieldValues,
   readUnifiedBorderColor,
   readUnifiedBorderRadius,
@@ -45,6 +47,7 @@ const VIDEO_PLAYBACK_FLAGS: { field: EditorTextField; label: string; defaultValu
   { field: 'videoAutoplay', label: 'Autoplay', defaultValue: false },
   { field: 'videoLoop', label: 'Loop', defaultValue: false },
 ];
+const AUTOPLAY_MUTED_TOOLTIP = 'Videos that autoplay must be muted.';
 
 type ValidationStatus = {
   state: 'idle' | 'checking' | 'valid' | 'error';
@@ -305,7 +308,11 @@ export function VideoContentSection({
           </FormField>
         ) : null}
         <FormField label="Long description">
-          <Input value={video?.description ?? ''} onChange={(e) => onTextChange('videoDescription', e.target.value)} />
+          <Textarea
+            className="min-h-16"
+            value={video?.description ?? ''}
+            onChange={(e) => onTextChange('videoDescription', e.target.value)}
+          />
         </FormField>
       </InspectorFieldGroup>
       <div className="editor-border-subtle border-b" aria-hidden="true" />
@@ -315,16 +322,22 @@ export function VideoContentSection({
           <span>Playback</span>
         </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-          {VIDEO_PLAYBACK_FLAGS.map((flag) => (
-            <div key={flag.field} className="flex items-center justify-between gap-2 text-[11px] font-medium">
-              <span>{flag.label}</span>
-              <Switch
-                checked={readFlag(flag.field, flag.defaultValue)}
-                disabled={isFlagDisabled(flag.field)}
-                onCheckedChange={(checked) => onTextChange(flag.field, checked ? 'true' : 'false')}
-              />
-            </div>
-          ))}
+          {VIDEO_PLAYBACK_FLAGS.map((flag) => {
+            const mutedLockedByAutoplay = flag.field === 'videoMuted' && autoplayEnabled;
+            return (
+              <div key={flag.field} className="flex items-center justify-between gap-2 text-[11px] font-medium">
+                <span className="inline-flex min-w-0 items-center gap-1">
+                  <span>{flag.label}</span>
+                  {mutedLockedByAutoplay ? <InfoTooltip>{AUTOPLAY_MUTED_TOOLTIP}</InfoTooltip> : null}
+                </span>
+                <Switch
+                  checked={readFlag(flag.field, flag.defaultValue)}
+                  disabled={isFlagDisabled(flag.field)}
+                  onCheckedChange={(checked) => onTextChange(flag.field, checked ? 'true' : 'false')}
+                />
+              </div>
+            );
+          })}
         </div>
       </InspectorFieldGroup>
       <div className="editor-border-subtle border-b" aria-hidden="true" />
@@ -346,9 +359,17 @@ export function VideoContentSection({
       </FormField>
       <div className="editor-border-subtle border-b" aria-hidden="true" />
       <InspectorFieldGroup>
-        <FormField label="Captions" layout="inline">
-          <Switch checked={captionsEnabled} onCheckedChange={toggleCaptions} />
-        </FormField>
+        <SwitchBlock
+          icon={
+            <ClosedCaption
+              className={`h-3.5 w-3.5 shrink-0 ${captionsEnabled ? 'editor-text-accent' : 'editor-text-muted'}`}
+            />
+          }
+          title="Video captions"
+          description="Attach a WebVTT file."
+          checked={captionsEnabled}
+          onCheckedChange={toggleCaptions}
+        />
         {captionsEnabled ? (
           <>
             <FormField label="Captions URL">
@@ -362,14 +383,9 @@ export function VideoContentSection({
                 <Input value={video?.captions?.label ?? ''} placeholder="English CC" onChange={(e) => onTextChange('videoCaptionsLabel', e.target.value)} />
               </FormField>
             </div>
-            <FormField label="Default captions" layout="inline">
-              <Switch checked={video?.captions?.default === true} onCheckedChange={(checked) => onTextChange('videoCaptionsDefault', checked ? 'true' : 'false')} />
-            </FormField>
+            <div className="editor-border-subtle border-b" aria-hidden="true" />
           </>
         ) : null}
-        <FormField label="Transcript URL">
-          <Input value={video?.transcriptSrc ?? ''} placeholder="/transcripts/video.html" onChange={(e) => onTextChange('videoTranscriptSrc', e.target.value)} />
-        </FormField>
       </InspectorFieldGroup>
     </InspectorSectionCard>
   );

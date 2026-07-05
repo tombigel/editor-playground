@@ -19,7 +19,7 @@ const selectTriggerVariants = cva(
   {
     variants: {
       size: {
-        default: 'h-7 py-1.5 text-sm',
+        default: 'h-7 py-1.5 text-xs',
         compact: 'h-7 py-1.5 text-xs',
         small: 'h-7 py-1.5 text-[11px]',
       },
@@ -189,7 +189,7 @@ const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
 >(({ className, children, ...props }, ref) => {
   const { size } = React.useContext(SelectContext);
-  const textClass = size === 'compact' ? 'text-xs' : size === 'small' ? 'text-[11px]' : 'text-sm';
+  const textClass = size === 'small' ? 'text-[11px]' : 'text-xs';
   return (
     <SelectPrimitive.Item
       ref={ref}

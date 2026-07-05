@@ -211,7 +211,7 @@ export function SearchableMultiSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          'editor-bg-surface editor-border-subtle editor-text-strong flex h-7 w-full items-center justify-between rounded-sm border px-2.5 text-sm shadow-sm',
+          'editor-bg-surface editor-border-subtle editor-text-strong flex h-7 w-full items-center justify-between rounded-sm border px-2.5 text-xs shadow-sm',
           triggerClassName,
         )}
         onClick={() => {
