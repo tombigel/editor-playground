@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { SlidersHorizontal } from 'lucide-react';
 import {
   BorderControlGroup,
   FormField,
@@ -85,7 +86,12 @@ export function VideoContentSection({
           <Input value={node.alt ?? ''} onChange={(e) => onTextChange('alt', e.target.value)} />
         </FormField>
       </InspectorFieldGroup>
+      <div className="editor-border-subtle border-b" aria-hidden="true" />
       <InspectorFieldGroup gap>
+        <div className="editor-text-muted flex items-center gap-1.5 text-[11px] font-medium">
+          <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>Playback</span>
+        </div>
         <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
           {VIDEO_PLAYBACK_FLAGS.map((flag) => (
             <Label key={flag.field} className="flex items-center justify-between gap-2 text-[11px] font-medium">
@@ -97,23 +103,24 @@ export function VideoContentSection({
             </Label>
           ))}
         </div>
-        <FormField label="Preload" layout="inline">
-          <Select
-            size="compact"
-            value={video?.preload ?? 'auto'}
-            onValueChange={(value) => onTextChange('videoPreload', value)}
-          >
-            <SelectTrigger size="compact">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="auto">Auto</SelectItem>
-              <SelectItem value="metadata">Metadata</SelectItem>
-              <SelectItem value="none">None</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
       </InspectorFieldGroup>
+      <div className="editor-border-subtle border-b" aria-hidden="true" />
+      <FormField label="Preload" layout="inline">
+        <Select
+          size="compact"
+          value={video?.preload ?? 'auto'}
+          onValueChange={(value) => onTextChange('videoPreload', value)}
+        >
+          <SelectTrigger size="compact">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="auto">Auto</SelectItem>
+            <SelectItem value="metadata">Metadata</SelectItem>
+            <SelectItem value="none">None</SelectItem>
+          </SelectContent>
+        </Select>
+      </FormField>
     </InspectorSectionCard>
   );
 }
