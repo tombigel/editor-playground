@@ -58,6 +58,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - mark inline SVG shipped under RI-11
 - refine gradient control and clip-text behavior notes
 - tidy gradient panel sizes and alignments
+- centralize wrapper style updates
 
 ### Fixed
 

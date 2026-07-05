@@ -108,6 +108,7 @@ export {
   setSvgViewBoxDoc,
   type SvgMarkupPayload,
 } from './documentApi/media';
+export { setWrapperStyleFieldDoc } from './documentApi/wrapperStyle';
 export {
   createNodeClipboardJson,
   createNodeFromExternalClipboardDoc,

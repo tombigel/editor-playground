@@ -1033,6 +1033,8 @@ type WrapperStyleField =
   | 'sectionBorderBottomColor' | 'sectionBorderBottomWidth';
 ```
 
+`setWrapperStyleFieldDoc(document, nodeId, field, value)` applies the same wrapper style contract at the document API layer: structural wrapper background colors are forced opaque, gradient text is validated and stored verbatim, repeating gradients seed `backgroundSize`, and unit-backed spacing/border fields are parsed before storage.
+
 ### Gradient parser
 
 `src/model/gradient.ts` (re-exported from `documentViewApi`) provides the two-way CSS gradient parser used by the wrapper Design inspector.
