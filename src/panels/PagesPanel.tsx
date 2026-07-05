@@ -26,6 +26,7 @@ export type PagesPanelProps = {
   onSetSiteSettings: (patch: Partial<SiteSettings>) => void;
   onSetActivePage: (pageId: PageId) => void;
   onAddPage: () => void;
+  onDuplicatePage: (pageId: PageId) => void;
   onDeletePage: (pageId: PageId) => void;
   onSetPageDisplayName: (pageId: PageId, name: string) => void;
   onSetPageAsHome: (pageId: PageId) => void;
@@ -63,6 +64,7 @@ export function PagesPanel({
   onSetSiteSettings,
   onSetActivePage,
   onAddPage,
+  onDuplicatePage,
   onDeletePage,
   onSetPageDisplayName,
   onSetPageAsHome,
@@ -225,6 +227,7 @@ export function PagesPanel({
               activePageId={activePageId}
               onSetActivePage={handlePageSelect}
               onAddPage={handleAddPage}
+              onDuplicatePage={onDuplicatePage}
               onDeletePage={onDeletePage}
               onSetPageParent={onSetPageParent}
               onReorderPage={onReorderPage}

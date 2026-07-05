@@ -8,6 +8,7 @@ import {
   addPage,
   addPageSlugAlias,
   deletePage,
+  duplicatePage,
   getAllPageRoutes,
   getPageForSection,
   moveSectionToPage,
@@ -162,6 +163,79 @@ describe('deletePage', () => {
     const homePage = doc.pages?.find((page) => page.pageRole === 'home');
     const result = deletePage(doc, homePage!.id);
     expect(result.pages?.[0].pageRole).toBe('home');
+  });
+});
+
+describe('duplicatePage', () => {
+  it('clones a page-owned section subtree with new ids and a unique route', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, {
+      displayName: 'About',
+      slug: 'about',
+      lang: 'fr',
+      visible: false,
+      viewTransition: 'slide',
+      slugAliases: ['about-us'],
+    });
+    const page = doc.pages?.[1];
+    const root = doc.nodes[doc.rootId];
+    if (!page || !root || root.contentType !== 'site') {
+      throw new Error('Expected page and site root');
+    }
+
+    const section = createContainerNode('section', doc.rootId);
+    const child = createTextNode('block', section.id);
+    section.children.push(child.id);
+    doc.nodes[section.id] = section;
+    doc.nodes[child.id] = child;
+    root.children.push(section.id);
+    page.sectionIds.push(section.id);
+
+    const result = duplicatePage(doc, page.id);
+    const duplicatedPage = result.document.pages?.find((entry) => entry.id === result.pageId);
+    const duplicatedSectionId = duplicatedPage?.sectionIds[0];
+    const duplicatedSection = duplicatedSectionId ? result.document.nodes[duplicatedSectionId] : null;
+    const duplicatedChildId = duplicatedSection?.children[0];
+    const duplicatedChild = duplicatedChildId ? result.document.nodes[duplicatedChildId] : null;
+
+    expect(duplicatedPage?.displayName).toBe('About Copy');
+    expect(duplicatedPage?.slug).toBe('about-copy');
+    expect(duplicatedPage?.slugAliases).toBeUndefined();
+    expect(duplicatedPage?.pageRole).toBe('default');
+    expect(duplicatedPage?.lang).toBe('fr');
+    expect(duplicatedPage?.visible).toBe(false);
+    expect(duplicatedPage?.viewTransition).toBe('slide');
+    expect(duplicatedSectionId).not.toBe(section.id);
+    expect(duplicatedChildId).not.toBe(child.id);
+    expect(duplicatedSection?.parentId).toBe(doc.rootId);
+    expect(duplicatedChild?.parentId).toBe(duplicatedSectionId);
+    expect(result.document.nodes[section.id]).toEqual(section);
+    expect(validateDocument(result.document)).toEqual([]);
+  });
+
+  it('keeps shared regions shared instead of cloning them into the duplicate page', () => {
+    let doc = makeDoc();
+    doc = addPage(doc, { displayName: 'About', slug: 'about' });
+    const page = doc.pages?.[1];
+    const sharedId = doc.sharedRegionIds?.[0];
+    if (!page || !sharedId) {
+      throw new Error('Expected page and shared region');
+    }
+    page.sectionIds.push(sharedId);
+
+    const result = duplicatePage(doc, page.id);
+    const duplicatedPage = result.document.pages?.find((entry) => entry.id === result.pageId);
+
+    expect(duplicatedPage?.sectionIds).toEqual([]);
+    expect(result.document.nodes[sharedId]).toBeDefined();
+  });
+
+  it('returns the original document for an unknown page id', () => {
+    const doc = makeDoc();
+    const result = duplicatePage(doc, 'missing-page');
+
+    expect(result.document).toBe(doc);
+    expect(result.pageId).toBeNull();
   });
 });
 

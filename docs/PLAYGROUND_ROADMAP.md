@@ -78,7 +78,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-25` | `🟢 In progress` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | - |
 | `RI-27` | `🟣 Partially present` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | Shared | - |
 | `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🟠 High` | UX | Shared | Dep: `RI-06` |
-| `RI-33` | `🟣 Partially present` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Stage node copy/paste/duplicate v1 done; page duplication deferred |
+| `RI-33` | `🟣 Partially present` | [Copy/paste and duplication across page structure](#copypaste-and-duplication-across-page-structure) | `🟠 High` | Feature | Shared | Stage node copy/paste/duplicate and whole-page duplication done; duplicate-drag follow-up remains |
 | `RI-34` | `🟢 In progress` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | P2-A through P2-D done; rich E2E isolated; four rich authoring cases quarantined; P2-C follow-ups, P2-E, and P2-F remain |
 | `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
 | `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Dep: `RI-11`, `RI-12B` |
@@ -367,7 +367,7 @@ None yet.
 - `Source`: `RI-07`
 - `Why it matters`: Multi-page support changes the document model, navigation semantics, export shape, and future product scope.
 - `Delivered (Wave 1-2)`: Page model with hierarchy, slug management, aliases, and uniqueness checks during new-page creation. Editor page switching via four UI entry points. Page linking with internal anchor support. Export with `outputStructure` selection (directory vs. flat). Preview mode with navigation. Top-level wrapper page visibility with `Hidden`, `Current page`, `All pages`, and `Custom pages`, exposed from the Components panel and Inspector.
-- `Deferred to RI-33`: Copy/paste across pages, page duplication, full page templates.
+- `Deferred to RI-33`: Copy/paste across pages and full page templates.
 
 ##### Copy/paste and duplication across page structure
 
@@ -377,8 +377,8 @@ None yet.
 - `Source`: `RI-33`
 - `Dependencies`: `RI-07`
 - `Why it matters`: Once the editor supports more than one page, authors need reusable editing workflows for moving or cloning content without rebuilding it manually. Copy/paste of components and sections, cross-page paste targets, and duplicate-page actions are part of the baseline trust model for authoring at page/site scope.
-- `Current state`: **Partially present** — stage node copy/paste/duplicate v1 is implemented through API-first clipboard payloads, shared shortcuts, active Edit menu entries, undoable editor actions, and docs/tests. Supported v1 transfer units are selected stage nodes, multi-selection top-level filtering, containers with descendants, section/subtree paste, in-memory/system clipboard payloads, and external text/html/link/image fallback paste.
-- `Next move`: Add whole-page duplication and decide whether duplicate-drag should commit through the new duplicate document API or remain a separate follow-up interaction.
+- `Current state`: **Partially present** — stage node copy/paste/duplicate v1 is implemented through API-first clipboard payloads, shared shortcuts, active Edit menu entries, undoable editor actions, and docs/tests. Whole-page duplication is also implemented through `duplicatePage(document, pageId)` plus an editor reducer action and Pages panel row action: it clones page-owned section subtrees with fresh ids, keeps shared regions shared, creates a unique `Copy` route, copies non-home page settings, activates the duplicate, and clears selection.
+- `Next move`: Connect the existing `Alt` / `Option` duplicate-requested drag stub to the duplicate document API, keeping drag preview and commit semantics aligned.
 
 ##### Form and input authoring platform
 

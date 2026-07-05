@@ -1,4 +1,10 @@
-import type { ContainerNode, DocumentModel, NodeId, TextNode } from '../model/types';
+import type {
+  ContainerNode,
+  DocumentModel,
+  DocumentNode,
+  NodeId,
+  TextNode,
+} from '../model/types';
 import { isContainerNode, isLeafNode, isTextNode } from '../model/types';
 import { createTextDocumentContent, mapLinks } from '../model/richContent';
 import type { DocumentPage, PageId, SiteSettings } from '../model/types/site';
@@ -165,6 +171,141 @@ export function deletePage(document: DocumentModel, pageId: PageId): DocumentMod
   }
 
   return { ...document, pages, nodes: newNodes };
+}
+
+export type DuplicatePageResult = {
+  document: DocumentModel;
+  pageId: PageId | null;
+};
+
+export function duplicatePage(document: DocumentModel, pageId: PageId): DuplicatePageResult {
+  const pages = structuredClone(document.pages ?? []);
+  const pageIndex = pages.findIndex((p) => p.id === pageId);
+  if (pageIndex === -1) {
+    return { document, pageId: null };
+  }
+
+  const sourcePage = pages[pageIndex];
+  const duplicateDisplayName = ensureUniquePageDisplayName(pages, `${sourcePage.displayName} Copy`);
+  const duplicateSlug = ensureUniquePageSlug(document, generateSlug(duplicateDisplayName));
+  const duplicate = createPage({
+    displayName: duplicateDisplayName,
+    slug: duplicateSlug,
+    pageRole: 'default',
+    parentPageId: sourcePage.parentPageId,
+    lang: sourcePage.lang,
+    visible: sourcePage.visible,
+    viewTransition: sourcePage.viewTransition,
+  });
+  delete duplicate.slugAliases;
+
+  const sharedRegionIds = new Set(document.sharedRegionIds ?? []);
+  const sourceSectionIds = sourcePage.sectionIds.filter((id) => !sharedRegionIds.has(id));
+  const nextNodes = { ...document.nodes };
+  const idMap = new Map<NodeId, NodeId>();
+  const allocatedIds = new Set<NodeId>();
+
+  for (const sectionId of sourceSectionIds) {
+    collectSubtreeIds(document, sectionId).forEach((nodeId) => {
+      const sourceNode = document.nodes[nodeId];
+      if (sourceNode && !idMap.has(nodeId)) {
+        idMap.set(nodeId, createUniquePageDuplicateNodeId(nextNodes, sourceNode, allocatedIds));
+      }
+    });
+  }
+
+  const duplicatedSectionIds: NodeId[] = [];
+  for (const sectionId of sourceSectionIds) {
+    const duplicateSectionId = idMap.get(sectionId);
+    if (!duplicateSectionId || !document.nodes[sectionId]) {
+      continue;
+    }
+    clonePageSubtree(document, nextNodes, sectionId, document.rootId, idMap, pageId, duplicate.id);
+    duplicatedSectionIds.push(duplicateSectionId);
+  }
+
+  duplicate.sectionIds = duplicatedSectionIds;
+  pages.splice(pageIndex + 1, 0, duplicate);
+
+  const root = nextNodes[document.rootId];
+  if (root) {
+    nextNodes[document.rootId] = {
+      ...root,
+      children: [...root.children, ...duplicatedSectionIds],
+    };
+  }
+
+  return {
+    document: { ...document, nodes: nextNodes, pages },
+    pageId: duplicate.id,
+  };
+}
+
+function collectSubtreeIds(document: DocumentModel, nodeId: NodeId): NodeId[] {
+  const node = document.nodes[nodeId];
+  if (!node) {
+    return [];
+  }
+  return [nodeId, ...node.children.flatMap((childId) => collectSubtreeIds(document, childId))];
+}
+
+function clonePageSubtree(
+  sourceDocument: DocumentModel,
+  nextNodes: DocumentModel['nodes'],
+  sourceId: NodeId,
+  parentId: NodeId,
+  idMap: Map<NodeId, NodeId>,
+  sourcePageId: PageId,
+  duplicatePageId: PageId,
+) {
+  const source = sourceDocument.nodes[sourceId];
+  const duplicateId = idMap.get(sourceId);
+  if (!source || !duplicateId || source.contentType === 'site') {
+    return;
+  }
+
+  const clone = structuredClone(source) as DocumentNode;
+  clone.id = duplicateId;
+  clone.parentId = parentId;
+  clone.children = source.children
+    .map((childId) => idMap.get(childId))
+    .filter((id): id is NodeId => Boolean(id));
+  clone.name = `${source.name} Copy`;
+  if (isContainerNode(clone) && clone.pageTargetIds?.length) {
+    clone.pageTargetIds = clone.pageTargetIds.map((targetPageId) =>
+      targetPageId === sourcePageId ? duplicatePageId : targetPageId,
+    );
+  }
+  nextNodes[clone.id] = clone;
+
+  for (const childId of source.children) {
+    clonePageSubtree(sourceDocument, nextNodes, childId, clone.id, idMap, sourcePageId, duplicatePageId);
+  }
+}
+
+function createUniquePageDuplicateNodeId(
+  nodes: DocumentModel['nodes'],
+  source: DocumentNode,
+  allocatedIds: Set<NodeId>,
+): NodeId {
+  const prefix =
+    source.contentType === 'container'
+      ? source.subtype
+      : source.contentType === 'text'
+        ? source.subtype === 'block'
+          ? 'text'
+          : source.subtype
+        : source.contentType === 'media'
+          ? source.subtype
+          : 'node';
+  let index = Object.keys(nodes).length + allocatedIds.size + 1;
+  let id = `${prefix}_${index}`;
+  while (nodes[id] || allocatedIds.has(id)) {
+    index += 1;
+    id = `${prefix}_${index}`;
+  }
+  allocatedIds.add(id);
+  return id;
 }
 
 export function reorderPage(

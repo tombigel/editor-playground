@@ -174,6 +174,7 @@ export {
 export {
   addPage,
   deletePage,
+  duplicatePage,
   getAllPageRoutes,
   getHomePage,
   getPageRole,

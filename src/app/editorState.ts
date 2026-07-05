@@ -66,6 +66,7 @@ import {
   addPage,
   addPageSlugAlias,
   deletePage,
+  duplicatePage,
   reorderPage,
   setPageAsHome,
   setPageDisplayName,
@@ -494,6 +495,20 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       const nextDoc = addPage(state.document, action.options);
       const newPage = nextDoc.pages?.[nextDoc.pages.length - 1];
       return { ...state, document: nextDoc, activePageId: newPage?.id ?? state.activePageId };
+    }
+    case 'duplicatePage': {
+      const result = duplicatePage(state.document, action.pageId);
+      if (result.document === state.document || !result.pageId) {
+        return state;
+      }
+      return {
+        ...state,
+        document: result.document,
+        activePageId: result.pageId,
+        selectedId: null,
+        selectedIds: [],
+        pendingRoleSwap: null,
+      };
     }
     case 'deletePage': {
       const nextDoc = deletePage(state.document, action.pageId);

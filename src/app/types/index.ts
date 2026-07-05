@@ -169,6 +169,7 @@ export type EditorAction =
   | { type: 'setFocusedPanelOffset'; value: FocusedPanelOffset }
   | { type: 'setActivePage'; pageId: PageId }
   | { type: 'addPage'; options?: Partial<DocumentPage> }
+  | { type: 'duplicatePage'; pageId: PageId }
   | { type: 'deletePage'; pageId: PageId }
   | { type: 'reorderPage'; pageId: PageId; direction: 'back' | 'forward' }
   | { type: 'setPageDisplayName'; pageId: PageId; displayName: string }

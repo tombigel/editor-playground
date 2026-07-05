@@ -1,4 +1,4 @@
-import { Ban, File, Plus, Trash2 } from "lucide-react";
+import { Ban, Copy, File, Plus, Trash2 } from "lucide-react";
 import {
 	useEffect,
 	useRef,
@@ -31,6 +31,7 @@ export type PageTreeContentProps = {
 	activePageId: PageId | null;
 	onSetActivePage: (pageId: PageId) => void;
 	onAddPage: () => void;
+	onDuplicatePage: (pageId: PageId) => void;
 	onDeletePage: (pageId: PageId) => void;
 	onSetPageParent: (pageId: PageId, parentPageId: PageId | null) => void;
 	onReorderPage: (pageId: PageId, direction: "back" | "forward") => void;
@@ -58,6 +59,7 @@ export function PageTreeContent({
 	activePageId,
 	onSetActivePage,
 	onAddPage,
+	onDuplicatePage,
 	onDeletePage,
 	onSetPageParent,
 	onReorderPage,
@@ -349,6 +351,13 @@ export function PageTreeContent({
 											label={page.visible ? "Hide" : "Show"}
 										/>
 									)}
+									<TreeRowActionButton
+										ariaLabel={`Duplicate ${page.displayName}`}
+										tooltip="Duplicate page"
+										onClick={() => onDuplicatePage(page.id)}
+									>
+										<Copy className="h-3.5 w-3.5" />
+									</TreeRowActionButton>
 									{isHomePage ? null : (
 										<TreeRowActionButton
 											ariaLabel={`Delete ${page.displayName}`}

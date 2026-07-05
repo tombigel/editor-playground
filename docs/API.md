@@ -167,6 +167,7 @@ Source: `src/api/pageApi.ts`
 | --- | --- | --- |
 | `addPage` | `(document, options?: Partial<Omit<DocumentPage, 'type' \| 'id'>>) -> DocumentModel` | Add a new page with optional properties |
 | `deletePage` | `(document, pageId) -> DocumentModel` | Delete a page and unlink its sections |
+| `duplicatePage` | `(document, pageId) -> { document, pageId }` | Duplicate a page with unique route metadata and cloned page-owned sections |
 | `reorderPage` | `(document, pageId, direction: 'back' \| 'forward') -> DocumentModel` | Move page in the page list |
 
 ### Page metadata

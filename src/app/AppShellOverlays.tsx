@@ -414,6 +414,9 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 							dispatch({ type: "setActivePage", pageId })
 						}
 						onAddPage={() => dispatch({ type: "addPage" })}
+						onDuplicatePage={(pageId) =>
+							dispatch({ type: "duplicatePage", pageId })
+						}
 						onDeletePage={(pageId) => dispatch({ type: "deletePage", pageId })}
 						onSetPageDisplayName={(pageId, displayName) =>
 							dispatch({ type: "setPageDisplayName", pageId, displayName })

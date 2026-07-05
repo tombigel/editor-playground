@@ -20,6 +20,7 @@ describe('panels/PagesPanel', () => {
         onSetSiteSettings={() => {}}
         onSetActivePage={() => {}}
         onAddPage={() => {}}
+        onDuplicatePage={() => {}}
         onDeletePage={() => {}}
         onSetPageDisplayName={() => {}}
         onSetPageAsHome={() => {}}
@@ -68,6 +69,7 @@ describe('panels/PagesPanel', () => {
         onSetSiteSettings={() => {}}
         onSetActivePage={() => {}}
         onAddPage={() => {}}
+        onDuplicatePage={() => {}}
         onDeletePage={() => {}}
         onSetPageDisplayName={() => {}}
         onSetPageAsHome={() => {}}

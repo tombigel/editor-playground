@@ -135,6 +135,36 @@ describe('app/pageActions', () => {
     });
   });
 
+  describe('editorReducer/duplicatePage', () => {
+    it('duplicates a page, activates the duplicate, and clears selection', () => {
+      const initial = createInitialState();
+      const withExtra = editorReducer(initial, { type: 'addPage', options: { displayName: 'About', slug: 'about' } });
+      const sourcePage = withExtra.document.pages?.find((page) => page.slug === 'about');
+      if (!sourcePage) throw new Error('Expected source page');
+
+      const withSelection = {
+        ...withExtra,
+        selectedId: 'some-node',
+        selectedIds: ['some-node'],
+      };
+      const next = editorReducer(withSelection, { type: 'duplicatePage', pageId: sourcePage.id });
+      const duplicatedPage = next.document.pages?.find((page) => page.id === next.activePageId);
+
+      expect(duplicatedPage?.displayName).toBe('About Copy');
+      expect(duplicatedPage?.slug).toBe('about-copy');
+      expect(duplicatedPage?.pageRole).not.toBe('home');
+      expect(next.selectedId).toBeNull();
+      expect(next.selectedIds).toEqual([]);
+    });
+
+    it('returns unchanged state for an unknown page id', () => {
+      const initial = createInitialState();
+      const next = editorReducer(initial, { type: 'duplicatePage', pageId: 'missing-page' });
+
+      expect(next).toBe(initial);
+    });
+  });
+
   describe('history undo/redo for addPage', () => {
     it('undoes addPage restoring previous page count and activePageId', () => {
       const initial = createInitialState();
