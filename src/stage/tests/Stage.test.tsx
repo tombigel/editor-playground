@@ -1345,6 +1345,53 @@ describe('stage/Stage', () => {
     expect(getWrapperResizeHandles(group, false)).toEqual([]);
   });
 
+  it('keeps grouped wrappers boxed in the editor stage', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const group = createContainerNode('group', section.id);
+    group.rect = createDefaultRect('100px', '120px', 'fit-content', 'auto');
+    const child = createTextNode('block', group.id);
+    child.rect = createDefaultRect('0px', '0px', '160px', '48px');
+    child.content = createTextDocumentFromText('Grouped child');
+    group.children = [child.id];
+    section.children = [group.id];
+    document.nodes[group.id] = group;
+    document.nodes[child.id] = child;
+
+    const markup = renderToStaticMarkup(
+      <Stage
+        document={document}
+        selectedId={group.id}
+        selectedIds={[group.id]}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        snapSettings={DEFAULT_SNAP_SETTINGS}
+        onStageFocus={() => {}}
+        onSelect={() => {}}
+        onMove={() => {}}
+        onReparent={() => {}}
+        onResize={() => {}}
+        onResizeStart={() => {}}
+        onResizeEnd={() => {}}
+      />,
+    );
+
+    const groupMarkupMatch = markup.match(new RegExp(`id="stage-node-${group.id}"[^>]*style="([^"]+)"`));
+
+    expect(groupMarkupMatch?.[1]).toContain('display:block');
+    expect(groupMarkupMatch?.[1]).toContain('position:relative');
+    expect(groupMarkupMatch?.[1]).toContain('width:fit-content');
+    expect(groupMarkupMatch?.[1]).not.toContain('display:contents');
+  });
+
   it('keeps the bottom resize handle round for selected non-structural wrappers in the overlay', () => {
     const markup = renderToStaticMarkup(
       <SingleSelectionOverlay

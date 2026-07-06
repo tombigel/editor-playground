@@ -33,6 +33,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - match standard group selection behavior
 - clarify group actions
 - complete group action integration
+- keep group wrappers boxed in editor
 
 ---
 

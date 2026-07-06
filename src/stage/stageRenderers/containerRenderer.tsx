@@ -65,7 +65,7 @@ export function renderContainer({
   const Tag = plan.tag;
   const hiddenStyle = getStageHiddenStyle(plan.hiddenState);
   const meshLayout = plan.meshLayout;
-  const wrapperStyle = buildWrapperStyle(node, plan.isTopLevel);
+  const wrapperStyle = getStageWrapperStyle(node, plan.isTopLevel);
   const hasSelectedDescendant = selectedIds.some((selectedId) =>
     isNodeDescendantOf(document, selectedId, node.id),
   );
@@ -90,12 +90,10 @@ export function renderContainer({
   const showPaddingVisual =
     shouldShowWrapperPaddingVisual(document, node, selectedIds) ||
     shouldShowDropTargetPaddingVisual(node, isHighlightedDropTarget);
-  const groupContentPlacement = node.subtype === 'group' && !isSelfStickyTrack ? plan.meshPlacement : {};
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
         ...getContentWrapperBaseStyle(node),
-        ...groupContentPlacement,
         ...getContentWrapperPaddingStyle(node),
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
@@ -106,7 +104,6 @@ export function renderContainer({
       }
     : {
         ...getContentWrapperBaseStyle(node),
-        ...groupContentPlacement,
         ...getContentWrapperPaddingStyle(node),
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
@@ -139,7 +136,7 @@ export function renderContainer({
       aria-label={getNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,
-        ...(isSelfStickyTrack || node.subtype === 'group' ? {} : plan.meshPlacement),
+        ...(isSelfStickyTrack ? {} : plan.meshPlacement),
         ...getWrapperBorderStyle(node),
         ...wrapperStickyCss,
         ...hiddenStyle,
@@ -275,6 +272,19 @@ export function renderContainer({
     bottomDistancePx,
     body: wrapperBody,
   });
+}
+
+function getStageWrapperStyle(node: ContainerNode, isTopLevel: boolean): CSSProperties {
+  if (node.subtype !== 'group') {
+    return buildWrapperStyle(node, isTopLevel);
+  }
+
+  return {
+    display: 'block',
+    position: 'relative',
+    width: 'fit-content',
+    height: 'auto',
+  };
 }
 
 function getStageHiddenStyle(hiddenState: RenderWrapperArgs['plan']['hiddenState']): CSSProperties | undefined {
