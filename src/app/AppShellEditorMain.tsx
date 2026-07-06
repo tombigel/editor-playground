@@ -492,6 +492,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 								rects: collectSelectionRects(),
 							})
 						}
+						onGroupSelection={() => dispatch({ type: "groupSelection" })}
 						onBulkEdit={(operations) =>
 							dispatch({ type: "bulkEdit", operations })
 						}

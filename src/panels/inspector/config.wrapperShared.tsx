@@ -1,3 +1,4 @@
+import { Group } from 'lucide-react';
 import { AnimationSection } from './AnimationSection';
 import { createFocusedModeEntry, InspectorSectionCard, WrapperDesignSection } from './CommonSections';
 import { StickySection } from './StickySection';
@@ -31,26 +32,16 @@ const wrapperContentSection: InspectorSectionDefinition = {
         focusedModeEntry={createFocusedModeEntry(focusedMode, 'content', actions.onEnterFocusedMode)}
       >
         {node.subtype === 'group' ? (
-          <div className="grid grid-cols-2 gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 justify-center text-[11px]"
-              onClick={() => actions.onConvertGroupToContainer(node.id)}
-            >
-              Convert
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 justify-center text-[11px]"
-              onClick={() => actions.onUngroupNode(node.id)}
-            >
-              Ungroup
-            </Button>
-          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 w-full justify-center text-[11px]"
+            onClick={() => actions.onConvertGroupToContainer(node.id)}
+          >
+            <Group className="h-3.5 w-3.5" />
+            Make container
+          </Button>
         ) : node.subtype === 'container' || node.subtype === 'nav' || node.subtype === 'aside' || node.subtype === 'article' ? (
           <div className="space-y-2.5">
             <FormField label="Semantic type">

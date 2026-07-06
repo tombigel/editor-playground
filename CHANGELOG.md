@@ -31,6 +31,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - tighten semantic container select
 - hide text merge for mixed selections
 - match standard group selection behavior
+- clarify group actions
 
 ---
 
