@@ -28,6 +28,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 ### Fixed
 
 - move overflow control after shadow
+- tighten semantic container select
 
 ---
 

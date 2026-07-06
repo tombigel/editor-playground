@@ -191,7 +191,7 @@ describe('panels/InspectorPanel', () => {
     expect(navMarkup).toContain('>Content<');
     expect(navMarkup).toContain('>Semantic type<');
     expect(navMarkup).toContain('>Accessible name<');
-    expect(navMarkup).toContain('Navigation landmark for primary or local menus.');
+    expect(navMarkup).not.toContain('Navigation landmark for primary or local menus.');
     expect(navMarkup).toContain('value="Primary navigation"');
     expect(navMarkup).not.toContain('>Ungroup<');
     expect(groupMarkup).toContain('>Convert<');

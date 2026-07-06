@@ -10,6 +10,7 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectOptionRow,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -63,22 +64,22 @@ const wrapperContentSection: InspectorSectionDefinition = {
                 }
               >
                 <SelectTrigger className="h-7 text-[11px]">
-                  <SelectValue />
+                  <SelectValue>
+                    {SEMANTIC_CONTAINER_OPTIONS.find((option) => option.value === node.subtype)?.label}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-56">
                   {SEMANTIC_CONTAINER_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      <div className="flex flex-col">
-                        <span>{option.label}</span>
-                        <span className="editor-text-muted text-[10px]">{option.description}</span>
-                      </div>
+                    <SelectItem key={option.value} value={option.value} textValue={option.label}>
+                      <SelectOptionRow
+                        label={option.label}
+                        description={option.description}
+                        descriptionClassName="text-[10px]"
+                      />
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="editor-text-muted mt-1 text-[11px] leading-4">
-                {SEMANTIC_CONTAINER_OPTIONS.find((option) => option.value === node.subtype)?.description}
-              </p>
             </FormField>
             <FormField label="Accessible name">
               <Input
