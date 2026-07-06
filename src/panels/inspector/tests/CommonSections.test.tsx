@@ -85,6 +85,7 @@ describe('panels/inspector/CommonSections', () => {
           onWrapperStyleChange: () => {},
           onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
+          onUngroupNode: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
       />,
@@ -135,6 +136,7 @@ describe('panels/inspector/CommonSections', () => {
           onWrapperStyleChange: () => {},
           onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
+          onUngroupNode: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
       />,
@@ -190,6 +192,7 @@ describe('panels/inspector/CommonSections', () => {
           onWrapperStyleChange: () => {},
           onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
+          onUngroupNode: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
       />,
@@ -241,6 +244,7 @@ describe('panels/inspector/CommonSections', () => {
           onWrapperStyleChange: () => {},
           onContainerChildBoundaryChange: () => {},
           onSetNodeVisibility: () => {},
+          onUngroupNode: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
       />,
@@ -345,6 +349,7 @@ describe('panels/inspector/CommonSections', () => {
           onPromote: () => {},
           onDemote: () => {},
           onSetNodeVisibility: () => {},
+          onUngroupNode: () => {},
           onSetTopLevelWrapperVisibility: () => {},
         }}
       />,

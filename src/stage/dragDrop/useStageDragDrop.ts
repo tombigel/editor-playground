@@ -300,7 +300,7 @@ export function useStageDragDrop({
     activePointerIdRef.current = event.pointerId;
     // Pointer capture is deferred to beginSessionFromPending so that
     // simple clicks (including dblclick) are never redirected to the stage.
-  }, [document, onSelect, selectedIds, snapSettings, stageElement]);
+  }, [document, selectedIds, snapSettings, stageElement]);
 
   const handlePointerMove = useCallback((event: PointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) {

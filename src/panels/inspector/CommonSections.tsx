@@ -244,6 +244,7 @@ export function NodeBasicsSection({
     | 'onContainerChildBoundaryChange'
     | 'onSetNodeVisibility'
     | 'onSetTopLevelWrapperVisibility'
+    | 'onUngroupNode'
   > & {
     onEnterFocusedMode?: InspectorActionHandlers['onEnterFocusedMode'];
   };
