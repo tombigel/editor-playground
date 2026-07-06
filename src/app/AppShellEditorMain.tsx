@@ -41,6 +41,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 		onLayersOpenChange,
 		onCloseLayers,
 		onOpenSectionTemplates,
+		onOpenContainerTypes,
 		onOpenTextTypes,
 		onOpenMediaTypes,
 		onManageFontsOpenChange,
@@ -207,11 +208,9 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 					<div className="flex h-full flex-col overflow-visible p-3">
 						<InsertPanel
 							onOpenSectionTemplates={onOpenSectionTemplates}
+							onOpenContainerTypes={onOpenContainerTypes}
 							onOpenTextTypes={onOpenTextTypes}
 							onOpenMediaTypes={onOpenMediaTypes}
-							onInsertWrapper={(role) =>
-								dispatch({ type: "insertWrapper", role })
-							}
 							onInsertLeaf={(role) => dispatch({ type: "insertLeaf", role })}
 							layersOpen={layersOpen}
 							onOpenLayers={onOpenLayers}
@@ -508,6 +507,16 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onWrapperStyleChange={(field, value) =>
 							dispatch({ type: "wrapperStyle", field, value })
 						}
+						onContainerSemanticTypeChange={(id, subtype) =>
+							dispatch({ type: "containerSemanticType", id, subtype })
+						}
+						onContainerAriaLabelChange={(id, value) =>
+							dispatch({ type: "containerAriaLabel", id, value })
+						}
+						onConvertGroupToContainer={(id) =>
+							dispatch({ type: "convertGroupToContainer", id })
+						}
+						onUngroupNode={(id) => dispatch({ type: "ungroupNode", id })}
 						onContainerChildBoundaryChange={(value) =>
 							dispatch({ type: "containerChildBoundary", value })
 						}

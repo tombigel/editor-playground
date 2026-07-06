@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { isContainerNode } from '../../api/documentViewApi';
 import type { FocusedMode } from '../../api/editorApi';
+import type { ContainerSubtype } from '../../api/documentApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NoticeSurface } from '@/components/ui/settings-panel';
@@ -44,7 +45,7 @@ export function StickySection({
 }) {
   const forceAutoDuration =
     isContainerNode(node) &&
-    node.subtype !== 'container' &&
+    !isSemanticContainerSubtype(node.subtype) &&
     (node.sticky?.target ?? 'self') === 'self';
   return (
     <InspectorSectionCard
@@ -203,6 +204,10 @@ export function StickySection({
         ) : null}
     </InspectorSectionCard>
   );
+}
+
+function isSemanticContainerSubtype(subtype: ContainerSubtype) {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 function edgeValue(node: NonSiteInspectorNode) {

@@ -190,7 +190,11 @@ export function isLayersNodeDraggable(node: LayersTreeNode) {
       node.subtype === 'section' ||
       node.subtype === 'header' ||
       node.subtype === 'footer' ||
-      node.subtype === 'container'
+      node.subtype === 'container' ||
+      node.subtype === 'nav' ||
+      node.subtype === 'aside' ||
+      node.subtype === 'article' ||
+      node.subtype === 'group'
     )
   );
 }

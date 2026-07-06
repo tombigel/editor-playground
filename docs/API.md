@@ -467,6 +467,11 @@ Source: `src/api/documentApi.ts`
 | `expandParentHeightDoc` | `(document, { parentId, minHeightPx }) -> DocumentModel` | Grow a container height to at least the requested px size, preserving authored `auto` height |
 | `resolveContainerChildBoundary` | `(document, containerId) -> ContainerChildBoundary` | Resolve a wrapper policy, defaulting to `anchor` |
 | `setContainerChildBoundaryDoc` | `(document, containerId, childBoundary) -> DocumentModel` | Set wrapper child overflow policy |
+| `setContainerSemanticTypeDoc` | `(document, nodeId, subtype) -> DocumentModel` | Change a semantic container between `container`, `nav`, `aside`, and `article` |
+| `setContainerAriaLabelDoc` | `(document, nodeId, value) -> DocumentModel` | Set or clear a semantic container accessible label |
+| `groupNodesDoc` | `(document, nodeIds) -> DocumentModel` | Create or consolidate an editor group around selected sibling nodes while preserving visual placement |
+| `ungroupNodeDoc` | `(document, groupId) -> DocumentModel` | Remove a group wrapper and reparent its children without visual movement |
+| `convertGroupToContainerDoc` | `(document, groupId) -> DocumentModel` | Convert a group into a plain container; conversion is one-way |
 
 These helpers are the API-first surface used by editor drag/drop and keyboard movement. They keep movement and reparent placement deterministic without depending on stage DOM state. Movement and reparent helpers accept `options.parentExpansion?: { parentId, minHeightPx }` so an `anchor` / Allow overflow drag commit can move the child and grow the parent in one model mutation. Parents with authored `auto` height ignore expansion requests and keep their authored height value.
 
@@ -815,9 +820,10 @@ type LeafNode = MediaNode | TextNode;
 ```typescript
 type ContainerNode = BaseNode & {
   contentType: 'container';
-  subtype: ContainerSubtype;  // 'section' | 'header' | 'footer' | 'container' | 'group'
+  subtype: ContainerSubtype;  // 'section' | 'header' | 'footer' | 'container' | 'group' | 'nav' | 'aside' | 'article'
   rect: RectModel;
   layout?: ContainerLayout;
+  ariaLabel?: string;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;
   pageTargetIds?: PageId[];
@@ -1203,7 +1209,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Document and Editor API
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
-- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
+- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
 - `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgStrokeCap`, `SvgStrokeJoin`, `SvgStrokePaintOrder`, `SvgStrokeStyle`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
@@ -1240,7 +1246,7 @@ This index keeps the split API reference synchronized with the public export sur
 - `RichTextLeaf`, `RichTextLink`, `RichInlineNode`, `RichBlockStyle`, `StandaloneTextNodeSnapshot`
 - `RichCodeLine`, `RichCodeBlock`, `RichListItem`, `RichUnorderedListBlock`, `RichOrderedListBlock`, `RichListBlock`
 - `TextDocumentBlocks`, `TemplateBuild`, `TemplateNode`, `TextStyleOptions`, `BoxPadding`
-- `ContainerLayout`, `ContainerChildBoundary`, `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
+- `ContainerSubtype`, `ContainerLayout`, `ContainerChildBoundary`, `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
 
 ### `schemaVersion` in exported documents
 

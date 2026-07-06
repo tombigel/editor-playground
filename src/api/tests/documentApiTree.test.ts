@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { createContainerNode, createMediaNode, createTextNode } from '../../model/defaults';
+import { parseUnitValue } from '../../model/units';
 import {
+  convertGroupToContainerDoc,
   createInitialDocument,
   deleteNodeDoc,
   deleteNodesDoc,
   demoteWrapperRoleDoc,
+  groupNodesDoc,
   moveNodeInTreeDoc,
   promoteWrapperRoleDoc,
   reorderNodeDoc,
@@ -12,7 +15,10 @@ import {
   reparentNodeDoc,
   reparentNodeAtDoc,
   reparentNodesAtDoc,
+  setContainerAriaLabelDoc,
+  setContainerSemanticTypeDoc,
   switchSubtypeDoc,
+  ungroupNodeDoc,
 } from '../documentApi';
 
 function getRoot(document: ReturnType<typeof createInitialDocument>) {
@@ -39,7 +45,106 @@ function getSection(document: ReturnType<typeof createInitialDocument>) {
   return section;
 }
 
+function getRectNode(document: ReturnType<typeof createInitialDocument>, id: string) {
+  const node = document.nodes[id];
+  if (!node || node.contentType === 'site') {
+    throw new Error(`Expected rect-bearing node ${id}`);
+  }
+  return node;
+}
+
 describe('api/documentApi tree operations', () => {
+  describe('semantic containers and groups', () => {
+    it('converts only semantic container subtypes and stores aria labels', () => {
+      const document = structuredClone(createInitialDocument());
+      const section = getSection(document);
+      const container = createContainerNode('container', section.id);
+      section.children.push(container.id);
+      document.nodes[container.id] = container;
+
+      const navDoc = setContainerSemanticTypeDoc(document, container.id, 'nav');
+      const nav = navDoc.nodes[container.id];
+      expect(nav?.contentType === 'container' && nav.subtype).toBe('nav');
+
+      const labeledDoc = setContainerAriaLabelDoc(navDoc, container.id, ' Primary navigation ');
+      const labeled = labeledDoc.nodes[container.id];
+      expect(labeled?.contentType === 'container' && labeled.ariaLabel).toBe('Primary navigation');
+
+      const unchangedGroup = createContainerNode('group', section.id);
+      section.children.push(unchangedGroup.id);
+      document.nodes[unchangedGroup.id] = unchangedGroup;
+      expect(setContainerSemanticTypeDoc(document, unchangedGroup.id, 'article')).toBe(document);
+    });
+
+    it('groups and ungroups same-parent nodes while preserving visual coordinates', () => {
+      const document = structuredClone(createInitialDocument());
+      const section = getSection(document);
+      const first = createTextNode('block', section.id);
+      const second = createTextNode('block', section.id);
+      first.rect.x.base = parseUnitValue('80px');
+      first.rect.y.base = parseUnitValue('90px');
+      first.rect.width.base = parseUnitValue('120px');
+      first.rect.height.base = parseUnitValue('40px');
+      second.rect.x.base = parseUnitValue('260px');
+      second.rect.y.base = parseUnitValue('140px');
+      second.rect.width.base = parseUnitValue('100px');
+      second.rect.height.base = parseUnitValue('50px');
+      section.children.push(first.id, second.id);
+      document.nodes[first.id] = first;
+      document.nodes[second.id] = second;
+
+      const grouped = groupNodesDoc(document, [first.id, second.id]);
+      const group = Object.values(grouped.nodes).find(
+        (node) => node.contentType === 'container' && node.subtype === 'group' && node.children.includes(first.id),
+      );
+      if (!group || group.contentType !== 'container') {
+        throw new Error('Expected group');
+      }
+
+      expect(group.rect.x.base.raw).toBe('80px');
+      expect(group.rect.y.base.raw).toBe('90px');
+      expect(group.rect.width.base.raw).toBe('fit-content');
+      expect(group.rect.height.base.raw).toBe('auto');
+      const groupedFirst = getRectNode(grouped, first.id);
+      const groupedSecond = getRectNode(grouped, second.id);
+      expect(groupedFirst.rect.x.base.raw).toBe('0px');
+      expect(groupedFirst.rect.y.base.raw).toBe('0px');
+      expect(groupedSecond.rect.x.base.raw).toBe('180px');
+      expect(groupedSecond.rect.y.base.raw).toBe('50px');
+
+      const ungrouped = ungroupNodeDoc(grouped, group.id);
+      expect(ungrouped.nodes[first.id].parentId).toBe(section.id);
+      const ungroupedFirst = getRectNode(ungrouped, first.id);
+      const ungroupedSecond = getRectNode(ungrouped, second.id);
+      expect(ungroupedFirst.rect.x.base.raw).toBe('80px');
+      expect(ungroupedFirst.rect.y.base.raw).toBe('90px');
+      expect(ungroupedSecond.rect.x.base.raw).toBe('260px');
+      expect(ungroupedSecond.rect.y.base.raw).toBe('140px');
+      expect(ungrouped.nodes[group.id]).toBeUndefined();
+    });
+
+    it('converts groups to containers without allowing reverse conversion', () => {
+      const document = structuredClone(createInitialDocument());
+      const section = getSection(document);
+      const child = createTextNode('block', section.id);
+      section.children.push(child.id);
+      document.nodes[child.id] = child;
+
+      const grouped = groupNodesDoc(document, [child.id]);
+      const group = Object.values(grouped.nodes).find(
+        (node) => node.contentType === 'container' && node.subtype === 'group',
+      );
+      if (!group || group.contentType !== 'container') {
+        throw new Error('Expected group');
+      }
+
+      const converted = convertGroupToContainerDoc(grouped, group.id);
+      const wrapper = converted.nodes[group.id];
+      expect(wrapper?.contentType === 'container' && wrapper.subtype).toBe('container');
+      expect(convertGroupToContainerDoc(converted, group.id)).toBe(converted);
+    });
+  });
+
   describe('deleteNodeDoc / deleteNodesDoc', () => {
     it('removes a node and its descendants and detaches it from the parent', () => {
       const document = structuredClone(createInitialDocument());

@@ -27,6 +27,28 @@ describe('site/siteExport', () => {
     expect(html).toContain('<main class="sp-site-main">');
   });
 
+  it('exports semantic container subtypes with accessible labels', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const nav = createContainerNode('nav', section.id);
+    nav.ariaLabel = 'Primary navigation';
+    section.children.push(nav.id);
+    document.nodes[nav.id] = nav;
+
+    const html = renderSiteHtmlDocument(document);
+
+    expect(html).toContain(`<nav class="sp-node sp-node-${nav.id} sp-role-nav sp-wrapper"`);
+    expect(html).toContain(`data-node-id="${nav.id}"`);
+    expect(html).toContain('aria-label="Primary navigation"');
+    expect(html).not.toContain(`role="navigation"`);
+  });
+
   it('exports wrapped standalone code markup inside the leaf width shell', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

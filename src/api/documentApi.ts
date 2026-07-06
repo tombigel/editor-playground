@@ -128,9 +128,11 @@ export {
 } from './documentApi/clipboard';
 export {
   convertTextNodeDoc,
+  convertGroupToContainerDoc,
   demoteWrapperRoleDoc,
   deleteNodeDoc,
   deleteNodesDoc,
+  groupNodesDoc,
   mergeTextNodesToRichDoc,
   moveNodeInTreeDoc,
   promoteWrapperRoleDoc,
@@ -139,8 +141,11 @@ export {
   reparentNodeDoc,
   reparentNodeAtDoc,
   reparentNodesAtDoc,
+  setContainerAriaLabelDoc,
+  setContainerSemanticTypeDoc,
   splitRichTextNodeDoc,
   switchSubtypeDoc,
   switchTextSubtypeDoc,
+  ungroupNodeDoc,
 } from './documentApi/tree';
-export type { PromoteWrapperRoleOptions } from './documentApi/tree';
+export type { PromoteWrapperRoleOptions, SemanticContainerSubtype } from './documentApi/tree';

@@ -31,10 +31,12 @@ function createProps(): ComponentProps<typeof AppShell> {
 		settingsOpen: false,
 		helpOpen: false,
 		sectionTemplateOpen: false,
+		containerTypeOpen: false,
 		textTypeOpen: false,
 		mediaTypeOpen: false,
 		settingsPanelRef: null,
 		sectionTemplatePanelRef: null,
+		containerTypePanelRef: null,
 		textTypePanelRef: null,
 		mediaTypePanelRef: null,
 		documentJson: "{}",
@@ -43,6 +45,10 @@ function createProps(): ComponentProps<typeof AppShell> {
 		onOpenSectionTemplates: () => undefined,
 		onSectionTemplateOpenChange: () => undefined,
 		onCloseSectionTemplates: () => undefined,
+		onOpenContainerTypes: () => undefined,
+		onContainerTypeOpenChange: () => undefined,
+		onCloseContainerTypes: () => undefined,
+		onInsertContainerType: () => undefined,
 		onOpenTextTypes: () => undefined,
 		onTextTypeOpenChange: () => undefined,
 		onCloseTextTypes: () => undefined,
@@ -129,12 +135,27 @@ describe("app/AppShell", () => {
 		expect(markup).toContain('data-panel-trigger="components"');
 		expect(markup).toContain('data-panel-trigger="pages"');
 		expect(markup).toContain('data-panel-trigger="ai"');
+		expect(markup).toContain('data-panel-trigger="container-types"');
 		expect(markup).toContain('data-panel-trigger="media-types"');
 		expect(markup).toContain('aria-label="Components"');
 		expect(markup).toContain('aria-label="Pages"');
 		expect(markup).toContain('aria-label="AI Assistant"');
 		expect(markup).toContain("editor-rail-entry-button");
 		expect(markup).toContain("editor-rail-toggle-button");
+	});
+
+	it("renders the container type flyout when the container add panel is open", () => {
+		const props = createProps();
+		props.containerTypeOpen = true;
+
+		const markup = renderToStaticMarkup(<AppShell {...props} />);
+
+		expect(markup).toContain("Insert container");
+		expect(markup).toContain('data-container-type-role="container"');
+		expect(markup).toContain('data-container-type-role="nav"');
+		expect(markup).toContain('data-container-type-role="aside"');
+		expect(markup).toContain('data-container-type-role="article"');
+		expect(markup).not.toContain('data-container-type-role="group"');
 	});
 
 	it("renders a token-backed storage warning with the persisted payload size", () => {

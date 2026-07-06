@@ -72,7 +72,7 @@ The playground exists to test:
 | `contentType` | `subtype` values | Notes |
 |---|---|---|
 | `site` | — | Document root; exactly one per document. |
-| `container` | `section`, `header`, `footer`, `container`, `group` | Structural layout nodes. |
+| `container` | `section`, `header`, `footer`, `container`, `group`, `nav`, `aside`, `article` | Structural layout nodes plus semantic nestable wrappers. |
 | `text` | `block`, `rich`, `code`, `list` | Text content nodes. |
 | `media` | `image`, `video`, `svg`, `embed` | Media content nodes. |
 
@@ -222,11 +222,15 @@ The control uses a compact dropdown trigger. Opening it shows page-targeting mod
 | `header` | yes | no | no | no | no |
 | `footer` | yes | no | no | no | no |
 | `container` | yes | yes | yes | yes | no |
+| `nav`, `aside`, `article` | yes | yes | yes | yes | no |
+| `group` | no visual surface | no | no | no | no |
 
 Shared rules:
 
 - Wrappers do not get an implicit visible border by default.
 - Wrapper visual styling is applied on the inner `contentWrapper` surface rather than on the outer layout shell.
+- `nav`, `aside`, and `article` behave like nestable containers for layout, insertion, drag/drop, snapping, ordering, padding, design controls, and export classes, but export as their matching semantic HTML tags.
+- `group` is an editor control wrapper for grouping selected nodes. It is not offered as an add-panel type, has no full container design surface, and can only be converted one-way into a plain `container`.
 
 ### Section type
 
@@ -270,10 +274,10 @@ The section design controls expose a dedicated bottom divider editor:
 
 | Parent | Allowed children | Disallowed children |
 |---|---|---|
-| `section`, `header`, `footer` | containers, leaves | other `section`, `header`, `footer` |
-| `container` | containers, leaves | none beyond validation rules |
+| `section`, `header`, `footer` | containers, semantic containers, groups, leaves | other `section`, `header`, `footer` |
+| `container`, `nav`, `aside`, `article`, `group` | containers, semantic containers, groups, leaves | top-level structural wrappers |
 
-This keeps site sections top-level while still allowing deep nested layout composition through containers.
+This keeps site sections top-level while still allowing deep nested layout composition through containers and semantic wrappers.
 
 ## Layout Model
 
@@ -311,10 +315,10 @@ Drag preview and drop targeting:
 - The dragged source node fades and suppresses local box/filter shadows so the drag silhouette stays clean.
 - The drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it.
 - Pointer-up commits preserve the last visible drag preview position; releasing without moving the pointer does not introduce a new snap target.
-- Hovering a valid drop target (`section` or `container`) highlights that wrapper with an accent-colored outline and tinted background.
+- Hovering a valid drop target (`section`, `container`, `nav`, `aside`, `article`, or `group`) highlights that wrapper with an accent-colored outline and tinted background.
 - Highlighted drop targets with non-zero wrapper padding also render the padding boundary line so the drop inset is visible.
 - While dragging a child inside its current parent, that source parent and its ancestors are not highlighted as drop targets.
-- When dragging a `container` wrapper, its structural source parent (`section`, `header`, `footer`) may still highlight.
+- When dragging a `container`, `nav`, `aside`, `article`, or `group` wrapper, its structural source parent (`section`, `header`, `footer`) may still highlight.
 - Each wrapper has a **Child overflow** policy. The default **Allow overflow** option maps to `anchor`: the child origin (`x`,`y`) stays inside the target content box while the child body may peek outside. **Keep inside** maps to `box`: the full child box stays inside the target content box.
 - With the default **Allow overflow** / `anchor` policy, dragging below the target wrapper's bottom edge commits the resolved child position and grows the parent height enough to contain the preview bottom. Parents authored with `auto` height preserve `auto` instead of receiving a generated pixel height. **Keep inside** / `box` keeps the full child box inside the target content box instead.
 
@@ -937,7 +941,7 @@ This section describes how compact editor controls author values without losing 
 |---|---|
 | `X`, `Y` | Fixed `px` fields with static suffixes. |
 | Structural wrapper `X`, `Y` | Hidden for `section`, `header`, and `footer` because those positions are structural. |
-| Wrapper padding | Exposed directly in `Layout` for `section`, `header`, `footer`, and `container` using four unit-selectable spacing inputs. |
+| Wrapper padding | Exposed directly in `Layout` for `section`, `header`, `footer`, `container`, `nav`, `aside`, and `article` using four unit-selectable spacing inputs. |
 | `Width`, `Height` | Shared composite shell with value segment plus unit-or-mode segment. |
 | Width modes | Numeric `px` / `%`, plus `fit-content`, `min-content`, `max-content`. |
 | Non-section height modes | Numeric `px` / `%`, plus `auto` and `aspect-ratio(...)`. |
@@ -985,7 +989,7 @@ Additional geometry rules:
 
 ### Selection overlays and known limitation
 
-- When a `section`, `header`, `footer`, or `container` is selected, or when any descendant inside it is selected, the stage draws a thin dashed accent-blue rectangle at the inner content boundary of that wrapper's padding box.
+- When a `section`, `header`, `footer`, `container`, `nav`, `aside`, or `article` is selected, or when any descendant inside it is selected, the stage draws a thin dashed accent-blue rectangle at the inner content boundary of that wrapper's padding box.
 - The overlay is purely visual and exists to show where the `contentWrapper` padding starts and ends while editing nested content.
 - Deferred limitation: child `height: %` conversion inside `section`, `header`, and `footer` wrappers remains intentionally unresolved. Those wrappers still render explicit authored height as `min-height` for editor growth behavior, so inspector conversion does not yet reinterpret that box as a reliable `%` height reference.
 
@@ -1100,7 +1104,7 @@ For self-target sticky guides in the editor preview, `durationMode=auto` uses th
 ### Renderer boundary
 
 - The site renderer is detached from editor interactions such as drag, resize, selection, and diagnostics.
-- It renders semantic wrapper tags (`header`, `section`, `footer`, `div`) plus the authored leaf tags and content.
+- It renders semantic wrapper tags (`header`, `section`, `footer`, `nav`, `aside`, `article`, `div`) plus the authored leaf tags and content. Semantic container `ariaLabel` exports as `aria-label`; no redundant ARIA role is added for native semantic tags.
 - It preserves authored width keywords and text HTML tags.
 - It uses the same mesh-grid child placement baseline as the editor stage instead of falling back to absolute-position export.
 - It carries the renderer's default presentation layer for text, links, buttons, and images into exported CSS, then layers authored model values on top.
@@ -1507,6 +1511,8 @@ Selection rules:
 - A plain second click on an already-selected node in a multi-selection collapses the selection back to just that node.
 - Top-level structural wrappers with role `section`, `header`, or `footer` are single-select only and are removed from any attempted multi-selection set.
 - Hidden selections are also single-select only; if a hidden node enters the selection, the selection collapses to that hidden node.
+- `Cmd/Ctrl+G` groups selected same-parent nodes through `groupNodesDoc`; `Shift+Cmd/Ctrl+G` ungroups a selected group through `ungroupNodeDoc`.
+- Multiple selected groups are consolidated into one group. Grouping, ungrouping, and converting a group to a container preserve visual placement.
 
 Supported operations:
 
@@ -1535,6 +1541,8 @@ Single-node inspector:
 - Text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`.
 - Standalone block text keeps its editable HTML tag in `Content`; `Text style` remains typography-only.
 - Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
+- Semantic containers expose a `Content` section with a type selector for `Container`, `Nav`, `Aside`, and `Article`, plus an `ARIA label` field. `aria-labelledby` is deferred until stable element ids are available.
+- Group inspectors expose only a `Convert to container` control in `Content`; containers cannot be converted back into groups.
 - Link-enabled standalone text nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
 - Hidden selections keep `Layout` editable, including visibility controls, and disable all other inspector blocks.
 

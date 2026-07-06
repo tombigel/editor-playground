@@ -807,11 +807,15 @@ function canAcceptClipboardChild(parent: DocumentNode | undefined, child: Docume
   if (isLeafNode(child)) {
     return true;
   }
-  return isContainerNode(child) && child.subtype === 'container';
+  return isContainerNode(child) && isNestableContainer(child);
 }
 
 function isStructuralContainer(node: DocumentNode): node is ContainerNode {
   return isContainerNode(node) && (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer');
+}
+
+function isNestableContainer(node: ContainerNode) {
+  return node.subtype === 'container' || node.subtype === 'nav' || node.subtype === 'aside' || node.subtype === 'article' || node.subtype === 'group';
 }
 
 function isDescendantOf(document: DocumentModel, candidateId: NodeId, ancestorId: NodeId): boolean {

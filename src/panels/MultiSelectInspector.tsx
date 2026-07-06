@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PopoverTooltip } from '@/components/ui/popover';
 import { SearchableSelect } from '@/components/ui/searchable-select';
-import { parseUnitValue } from '../api/documentApi';
+import { parseUnitValue, type ContainerSubtype } from '../api/documentApi';
 import type { DocumentModel, DocumentNode } from '../api/editorApi';
 import {
   BOLD_FONT_WEIGHT,
@@ -116,7 +116,7 @@ export function MultiSelectInspector({
     isTextNode(node) && !node.style?.background,
   );
   const backgroundWrapperIds = selectedNodes.flatMap((node) =>
-    isContainerNode(node) && node.subtype === 'container' ? [node.id] : [],
+    isContainerNode(node) && isSemanticContainerSubtype(node.subtype) ? [node.id] : [],
   );
   const backgroundLeafIds = selectedNodes.flatMap((node) =>
     isTextNode(node) && node.link !== undefined && node.style?.background !== undefined ? [node.id] : [],
@@ -154,7 +154,7 @@ export function MultiSelectInspector({
   const filterShadowState = resolveSharedShadow(filterShadowNodes.map((node) => node.style));
   const backgroundState = resolveSharedString(
     selectedNodes.flatMap((node) => {
-      if (isContainerNode(node) && node.subtype === 'container') {
+      if (isContainerNode(node) && isSemanticContainerSubtype(node.subtype)) {
         return [node.style?.background ?? ''];
       }
       if (isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) {
@@ -164,7 +164,7 @@ export function MultiSelectInspector({
     }),
   );
   const radiusValues = selectedNodes.flatMap((node) => {
-    if (isContainerNode(node) && node.subtype === 'container') {
+    if (isContainerNode(node) && isSemanticContainerSubtype(node.subtype)) {
       return [node.style?.borderRadius?.raw ?? ''];
     }
     if ((isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) || (isMediaNode(node) && node.subtype === 'image')) {
@@ -176,7 +176,7 @@ export function MultiSelectInspector({
   const radiusUnitState = resolveSharedParsedUnit(radiusValues);
   const boxShadowState = resolveSharedShadow(
     selectedNodes.flatMap((node) => {
-      if (isContainerNode(node) && node.subtype === 'container') {
+      if (isContainerNode(node) && isSemanticContainerSubtype(node.subtype)) {
         return [node.style];
       }
       if ((isTextNode(node) && node.link !== undefined && node.style?.background !== undefined) || (isMediaNode(node) && node.subtype === 'image')) {
@@ -600,7 +600,11 @@ function canAlignSelection(selectedNodes: DocumentNode[]) {
 }
 
 function isMovableAlignmentNode(node: DocumentNode) {
-  return isLeafNode(node) || (isContainerNode(node) && node.subtype === 'container');
+  return isLeafNode(node) || (isContainerNode(node) && isSemanticContainerSubtype(node.subtype));
+}
+
+function isSemanticContainerSubtype(subtype: ContainerSubtype) {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 function resolveSharedParsedUnit(values: string[]) {

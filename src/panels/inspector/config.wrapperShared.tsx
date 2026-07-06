@@ -1,8 +1,97 @@
 import { AnimationSection } from './AnimationSection';
-import { WrapperDesignSection } from './CommonSections';
+import { createFocusedModeEntry, InspectorSectionCard, WrapperDesignSection } from './CommonSections';
 import { StickySection } from './StickySection';
 import { basicsSection, createSectionBlock, summaryBlock } from './config.common';
 import type { InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, WrapperInspectorNode } from './types';
+import { FormField } from '../InspectorControls';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const SEMANTIC_CONTAINER_OPTIONS = [
+  { value: 'container', label: 'Container', description: 'Generic layout wrapper with no landmark meaning.' },
+  { value: 'nav', label: 'Nav', description: 'Navigation landmark for primary or local menus.' },
+  { value: 'aside', label: 'Aside', description: 'Complementary content related to the surrounding section.' },
+  { value: 'article', label: 'Article', description: 'Standalone content that can make sense on its own.' },
+] as const;
+
+const wrapperContentSection: InspectorSectionDefinition = {
+  id: 'wrapper-content',
+  render: ({ node, actions, focusedMode }) =>
+    isWrapperNode(node) ? (
+      <InspectorSectionCard
+        title="Content"
+        focusedModeEntry={createFocusedModeEntry(focusedMode, 'content', actions.onEnterFocusedMode)}
+      >
+        {node.subtype === 'group' ? (
+          <div className="grid grid-cols-2 gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 justify-center text-[11px]"
+              onClick={() => actions.onConvertGroupToContainer(node.id)}
+            >
+              Convert
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 justify-center text-[11px]"
+              onClick={() => actions.onUngroupNode(node.id)}
+            >
+              Ungroup
+            </Button>
+          </div>
+        ) : node.subtype === 'container' || node.subtype === 'nav' || node.subtype === 'aside' || node.subtype === 'article' ? (
+          <div className="space-y-2.5">
+            <FormField label="Semantic type">
+              <Select
+                value={node.subtype}
+                onValueChange={(value) =>
+                  actions.onContainerSemanticTypeChange(
+                    node.id,
+                    value as (typeof SEMANTIC_CONTAINER_OPTIONS)[number]['value'],
+                  )
+                }
+              >
+                <SelectTrigger className="h-7 text-[11px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SEMANTIC_CONTAINER_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex flex-col">
+                        <span>{option.label}</span>
+                        <span className="editor-text-muted text-[10px]">{option.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="editor-text-muted mt-1 text-[11px] leading-4">
+                {SEMANTIC_CONTAINER_OPTIONS.find((option) => option.value === node.subtype)?.description}
+              </p>
+            </FormField>
+            <FormField label="Accessible name">
+              <Input
+                value={node.ariaLabel ?? ''}
+                placeholder="Accessible name"
+                onChange={(event) => actions.onContainerAriaLabelChange(node.id, event.currentTarget.value)}
+              />
+            </FormField>
+          </div>
+        ) : null}
+      </InspectorSectionCard>
+    ) : null,
+};
 
 const wrapperDesignSection: InspectorSectionDefinition = {
   id: 'wrapper-design',
@@ -29,7 +118,22 @@ const wrapperAnimationSection: InspectorSectionDefinition = {
     isWrapperNode(node) ? <AnimationSection node={node} actions={actions} focusedMode={focusedMode} /> : null,
 };
 
-export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonly InspectorBlockDefinition[] {
+export function createWrapperInspectorConfig(
+  title = 'Sticky behavior',
+  options: { includeContent?: boolean } = {},
+): readonly InspectorBlockDefinition[] {
+  const contentBlock = options.includeContent
+    ? [
+      createSectionBlock({
+        id: 'content',
+        bucket: 'primary',
+        title: 'Content',
+        description: 'Semantic wrapper role and accessible label.',
+        sections: [wrapperContentSection],
+      }),
+    ]
+    : [];
+
   return [
     summaryBlock,
     createSectionBlock({
@@ -39,6 +143,7 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
       description: 'Position, sizing, and wrapper actions.',
       sections: [basicsSection],
     }),
+    ...contentBlock,
     createSectionBlock({
       id: 'sticky-behavior',
       bucket: 'behavior',
@@ -58,6 +163,7 @@ export function createWrapperInspectorConfig(title = 'Sticky behavior'): readonl
       bucket: 'primary',
       title: 'Design',
       description: 'Wrapper visual styling.',
+      when: ({ node }) => !isWrapperNode(node) || node.subtype !== 'group',
       sections: [wrapperDesignSection],
     }),
   ];

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../api/editorApi';
-import type { SvgMarkupPayload, WrapperStyleField } from '../api/documentApi';
+import type { SemanticContainerSubtype, SvgMarkupPayload, WrapperStyleField } from '../api/documentApi';
 import { createInitialDocument } from '../api/documentViewApi';
 import type { ContainerChildBoundary, PageId } from '../api/documentViewApi';
 import type { AnimationTriggerType, KeyframeAnimationEffect, HoverOutAction, ReducedMotionResponse, DocumentAnimationSettings } from '../api/animationApi';
@@ -55,6 +55,10 @@ export type InspectorPanelProps = {
   onBulkEdit?: (operations: BulkEditOperation[]) => void;
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
+  onContainerSemanticTypeChange?: (nodeId: string, subtype: SemanticContainerSubtype) => void;
+  onContainerAriaLabelChange?: (nodeId: string, value: string) => void;
+  onConvertGroupToContainer?: (nodeId: string) => void;
+  onUngroupNode?: (nodeId: string) => void;
   onContainerChildBoundaryChange: (value: ContainerChildBoundary) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onSetNodeVisibility: (id: string, value: boolean) => void;
@@ -126,6 +130,10 @@ export function InspectorPanel({
   onBulkEdit = () => undefined,
   onTextChange,
   onWrapperStyleChange,
+  onContainerSemanticTypeChange = () => undefined,
+  onContainerAriaLabelChange = () => undefined,
+  onConvertGroupToContainer = () => undefined,
+  onUngroupNode = () => undefined,
   onContainerChildBoundaryChange,
   onRectChange,
   onSetNodeVisibility,
@@ -172,6 +180,10 @@ export function InspectorPanel({
     () => ({
       onTextChange,
       onWrapperStyleChange,
+      onContainerSemanticTypeChange,
+      onContainerAriaLabelChange,
+      onConvertGroupToContainer,
+      onUngroupNode,
       onContainerChildBoundaryChange,
       onRectChange,
       onSetNodeVisibility,
@@ -212,7 +224,7 @@ export function InspectorPanel({
       onOpenManageFonts,
     }),
     [
-      onTextChange, onWrapperStyleChange, onContainerChildBoundaryChange, onRectChange, onPromote, onDemote,
+      onTextChange, onWrapperStyleChange, onContainerSemanticTypeChange, onContainerAriaLabelChange, onConvertGroupToContainer, onUngroupNode, onContainerChildBoundaryChange, onRectChange, onPromote, onDemote,
       onSetNodeVisibility, onSetTopLevelWrapperVisibility, resolvedActivePageId,
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,

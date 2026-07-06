@@ -60,6 +60,9 @@ describe('site/siteShared', () => {
 
     expect(children).toHaveLength(4);
     expect(getWrapperTag(section.subtype)).toBe('section');
+    expect(getWrapperTag('nav')).toBe('nav');
+    expect(getWrapperTag('aside')).toBe('aside');
+    expect(getWrapperTag('article')).toBe('article');
     expect(getNodeClassName(section)).toContain(`sp-node-${section.id}`);
     expect(getTrackClassName(section.id)).toBe(`sp-sticky-track sp-node-${section.id}-track`);
     expect(getTrackSpacerClassName(section.id, 'top')).toBe(

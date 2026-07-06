@@ -1,5 +1,6 @@
 import type { DocumentModel, DocumentNode, EditorTextField, FocusedMode, TopLevelWrapperVisibility } from '../../../api/editorApi';
 import type { SvgMarkupPayload, WrapperStyleField } from '../../../api/documentApi';
+import type { SemanticContainerSubtype } from '../../../api/documentApi';
 import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
@@ -20,6 +21,10 @@ export type WrapperInspectorNode = ContainerNode;
 export type InspectorActionHandlers = {
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
+  onContainerSemanticTypeChange: (nodeId: string, subtype: SemanticContainerSubtype) => void;
+  onContainerAriaLabelChange: (nodeId: string, value: string) => void;
+  onConvertGroupToContainer: (nodeId: string) => void;
+  onUngroupNode: (nodeId: string) => void;
   onContainerChildBoundaryChange: (value: ContainerChildBoundary) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onSetNodeVisibility: (id: string, value: boolean) => void;

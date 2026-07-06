@@ -23,6 +23,7 @@ export function createDefaultEditorPanelState(
 		componentsOpen: false,
 		pagesOpen: false,
 		sectionTemplateOpen: false,
+		containerTypeOpen: false,
 		textTypeOpen: false,
 		mediaTypeOpen: false,
 		aiOpen: false,
@@ -100,6 +101,7 @@ function closeAllPanels(state: EditorPanelState): EditorPanelState {
 		componentsOpen: false,
 		pagesOpen: false,
 		sectionTemplateOpen: false,
+		containerTypeOpen: false,
 		textTypeOpen: false,
 		mediaTypeOpen: false,
 		aiOpen: false,
@@ -140,6 +142,8 @@ function openPanel(
 			};
 		case "sectionTemplates":
 			return { ...state, sectionTemplateOpen: true };
+		case "containerTypes":
+			return { ...state, containerTypeOpen: true };
 		case "textTypes":
 			return { ...state, textTypeOpen: true };
 		case "mediaTypes":
@@ -169,6 +173,8 @@ function closePanel(state: EditorPanelState, panel: EditorPanelId): EditorPanelS
 			return { ...state, pagesOpen: false };
 		case "sectionTemplates":
 			return { ...state, sectionTemplateOpen: false };
+		case "containerTypes":
+			return { ...state, containerTypeOpen: false };
 		case "textTypes":
 			return { ...state, textTypeOpen: false };
 		case "mediaTypes":

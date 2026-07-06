@@ -111,7 +111,7 @@ function migrateSiteNode(raw: RawNode): SiteNode {
 
 function migrateWrapperNode(raw: RawNode): ContainerNode | null {
   const role = asString(raw.role);
-  const validSubtypes: ContainerSubtype[] = ['section', 'header', 'footer', 'container', 'group'];
+  const validSubtypes: ContainerSubtype[] = ['section', 'header', 'footer', 'container', 'group', 'nav', 'aside', 'article'];
   const subtype: ContainerSubtype = validSubtypes.includes(role as ContainerSubtype)
     ? (role as ContainerSubtype)
     : 'section';
@@ -129,6 +129,7 @@ function migrateWrapperNode(raw: RawNode): ContainerNode | null {
     ...(isObject(raw.sticky) ? { sticky: raw.sticky as ContainerNode['sticky'] } : {}),
     ...(isObject(raw.animation) ? { animation: raw.animation as ContainerNode['animation'] } : {}),
     ...(Array.isArray(raw.pageTargetIds) ? { pageTargetIds: asStringArray(raw.pageTargetIds) } : {}),
+    ...(typeof raw.ariaLabel === 'string' && raw.ariaLabel.trim() ? { ariaLabel: raw.ariaLabel.trim() } : {}),
     ...(isObject(raw.style) ? { style: raw.style as ContainerNode['style'] } : { style: {} as ContainerNode['style'] }),
   };
 

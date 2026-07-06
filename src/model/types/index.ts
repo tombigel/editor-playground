@@ -8,7 +8,7 @@ export type NodeId = string;
 // ---------------------------------------------------------------------------
 // Content-type discriminators (new model)
 // ---------------------------------------------------------------------------
-export type ContainerSubtype = 'section' | 'header' | 'footer' | 'container' | 'group';
+export type ContainerSubtype = 'section' | 'header' | 'footer' | 'container' | 'group' | 'nav' | 'aside' | 'article';
 export type TextSubtype = 'block' | 'rich' | 'code' | 'list';
 export type MediaSubtype = 'image' | 'video' | 'svg' | 'embed';
 export type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -528,6 +528,7 @@ export type ContainerNode = BaseNode & {
   subtype: ContainerSubtype;
   children: NodeId[];
   rect: RectModel;
+  ariaLabel?: string;
   layout?: ContainerLayout;
   sticky?: StickyDefinition;
   animation?: AnimationDefinition;

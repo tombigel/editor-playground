@@ -20,6 +20,7 @@ export type EditorPanelId =
 	| "components"
 	| "pages"
 	| "sectionTemplates"
+	| "containerTypes"
 	| "textTypes"
 	| "mediaTypes"
 	| "ai";
@@ -49,6 +50,7 @@ export type EditorPanelState = {
 	componentsOpen: boolean;
 	pagesOpen: boolean;
 	sectionTemplateOpen: boolean;
+	containerTypeOpen: boolean;
 	textTypeOpen: boolean;
 	mediaTypeOpen: boolean;
 	aiOpen: boolean;

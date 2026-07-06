@@ -168,6 +168,7 @@ describe("api/editorNavigationApi/panelState", () => {
 			componentsOpen: false,
 			pagesOpen: false,
 			sectionTemplateOpen: false,
+			containerTypeOpen: false,
 			textTypeOpen: false,
 			mediaTypeOpen: false,
 			aiOpen: false,

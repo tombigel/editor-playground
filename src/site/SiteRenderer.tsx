@@ -58,6 +58,7 @@ function renderWrapperPlan(plan: RenderWrapperPlanNode): ReactElement {
       className={plan.nodeClassName}
       data-node-id={plan.node.id}
       data-top-level={plan.isTopLevel ? 'true' : 'false'}
+      {...(plan.node.ariaLabel ? { 'aria-label': plan.node.ariaLabel } : {})}
       {...(
         plan.node.subtype === 'header' || plan.node.subtype === 'section' || plan.node.subtype === 'footer'
           ? { id: plan.node.id }

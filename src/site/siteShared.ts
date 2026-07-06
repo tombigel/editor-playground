@@ -66,7 +66,7 @@ export function splitRootWrappers(wrappers: ContainerNode[]) {
   return { header, footer, main };
 }
 
-export function getWrapperTag(subtype: ContainerSubtype): 'section' | 'header' | 'footer' | 'div' {
+export function getWrapperTag(subtype: ContainerSubtype): 'section' | 'header' | 'footer' | 'nav' | 'aside' | 'article' | 'div' {
   if (subtype === 'header') {
     return 'header';
   }
@@ -75,6 +75,15 @@ export function getWrapperTag(subtype: ContainerSubtype): 'section' | 'header' |
   }
   if (subtype === 'section') {
     return 'section';
+  }
+  if (subtype === 'nav') {
+    return 'nav';
+  }
+  if (subtype === 'aside') {
+    return 'aside';
+  }
+  if (subtype === 'article') {
+    return 'article';
   }
   return 'div';
 }

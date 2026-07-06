@@ -80,6 +80,9 @@ export function resolveWrapperRenderPlan(
 }
 
 export function buildWrapperStyle(node: ContainerNode, isTopLevel: boolean): CSSProperties {
+  if (node.subtype === 'group') {
+    return { display: 'contents' };
+  }
   return {
     width: formatValue(node.rect.width.base.parsed),
     ...(isTopLevel ? {} : { position: 'relative' }),
@@ -189,13 +192,20 @@ export function getContentWrapperPaddingStyle(node: ContainerNode): CSSPropertie
 }
 
 export function getContentWrapperBaseStyle(node: ContainerNode): CSSProperties {
+  if (node.subtype === 'group') {
+    return {
+      width: 'fit-content',
+      height: 'auto',
+    };
+  }
+
   const height = node.rect.height.base.parsed;
   const base: CSSProperties = {
     width: '100%',
   };
 
   if ('unit' in height) {
-    if (node.subtype === 'container') {
+    if (isNestableWrapperSubtype(node.subtype)) {
       base.height = formatValue(height);
     } else {
       base.minHeight = formatValue(height);
@@ -210,6 +220,10 @@ export function getContentWrapperBaseStyle(node: ContainerNode): CSSProperties {
 
   base.minHeight = `${AUTO_WRAPPER_MIN_HEIGHT_PX}px`;
   return base;
+}
+
+function isNestableWrapperSubtype(subtype: ContainerNode['subtype']) {
+  return subtype === 'container' || subtype === 'group' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 export function getLeafCssHeight(node: LeafNode) {

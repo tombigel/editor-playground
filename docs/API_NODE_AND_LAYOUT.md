@@ -32,8 +32,17 @@ Primary source: `src/api/documentApi.ts`
 - `moveNodeInTreeDoc(document, nodeId, targetParentId, targetIndex)`
 - `promoteWrapperRoleDoc(document, wrapperId, targetRole, options?)`
 - `demoteWrapperRoleDoc(document, wrapperId)`
+- `setContainerSemanticTypeDoc(document, nodeId, subtype)`
+- `setContainerAriaLabelDoc(document, nodeId, value)`
+- `groupNodesDoc(document, nodeIds)`
+- `ungroupNodeDoc(document, groupId)`
+- `convertGroupToContainerDoc(document, groupId)`
 
 `PromoteWrapperRoleOptions` accepts `replaceExisting` for the editor's confirm-replace flow; request/cancel UI state remains editor-only.
+
+Semantic container subtypes are `container`, `nav`, `aside`, and `article`. They share nesting, drag/drop, snapping, ordering, and design behavior, but render with the matching semantic HTML tag where applicable. `setContainerAriaLabelDoc` trims string values and clears the field when the value is empty.
+
+Groups are editor control wrappers, not semantic containers. `groupNodesDoc` wraps selected sibling nodes in a `group`, consolidating selected groups into the new group and preserving visual placement through authored coordinate adjustment. `ungroupNodeDoc` removes only group wrappers and preserves child placement. `convertGroupToContainerDoc` is intentionally one-way: a group can become a plain `container`, but a container cannot become a group.
 
 ## Geometry And Layout
 

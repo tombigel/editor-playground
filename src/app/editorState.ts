@@ -53,6 +53,11 @@ import {
   setTextDocumentContentDoc,
   splitRichTextNodeDoc,
   switchTextSubtypeDoc,
+  groupNodesDoc,
+  ungroupNodeDoc,
+  setContainerSemanticTypeDoc,
+  setContainerAriaLabelDoc,
+  convertGroupToContainerDoc,
 } from '../api/documentApi';
 import {
   setPresetAnimation,
@@ -139,6 +144,14 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         updateWrapperStyleField(nextState, nodeId, action.field, action.value),
       );
+    case 'containerSemanticType':
+      return { ...state, document: setContainerSemanticTypeDoc(state.document, action.id, action.subtype) };
+    case 'containerAriaLabel':
+      return { ...state, document: setContainerAriaLabelDoc(state.document, action.id, action.value) };
+    case 'convertGroupToContainer':
+      return { ...state, document: convertGroupToContainerDoc(state.document, action.id) };
+    case 'ungroupNode':
+      return ungroupSelection(state, action.id);
     case 'containerChildBoundary':
       return applySelectedNodeUpdate(state, selectedIds, (nextState, nodeId) =>
         setContainerChildBoundary(nextState, nodeId, action.value),
@@ -159,6 +172,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return deleteNode(state, action.id);
     case 'duplicateSelection':
       return selectedIds.length > 0 ? duplicateSelection(state, action.nodeIds) : state;
+    case 'groupSelection':
+      return selectedIds.length > 0 ? groupSelection(state, selectedIds) : state;
+    case 'ungroupSelection':
+      return selectedId ? ungroupSelection(state, selectedId) : state;
     case 'duplicateDraggedNodes':
       return action.nodeIds.length > 0
         ? duplicateDraggedNodes(state, action.nodeIds, action.targetParentId, action.placements, action.options)
@@ -567,6 +584,39 @@ export function editorReducer(state: EditorState, action: EditorAction) {
     default:
       return state;
   }
+}
+
+function groupSelection(state: EditorState, selectedIds: NodeId[]): EditorState {
+  const document = groupNodesDoc(state.document, selectedIds);
+  if (document === state.document) {
+    return state;
+  }
+  const insertedId = Object.keys(document.nodes).find((nodeId) => !state.document.nodes[nodeId]);
+  return {
+    ...state,
+    document,
+    selectedId: insertedId ?? state.selectedId,
+    selectedIds: insertedId ? [insertedId] : state.selectedIds,
+  };
+}
+
+function ungroupSelection(state: EditorState, selectedId: NodeId): EditorState {
+  const node = state.document.nodes[selectedId];
+  if (!node || node.contentType !== 'container' || node.subtype !== 'group') {
+    return state;
+  }
+  const childIds = [...node.children];
+  const document = ungroupNodeDoc(state.document, selectedId);
+  if (document === state.document) {
+    return state;
+  }
+  const nextSelectedIds = childIds.filter((id) => document.nodes[id]);
+  return {
+    ...state,
+    document,
+    selectedId: nextSelectedIds[0] ?? null,
+    selectedIds: nextSelectedIds,
+  };
 }
 
 function constrainSelectionForHiddenNodes(state: EditorState, selectedIds: NodeId[]) {

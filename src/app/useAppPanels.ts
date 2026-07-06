@@ -33,6 +33,7 @@ export function useAppPanels() {
 	const layersPanelRef = useRef<HTMLDivElement | null>(null);
 	const pagesPanelRef = useRef<HTMLDivElement | null>(null);
 	const sectionTemplatePanelRef = useRef<HTMLDivElement | null>(null);
+	const containerTypePanelRef = useRef<HTMLDivElement | null>(null);
 	const textTypePanelRef = useRef<HTMLDivElement | null>(null);
 	const mediaTypePanelRef = useRef<HTMLDivElement | null>(null);
 	const aiPanelRef = useRef<HTMLDivElement | null>(null);
@@ -124,6 +125,18 @@ export function useAppPanels() {
 		setPanelOpen("sectionTemplates", open);
 	}
 
+	function openContainerTypePopover(_trigger: HTMLElement) {
+		applyPanelRequest({ type: "open", panel: "containerTypes" });
+	}
+
+	function closeContainerTypePopover() {
+		applyPanelRequest({ type: "close", panel: "containerTypes" });
+	}
+
+	function handleContainerTypeOpenChange(open: boolean) {
+		setPanelOpen("containerTypes", open);
+	}
+
 	function openTextTypePopover(_trigger: HTMLElement) {
 		applyPanelRequest({ type: "open", panel: "textTypes" });
 	}
@@ -203,6 +216,11 @@ export function useAppPanels() {
 		openSectionTemplates,
 		handleSectionTemplateOpenChange,
 		closeSectionTemplatePopover,
+		containerTypeOpen: panelState.containerTypeOpen,
+		containerTypePanelRef,
+		openContainerTypePopover,
+		closeContainerTypePopover,
+		handleContainerTypeOpenChange,
 		textTypeOpen: panelState.textTypeOpen,
 		textTypePanelRef,
 		openTextTypePopover,
@@ -223,6 +241,7 @@ export function useAppPanels() {
 			panelState.componentsOpen ||
 			panelState.pagesOpen ||
 			panelState.sectionTemplateOpen ||
+			panelState.containerTypeOpen ||
 			panelState.textTypeOpen ||
 			panelState.mediaTypeOpen ||
 			panelState.aiOpen,
@@ -247,6 +266,8 @@ function getPanelOpenState(state: EditorPanelState, panel: EditorPanelId) {
 			return state.pagesOpen;
 		case "sectionTemplates":
 			return state.sectionTemplateOpen;
+		case "containerTypes":
+			return state.containerTypeOpen;
 		case "textTypes":
 			return state.textTypeOpen;
 		case "mediaTypes":

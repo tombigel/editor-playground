@@ -57,7 +57,7 @@ export type WrapperRenderPlan = {
 };
 
 export type RenderTrackSpacerEdge = 'top' | 'bottom';
-export type RenderWrapperTag = 'div' | 'section' | 'header' | 'footer';
+export type RenderWrapperTag = 'div' | 'section' | 'header' | 'footer' | 'nav' | 'aside' | 'article';
 export type RenderLeafPlanNode = {
   kind: 'leaf';
   node: RenderLeafNode;

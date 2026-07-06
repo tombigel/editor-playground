@@ -2,7 +2,7 @@
 
 Execution-ready plan for three roadmap items: **RI-12B** (semantic wrapper subtypes `nav`/`aside`/`article`), **RI-12A slice** (extended link types), and **RI-40 simple variant** (Slate-backed table block). Written to be executed by any competent coding agent with no access to prior conversations.
 
-Status: `Not started`. Owner lane: `Shared`. Predecessor: RI-11 (video, inline SVG, gradients) is fully shipped.
+Status: `In progress`. Owner lane: `Shared`. Predecessor: RI-11 (video, inline SVG, gradients) is fully shipped.
 
 ---
 
@@ -54,6 +54,7 @@ Read [AGENTS.md](../AGENTS.md) / [CLAUDE.md](../CLAUDE.md) first. Non-negotiable
 
 - Three independent workstreams: **A. semantic wrappers**, **B. link types**, **C. table block**. A and B are parallelizable (disjoint files except `src/model/types/index.ts` — coordinate or run sequentially through that file). C is the largest and depends on nothing from A/B, but its export semantics benefit from A landing first (a table often lives inside `article`/`section`).
 - One bounded change per task; sequential commits; stage only task-owned files.
+- Commit at the boundary between workstreams: close and commit Workstream A before starting B, close and commit B before starting C, and keep the final closeout as its own commit if it changes files.
 - Every functional task is **Tier 2** (docs + tests in the same commit, typecheck). The final task of each workstream and the overall closeout are **Tier 3** (`pnpm run build`).
 - Use read-only exploration before each task to re-locate anchors; do not re-plan.
 

@@ -31,6 +31,8 @@ export type ShortcutId =
   | 'copySelection'
   | 'pasteClipboard'
   | 'duplicateSelection'
+  | 'groupSelection'
+  | 'ungroupSelection'
   | 'deleteSelection'
   | 'toggleBoldSelection'
   | 'toggleItalicSelection'

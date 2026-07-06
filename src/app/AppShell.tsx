@@ -52,7 +52,7 @@ import {
 } from "../panels/inspectorLayout";
 import type { SettingsSectionId } from "../panels/settings/settingsSections";
 import type { ActionResult } from "../panels/settingsTransfer";
-import type { MediaTypeRole, TextTypeRole } from "./AppChrome";
+import type { ContainerTypeRole, MediaTypeRole, TextTypeRole } from "./AppChrome";
 import { AppShellEditorMain } from "./AppShellEditorMain";
 import { AppShellOverlays } from "./AppShellOverlays";
 import { PreviewMode } from "./AppShellPreview";
@@ -92,6 +92,7 @@ type Props = {
 	layersPosition?: { top: number; left: number };
 	pagesPosition?: { top: number; left: number };
 	sectionTemplateOpen: boolean;
+	containerTypeOpen: boolean;
 	textTypeOpen: boolean;
 	mediaTypeOpen: boolean;
 	settingsPanelRef: Ref<HTMLDivElement>;
@@ -99,6 +100,7 @@ type Props = {
 	pagesPanelRef?: Ref<HTMLDivElement>;
 	aiPanelRef?: Ref<HTMLDivElement>;
 	sectionTemplatePanelRef: Ref<HTMLDivElement>;
+	containerTypePanelRef: Ref<HTMLDivElement>;
 	textTypePanelRef: Ref<HTMLDivElement>;
 	mediaTypePanelRef: Ref<HTMLDivElement>;
 	documentJson: string;
@@ -119,6 +121,10 @@ type Props = {
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
 	onSectionTemplateOpenChange: (open: boolean) => void;
 	onCloseSectionTemplates: () => void;
+	onOpenContainerTypes: (trigger: HTMLElement) => void;
+	onContainerTypeOpenChange: (open: boolean) => void;
+	onCloseContainerTypes: () => void;
+	onInsertContainerType: (role: ContainerTypeRole) => void;
 	onOpenTextTypes: (trigger: HTMLElement) => void;
 	onTextTypeOpenChange: (open: boolean) => void;
 	onCloseTextTypes: () => void;
@@ -168,6 +174,7 @@ export function AppShell({
 	aiOpen = false,
 	aiPosition = { top: 76, left: 80 },
 	sectionTemplateOpen,
+	containerTypeOpen,
 	textTypeOpen,
 	mediaTypeOpen,
 	settingsPanelRef,
@@ -175,6 +182,7 @@ export function AppShell({
 	pagesPanelRef,
 	aiPanelRef,
 	sectionTemplatePanelRef,
+	containerTypePanelRef,
 	textTypePanelRef,
 	mediaTypePanelRef,
 	documentJson,
@@ -193,6 +201,10 @@ export function AppShell({
 	onOpenSectionTemplates,
 	onSectionTemplateOpenChange,
 	onCloseSectionTemplates,
+	onOpenContainerTypes,
+	onContainerTypeOpenChange,
+	onCloseContainerTypes,
+	onInsertContainerType,
 	onOpenTextTypes,
 	onTextTypeOpenChange,
 	onCloseTextTypes,
@@ -259,6 +271,7 @@ export function AppShell({
 			componentsOpen: layersOpen,
 			pagesOpen,
 			sectionTemplateOpen,
+			containerTypeOpen,
 			textTypeOpen,
 			mediaTypeOpen,
 			aiOpen,
@@ -282,6 +295,7 @@ export function AppShell({
 			layersOpen,
 			pagesOpen,
 			sectionTemplateOpen,
+			containerTypeOpen,
 			textTypeOpen,
 			mediaTypeOpen,
 			aiOpen,
@@ -795,6 +809,7 @@ export function AppShell({
 		editorWindowId,
 		linkPopupVisible,
 		sectionTemplateOpen,
+		containerTypeOpen,
 		textTypeOpen,
 		mediaTypeOpen,
 		setRequestedPageSettingsId,
@@ -824,6 +839,7 @@ export function AppShell({
 		pagesPanelRef,
 		aiPanelRef,
 		sectionTemplatePanelRef,
+		containerTypePanelRef,
 		textTypePanelRef,
 		mediaTypePanelRef,
 		documentJson,
@@ -846,6 +862,10 @@ export function AppShell({
 		onOpenSectionTemplates,
 		onSectionTemplateOpenChange,
 		onCloseSectionTemplates,
+		onOpenContainerTypes,
+		onContainerTypeOpenChange,
+		onCloseContainerTypes,
+		onInsertContainerType,
 		onOpenTextTypes,
 		onTextTypeOpenChange,
 		onCloseTextTypes,

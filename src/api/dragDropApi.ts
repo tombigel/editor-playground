@@ -18,7 +18,7 @@ import type {
   NodeId,
   Rect,
 } from './types';
-import { isContainerNode, isLeafNode } from '../model/types';
+import { isContainerNode, isLeafNode, type ContainerNode } from '../model/types';
 import { DRAG_COMMIT_THRESHOLD_PX } from '../lib/dragConstants';
 import { resolveContainerChildBoundary } from './documentApi/basic';
 
@@ -820,13 +820,17 @@ function isValidDropParent(
   if (isLeafNode(draggedNode)) {
     return true;
   }
-  if (!isContainerNode(draggedNode) || draggedNode.subtype !== 'container') {
+  if (!isContainerNode(draggedNode) || !isNestableWrapperSubtype(draggedNode.subtype)) {
     return false;
   }
-  if (candidate.subtype === 'container') {
+  if (isNestableWrapperSubtype(candidate.subtype)) {
     return true;
   }
   return candidate.subtype === 'section' || candidate.subtype === 'header' || candidate.subtype === 'footer';
+}
+
+function isNestableWrapperSubtype(subtype: ContainerNode['subtype']) {
+  return subtype === 'container' || subtype === 'group' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 function isValidDropParentSelection(
@@ -857,7 +861,7 @@ function shouldAllowSourceParentHighlight(
 
   return (
     isContainerNode(draggedNode) &&
-    draggedNode.subtype === 'container' &&
+    isNestableWrapperSubtype(draggedNode.subtype) &&
     (sourceParent.subtype === 'section' || sourceParent.subtype === 'header' || sourceParent.subtype === 'footer')
   );
 }

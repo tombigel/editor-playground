@@ -3,6 +3,7 @@ import { createInitialState } from '../../api/editorApi';
 import { getNodeAnimation } from '../../api/animationApi';
 import { createRichTextBlock, createRichTextLeaf, createTextDocumentContent } from '../../model/richContent';
 import { createContainerNode, createTextNode } from '../../model/defaults';
+import { parseUnitValue } from '../../model/units';
 import { editorReducer, type EditorAction } from '../editorState';
 import type { EditorState } from '../../editor/types';
 
@@ -85,6 +86,8 @@ describe('app/editorReducer empty-selection guards', () => {
     ['animationClear', { type: 'animationClear' }],
     ['mergeTextSelectionToRich', { type: 'mergeTextSelectionToRich' }],
     ['splitRichTextNode', { type: 'splitRichTextNode' }],
+    ['groupSelection', { type: 'groupSelection' }],
+    ['ungroupSelection', { type: 'ungroupSelection' }],
   ])('%s returns the same state reference with no selection', (_name, action) => {
     const state = stateWithNoSelection();
     expect(editorReducer(state, action)).toBe(state);
@@ -202,6 +205,56 @@ describe('app/editorReducer geometry and structure dispatch', () => {
       throw new Error('Expected container');
     }
     expect(untouched.subtype).toBe('section');
+  });
+
+  it('groups, ungroups, and converts semantic containers through the reducer', () => {
+    const state = createInitialState();
+    const sectionId = findSectionId(state);
+    const document = structuredClone(state.document);
+    const section = document.nodes[sectionId];
+    if (section.contentType !== 'container') {
+      throw new Error('Expected container section');
+    }
+    const first = createTextNode('block', sectionId);
+    const second = createTextNode('block', sectionId);
+    first.rect.x.base = parseUnitValue('80px');
+    first.rect.y.base = parseUnitValue('90px');
+    second.rect.x.base = parseUnitValue('180px');
+    second.rect.y.base = parseUnitValue('140px');
+    document.nodes[first.id] = first;
+    document.nodes[second.id] = second;
+    section.children.push(first.id, second.id);
+
+    const selectedState = {
+      ...state,
+      document,
+      selectedId: first.id,
+      selectedIds: [first.id, second.id],
+    };
+    const grouped = editorReducer(selectedState, { type: 'groupSelection' });
+    const groupId = grouped.selectedId;
+    const group = groupId ? grouped.document.nodes[groupId] : null;
+    if (!group || group.contentType !== 'container') {
+      throw new Error('Expected selected group');
+    }
+    expect(group.subtype).toBe('group');
+    expect(group.children).toEqual([first.id, second.id]);
+
+    const converted = editorReducer(grouped, { type: 'convertGroupToContainer', id: group.id });
+    const convertedNode = converted.document.nodes[group.id];
+    expect(convertedNode?.contentType === 'container' && convertedNode.subtype).toBe('container');
+
+    const nav = editorReducer(converted, { type: 'containerSemanticType', id: group.id, subtype: 'nav' });
+    const labeled = editorReducer(nav, { type: 'containerAriaLabel', id: group.id, value: ' Main nav ' });
+    const labeledNode = labeled.document.nodes[group.id];
+    expect(labeledNode?.contentType === 'container' && labeledNode.subtype).toBe('nav');
+    expect(labeledNode?.contentType === 'container' && labeledNode.ariaLabel).toBe('Main nav');
+
+    const ungroupSource = editorReducer(selectedState, { type: 'groupSelection' });
+    const ungrouped = editorReducer(ungroupSource, { type: 'ungroupSelection' });
+    expect(ungrouped.selectedIds).toEqual([first.id, second.id]);
+    expect(ungrouped.document.nodes[first.id].parentId).toBe(sectionId);
+    expect(ungrouped.document.nodes[second.id].parentId).toBe(sectionId);
   });
 });
 

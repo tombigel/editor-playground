@@ -263,6 +263,26 @@ export const SHORTCUT_DEFINITIONS: ShortcutDefinition[] = [
     execution: { actionId: 'duplicateSelection' },
   },
   {
+    id: 'groupSelection',
+    category: 'Edit',
+    description: 'Group selection',
+    combos: [{ code: 'KeyG', keyLabel: 'G', mod: true }],
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'groupSelection' },
+  },
+  {
+    id: 'ungroupSelection',
+    category: 'Edit',
+    description: 'Ungroup selection',
+    combos: [{ code: 'KeyG', keyLabel: 'G', mod: true, shift: true }],
+    context: {
+      requiresSelection: true,
+    },
+    execution: { actionId: 'ungroupSelection' },
+  },
+  {
     id: 'deleteSelection',
     category: 'Edit',
     description: 'Delete selection',

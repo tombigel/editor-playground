@@ -43,6 +43,9 @@ export function resolveInspectorConfigKey(node: InspectorNode | null): Inspector
     return 'site';
   }
   if (isContainerNode(node)) {
+    if (node.subtype === 'nav' || node.subtype === 'aside' || node.subtype === 'article' || node.subtype === 'group') {
+      return 'container';
+    }
     return node.subtype as InspectorConfigKey;
   }
   if (isTextNode(node)) {

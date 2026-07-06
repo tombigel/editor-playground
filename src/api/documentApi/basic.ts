@@ -2,7 +2,7 @@ import { DOCUMENT_MODEL_VERSION } from '../../lib/version';
 import { normalizeDocumentFontState } from '../../fonts';
 import { migrateDocumentModel } from '../../model/migration';
 import { stripDerivedCodeHighlightsFromTextNode } from '../../model/richContent';
-import type { ContainerChildBoundary, DocumentModel, DocumentNode, NodeId, StickyDefinition } from '../../model/types';
+import type { ContainerChildBoundary, ContainerNode, DocumentModel, DocumentNode, NodeId, StickyDefinition } from '../../model/types';
 import { isContainerNode, isLeafNode, isTextNode } from '../../model/types';
 import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import { validateDocument } from '../../model/validation';
@@ -181,7 +181,7 @@ export function setNodeSticky(
     ...node.sticky,
     ...patch,
   };
-  if (isContainerNode(node) && node.subtype === 'container' && node.sticky.target === 'contentWrapper') {
+  if (isContainerNode(node) && isSemanticContainerSubtype(node.subtype) && node.sticky.target === 'contentWrapper') {
     node.sticky.target = 'self';
   }
 
@@ -374,7 +374,11 @@ export function serializeDocumentJson(document: DocumentModel): string {
 }
 
 function isMovableAlignmentNode(node: Exclude<DocumentNode, { contentType: 'site' }>) {
-  return isLeafNode(node) || (isContainerNode(node) && node.subtype === 'container');
+  return isLeafNode(node) || (isContainerNode(node) && isSemanticContainerSubtype(node.subtype));
+}
+
+function isSemanticContainerSubtype(subtype: ContainerNode['subtype']) {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 function getAlignmentContext(document: DocumentModel, nodeIds: NodeId[]) {

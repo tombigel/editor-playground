@@ -15,8 +15,8 @@ import { PopoverTooltip } from "@/components/ui/popover";
 type LeafItemKind = 'image' | 'video' | 'svg' | 'link' | 'button';
 
 type Props = {
-	onInsertWrapper: (role: "container") => void;
 	onOpenSectionTemplates: (trigger: HTMLElement) => void;
+	onOpenContainerTypes: (trigger: HTMLElement) => void;
 	onOpenTextTypes: (trigger: HTMLElement) => void;
 	onOpenMediaTypes: (trigger: HTMLElement) => void;
 	onInsertLeaf: (role: LeafItemKind) => void;
@@ -74,8 +74,8 @@ const INSERT_ITEMS = [
 ];
 
 export function InsertPanel({
-	onInsertWrapper,
 	onOpenSectionTemplates,
+	onOpenContainerTypes,
 	onOpenTextTypes,
 	onOpenMediaTypes,
 	onInsertLeaf,
@@ -121,7 +121,9 @@ export function InsertPanel({
 							data-panel-trigger={
 								item.kind === "wrapper" && item.role === "section"
 									? "section-templates"
-									: item.kind === "textType"
+									: item.kind === "wrapper" && item.role === "container"
+										? "container-types"
+										: item.kind === "textType"
 										? "text-types"
 										: item.kind === "mediaType"
 											? "media-types"
@@ -136,7 +138,7 @@ export function InsertPanel({
 									if (item.role === "section") {
 										onOpenSectionTemplates(event.currentTarget);
 									} else {
-										onInsertWrapper(item.role);
+										onOpenContainerTypes(event.currentTarget);
 									}
 									return;
 								}

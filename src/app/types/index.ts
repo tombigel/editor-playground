@@ -11,6 +11,7 @@ import type {
   WrapperStyleField,
   ContainerChildBoundary,
 } from '../../api/documentViewApi';
+import type { ContainerSubtype, SemanticContainerSubtype } from '../../api/documentApi';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
 import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewApi';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
@@ -95,7 +96,7 @@ export type EditorAction =
   | { type: 'toggleSelect'; id: string }
   | { type: 'clearSelection' }
   | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
-  | { type: 'insertWrapper'; role: 'section' | 'container' }
+  | { type: 'insertWrapper'; role: ContainerSubtype }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
   | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'video' | 'svg' | 'link' | 'button' }
   | { type: 'adoptVideoIntrinsicRatio'; id: NodeId; ratio: number }
@@ -112,6 +113,10 @@ export type EditorAction =
   | { type: 'resize'; id: string; width: string; height: string }
   | { type: 'text'; field: EditorTextField; value: string; id?: string }
   | { type: 'wrapperStyle'; field: WrapperStyleField; value: string }
+  | { type: 'containerSemanticType'; id: string; subtype: SemanticContainerSubtype }
+  | { type: 'containerAriaLabel'; id: string; value: string }
+  | { type: 'convertGroupToContainer'; id: string }
+  | { type: 'ungroupNode'; id: string }
   | { type: 'containerChildBoundary'; value: ContainerChildBoundary }
   | { type: 'rect'; field: 'x' | 'y' | 'width' | 'height'; value: string }
   | { type: 'promote'; role: 'header' | 'footer' }
@@ -121,6 +126,8 @@ export type EditorAction =
   | { type: 'delete' }
   | { type: 'deleteNode'; id: string }
   | { type: 'duplicateSelection'; nodeIds?: NodeId[] }
+  | { type: 'groupSelection' }
+  | { type: 'ungroupSelection' }
   | {
       type: 'duplicateDraggedNodes';
       nodeIds: NodeId[];
@@ -264,6 +271,8 @@ export type ShortcutExecutionHandlers = {
     copySelection: () => void;
     pasteClipboard: () => void;
     duplicateSelection: () => void;
+    groupSelection: () => void;
+    ungroupSelection: () => void;
     toggleBoldSelection: () => void;
     toggleItalicSelection: () => void;
     toggleUnderlineSelection: () => void;

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { DocumentNode, FocusedMode } from '../api/editorApi';
 import { isContainerNode } from '../api/documentViewApi';
+import type { ContainerSubtype } from '../api/documentApi';
 import { Pin, PinOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -250,7 +251,11 @@ export function MultiStickySection({
 }
 
 function isAutoDurationLocked(node: Exclude<DocumentNode, { contentType: 'site' }>) {
-  return isContainerNode(node) && node.subtype !== 'container' && (node.sticky?.target ?? 'self') === 'self';
+  return isContainerNode(node) && !isSemanticContainerSubtype(node.subtype) && (node.sticky?.target ?? 'self') === 'self';
+}
+
+function isSemanticContainerSubtype(subtype: ContainerSubtype) {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 function readStickyEdgeValue(node: Exclude<DocumentNode, { type: 'site' }>) {

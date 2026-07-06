@@ -6,9 +6,10 @@ import type { EditorState } from '../types';
 import { applySelectionToDocument } from './shared';
 
 export function insertWrapper(state: EditorState, role: ContainerSubtype): EditorState {
+  const insertType = isNestableContainerRole(role) ? 'containerWrapper' : 'siteWrapper';
   const parentId = state.selectedId
-    ? getInsertionParent(state.document, state.selectedId, role === 'container' ? 'containerWrapper' : 'siteWrapper')
-    : role === 'container'
+    ? getInsertionParent(state.document, state.selectedId, insertType)
+    : isNestableContainerRole(role)
       ? findFirstSection(state.document) ?? state.document.rootId
       : state.document.rootId;
   const document = insertContainerDoc(state.document, role, parentId, { pageId: state.activePageId });
@@ -63,11 +64,15 @@ export function insertLeaf(state: EditorState, role: LeafInsertionRole): EditorS
 
 function findFirstSection(document: DocumentModel): NodeId | null {
   for (const node of Object.values(document.nodes)) {
-    if (isContainerNode(node) && (node.subtype === 'section' || node.subtype === 'container')) {
+    if (isContainerNode(node) && (node.subtype === 'section' || isNestableContainerRole(node.subtype))) {
       return node.id;
     }
   }
   return null;
+}
+
+function isNestableContainerRole(role: ContainerSubtype) {
+  return role === 'container' || role === 'nav' || role === 'aside' || role === 'article';
 }
 
 function getInsertionParent(

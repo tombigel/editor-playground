@@ -255,11 +255,12 @@ function appendPlanCss(plan: RenderPlanNode, rules: SharedCssRule[]) {
 }
 
 function appendWrapperPlanCss(plan: RenderWrapperPlanNode, rules: SharedCssRule[]) {
+  const isGroup = plan.node.subtype === 'group';
   rules.push({
     selector: selectorFromClassName(plan.nodeClassName),
     style: declarationsToStyleRecord([
       ...cssPropertiesToDeclarations(buildWrapperStyle(plan.node, plan.isTopLevel)),
-      ...(plan.selfStickyTrack ? [] : cssPropertiesToDeclarations(plan.meshPlacement)),
+      ...(plan.selfStickyTrack || isGroup ? [] : cssPropertiesToDeclarations(plan.meshPlacement)),
       ...getWrapperBorderDeclarations(plan.node),
       ...(plan.selfSticky ? getStickyCssDeclarations(plan.node.sticky) : []),
     ]),
@@ -270,6 +271,7 @@ function appendWrapperPlanCss(plan: RenderWrapperPlanNode, rules: SharedCssRule[
       style: declarationsToStyleRecord([
         ...cssPropertiesToDeclarations({
           ...getContentWrapperBaseStyle(plan.node),
+          ...(isGroup && !plan.selfStickyTrack ? plan.meshPlacement : {}),
           ...getContentWrapperPaddingStyle(plan.node),
           ...getContentWrapperSurfaceStyle(plan.node),
           display: 'grid',

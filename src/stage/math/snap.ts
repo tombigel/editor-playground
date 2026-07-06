@@ -143,15 +143,19 @@ function isValidDropParent(
     return true;
   }
 
-  if (!isContainerNode(draggedNode) || draggedNode.subtype !== 'container') {
+  if (!isContainerNode(draggedNode) || !isNestableWrapperSubtype(draggedNode.subtype)) {
     return false;
   }
 
-  if (candidate.subtype === 'container') {
+  if (isNestableWrapperSubtype(candidate.subtype)) {
     return true;
   }
 
   return candidate.subtype === 'section' || candidate.subtype === 'header' || candidate.subtype === 'footer';
+}
+
+function isNestableWrapperSubtype(subtype: WrapperNode['subtype']) {
+  return subtype === 'container' || subtype === 'group' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 function isDescendant(model: DocumentModel, candidateId: NodeId, targetAncestorId: NodeId) {

@@ -90,10 +90,12 @@ export function renderContainer({
   const showPaddingVisual =
     shouldShowWrapperPaddingVisual(document, node, selectedIds) ||
     shouldShowDropTargetPaddingVisual(node, isHighlightedDropTarget);
+  const groupContentPlacement = node.subtype === 'group' && !isSelfStickyTrack ? plan.meshPlacement : {};
   const contentWrapperStyle: CSSProperties = isStickyContentWrapper
     ? {
         width: '100%',
         ...getContentWrapperBaseStyle(node),
+        ...groupContentPlacement,
         ...getContentWrapperPaddingStyle(node),
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
@@ -104,6 +106,7 @@ export function renderContainer({
       }
     : {
         ...getContentWrapperBaseStyle(node),
+        ...groupContentPlacement,
         ...getContentWrapperPaddingStyle(node),
         display: 'grid',
         gridTemplateColumns: meshLayout.columnTemplate,
@@ -136,7 +139,7 @@ export function renderContainer({
       aria-label={getNodeAriaLabel(node)}
       style={{
         ...wrapperStyle,
-        ...(isSelfStickyTrack ? {} : plan.meshPlacement),
+        ...(isSelfStickyTrack || node.subtype === 'group' ? {} : plan.meshPlacement),
         ...getWrapperBorderStyle(node),
         ...wrapperStickyCss,
         ...hiddenStyle,
@@ -728,7 +731,7 @@ function shouldShowWrapperPaddingVisual(
   if (selectedIds.length === 0) {
     return false;
   }
-  if (node.subtype !== 'section' && node.subtype !== 'header' && node.subtype !== 'footer' && node.subtype !== 'container') {
+  if (!supportsPaddingVisuals(node.subtype)) {
     return false;
   }
   if (!hasNonZeroWrapperPadding(node)) {
@@ -753,8 +756,12 @@ function shouldShowDropTargetPaddingVisual(
   if (!isHighlightedDropTarget) {
     return false;
   }
-  if (node.subtype !== 'section' && node.subtype !== 'header' && node.subtype !== 'footer' && node.subtype !== 'container') {
+  if (!supportsPaddingVisuals(node.subtype)) {
     return false;
   }
   return hasNonZeroWrapperPadding(node);
+}
+
+function supportsPaddingVisuals(subtype: ContainerNode['subtype']) {
+  return subtype === 'section' || subtype === 'header' || subtype === 'footer' || subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }

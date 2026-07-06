@@ -135,16 +135,18 @@ export function createContainerNode(subtype: ContainerSubtype, parentId: NodeId)
     visible: true,
     locked: false,
     rect:
-      subtype === 'container' || subtype === 'group'
-        ? createDefaultRect('48px', '48px', '360px', '240px')
-        : createDefaultRect('0px', '0px', '100%', '480px'),
+      subtype === 'group'
+        ? createDefaultRect('48px', '48px', 'fit-content', 'auto')
+        : subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article'
+          ? createDefaultRect('48px', '48px', '360px', '240px')
+          : createDefaultRect('0px', '0px', '100%', '480px'),
     style: {
-      background: '#ffffff',
-      paddingTop: parseSpacingValue('16px'),
-      paddingRight: parseSpacingValue('16px'),
-      paddingBottom: parseSpacingValue('16px'),
-      paddingLeft: parseSpacingValue('16px'),
-      ...(subtype === 'container' || subtype === 'group'
+      background: subtype === 'group' ? 'transparent' : '#ffffff',
+      paddingTop: parseSpacingValue(subtype === 'group' ? '0px' : '16px'),
+      paddingRight: parseSpacingValue(subtype === 'group' ? '0px' : '16px'),
+      paddingBottom: parseSpacingValue(subtype === 'group' ? '0px' : '16px'),
+      paddingLeft: parseSpacingValue(subtype === 'group' ? '0px' : '16px'),
+      ...(subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article'
         ? {
             borderColor: DEFAULT_IMAGE_BORDER_COLOR,
             borderWidth: parseUnitValue(DEFAULT_IMAGE_BORDER_WIDTH),

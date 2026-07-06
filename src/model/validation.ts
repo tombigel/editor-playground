@@ -57,6 +57,10 @@ function isSiteSectionSubtype(subtype: ContainerSubtype) {
   return subtype === 'section' || subtype === 'header' || subtype === 'footer';
 }
 
+function isNestableContainerSubtype(subtype: ContainerSubtype) {
+  return subtype === 'container' || subtype === 'group' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
+}
+
 export function validateDocument(document: DocumentModel): string[] {
   const errors: string[] = [];
   const nodes = Object.values(document.nodes);
@@ -409,8 +413,8 @@ function validateRelationship(
       errors.push(`Site can only contain containers, found ${child.id}.`);
       return;
     }
-    if (child.subtype === 'container') {
-      errors.push(`Site cannot directly contain container ${child.id}.`);
+    if (isNestableContainerSubtype(child.subtype)) {
+      errors.push(`Site cannot directly contain ${child.subtype} ${child.id}.`);
     }
     return;
   }
@@ -420,7 +424,7 @@ function validateRelationship(
   if (isSiteSectionSubtype(parent.subtype) && isSiteSectionSubtype(child.subtype)) {
     errors.push(`${parent.subtype} ${parent.id} cannot contain ${child.subtype} ${child.id}.`);
   }
-  if (parent.subtype === 'container' && child.subtype !== 'container') {
+  if (isNestableContainerSubtype(parent.subtype) && !isNestableContainerSubtype(child.subtype)) {
     errors.push(`Container ${parent.id} cannot contain site section ${child.id}.`);
   }
 }

@@ -1,6 +1,7 @@
 import type { CSSProperties, ComponentType, ReactNode, Ref } from 'react';
-import { AlignLeft, Clapperboard, Code2, FileText, Heading2, ImageIcon, ListOrdered, Rows3, Shapes, TvMinimalPlay, Type } from 'lucide-react';
+import { AlignLeft, Clapperboard, Code2, FileText, Heading2, ImageIcon, ListOrdered, Navigation, Newspaper, PanelRight, Rows3, Shapes, SquareStack, TvMinimalPlay, Type } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
+import type { ContainerSubtype } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
 import { FloatingPanelShell } from '@/components/ui/floating-panel-shell';
 import { cn } from '@/lib/utils';
@@ -161,8 +162,86 @@ export function SectionTemplatePopover({
   );
 }
 
-type TextTypeRole = 'heading' | 'text' | 'list' | 'code' | 'richtext';
-type MediaTypeRole = 'image' | 'video' | 'svg';
+export type TextTypeRole = 'heading' | 'text' | 'list' | 'code' | 'richtext';
+export type MediaTypeRole = 'image' | 'video' | 'svg';
+export type ContainerTypeRole = Extract<ContainerSubtype, 'container' | 'nav' | 'aside' | 'article'>;
+
+const CONTAINER_TYPE_OPTIONS: {
+  role: ContainerTypeRole;
+  label: string;
+  description: string;
+  icon: ComponentType<{ className?: string; size?: number }>;
+}[] = [
+  { role: 'container', label: 'Container', description: 'Nestable layout wrapper', icon: SquareStack },
+  { role: 'nav', label: 'Nav', description: 'Navigation landmark', icon: Navigation },
+  { role: 'aside', label: 'Aside', description: 'Complementary content', icon: PanelRight },
+  { role: 'article', label: 'Article', description: 'Standalone content region', icon: Newspaper },
+];
+
+export function ContainerTypePopover({
+  panelRef,
+  open,
+  onOpenChange,
+  onClose,
+  onInsert,
+  suppressPopover = false,
+  style,
+}: {
+  panelRef?: Ref<HTMLDivElement>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
+  onInsert: (role: ContainerTypeRole) => void;
+  suppressPopover?: boolean;
+  style?: CSSProperties;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <FloatingPanelShell
+      ref={panelRef}
+      open={open}
+      onOpenChange={onOpenChange}
+      positionMode="absolute"
+      suppressPopover={suppressPopover}
+      className="w-[232px]"
+      style={style}
+      header={(
+        <EditorPanelHeader
+          icon={SquareStack}
+          title="Insert container"
+          description="Choose a wrapper type."
+          closeLabel="Close container type panel"
+          onClose={onClose}
+        />
+      )}
+      bodyClassName="p-2"
+    >
+      <div className="flex flex-col gap-1">
+        {CONTAINER_TYPE_OPTIONS.map(({ role, label, description, icon: Icon }) => (
+          <button
+            key={role}
+            type="button"
+            data-container-type-role={role}
+            className="editor-template-card flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--editor-focus-ring-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--editor-focus-ring-offset)]"
+            onClick={() => {
+              onInsert(role);
+              onClose();
+            }}
+          >
+            <Icon size={16} className="editor-text-muted shrink-0" />
+            <div>
+              <span className="editor-text-strong block text-xs font-semibold">{label}</span>
+              <span className="editor-text-muted mt-0.5 block text-[10px]">{description}</span>
+            </div>
+          </button>
+        ))}
+      </div>
+    </FloatingPanelShell>
+  );
+}
 
 const TEXT_TYPE_OPTIONS: {
   role: TextTypeRole;
@@ -317,8 +396,6 @@ export function MediaTypePopover({
     </FloatingPanelShell>
   );
 }
-
-export type { MediaTypeRole, TextTypeRole };
 
 export function RailToggleButton({
   icon: Icon,

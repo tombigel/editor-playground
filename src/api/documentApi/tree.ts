@@ -1,7 +1,7 @@
-import { createMediaNode } from '../../model/defaults';
+import { createContainerNode, createMediaNode } from '../../model/defaults';
 import type { ContainerNode, ContainerSubtype, DocumentModel, DocumentNode, MediaNode, MediaSubtype, NodeId, TextSubtype } from '../../model/types';
 import { isContainerNode, isLeafNode } from '../../model/types';
-import { parseUnitValue } from '../../model/units';
+import { parseHeightValue, parseUnitValue, parseWidthValue } from '../../model/units';
 import {
   convertTextNodeDoc as convertTextNodeDocHelper,
   switchTextSubtypeDoc as switchTextSubtypeDocHelper,
@@ -451,6 +451,237 @@ export type PromoteWrapperRoleOptions = {
   replaceExisting?: boolean;
 };
 
+export type SemanticContainerSubtype = 'container' | 'nav' | 'aside' | 'article';
+
+function isSemanticContainerSubtype(subtype: ContainerSubtype): subtype is SemanticContainerSubtype {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
+}
+
+export function setContainerSemanticTypeDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  subtype: SemanticContainerSubtype,
+): DocumentModel {
+  const node = document.nodes[nodeId];
+  if (!node || !isContainerNode(node) || !isSemanticContainerSubtype(node.subtype)) {
+    return document;
+  }
+  if (node.subtype === subtype) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const wrapper = next.nodes[nodeId];
+  if (!wrapper || !isContainerNode(wrapper) || !isSemanticContainerSubtype(wrapper.subtype)) {
+    return document;
+  }
+  wrapper.subtype = subtype;
+  return next;
+}
+
+export function setContainerAriaLabelDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  value: string,
+): DocumentModel {
+  const node = document.nodes[nodeId];
+  if (!node || !isContainerNode(node) || !isSemanticContainerSubtype(node.subtype)) {
+    return document;
+  }
+
+  const label = value.trim();
+  const nextLabel = label || undefined;
+  if (node.ariaLabel === nextLabel) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const wrapper = next.nodes[nodeId];
+  if (!wrapper || !isContainerNode(wrapper)) {
+    return document;
+  }
+  wrapper.ariaLabel = nextLabel;
+  return next;
+}
+
+export function groupNodesDoc(document: DocumentModel, nodeIds: NodeId[]): DocumentModel {
+  const selectedIds = normalizeSelectedIdsForDocument(document, nodeIds);
+  if (selectedIds.length === 0) {
+    return document;
+  }
+
+  const nodes = selectedIds.map((id) => document.nodes[id]);
+  if (nodes.some((node) => !node || node.contentType === 'site' || !node.parentId)) {
+    return document;
+  }
+
+  const parentId = nodes[0]?.parentId ?? null;
+  if (!parentId || nodes.some((node) => node?.parentId !== parentId)) {
+    return document;
+  }
+
+  const parent = document.nodes[parentId];
+  if (!parent || !isContainerNode(parent)) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const nextParent = next.nodes[parentId];
+  if (!nextParent || !isContainerNode(nextParent)) {
+    return document;
+  }
+
+  const sourceIds = selectedIds.filter((id) => nextParent.children.includes(id));
+  if (sourceIds.length === 0) {
+    return document;
+  }
+
+  const members = sourceIds.flatMap((id) => {
+    const node = next.nodes[id];
+    if (node && isContainerNode(node) && node.subtype === 'group') {
+      return node.children;
+    }
+    return [id];
+  });
+  if (members.length === 0) {
+    return document;
+  }
+
+  const memberEntries = sourceIds.flatMap((id) => {
+    const node = next.nodes[id];
+    if (node && isContainerNode(node) && node.subtype === 'group') {
+      return node.children.flatMap((childId) => {
+        const child = next.nodes[childId];
+        if (!child || child.contentType === 'site') {
+          return [];
+        }
+        return [{
+          id: childId,
+          x: getUnitValuePx(node.rect.x.base) + getUnitValuePx(child.rect.x.base),
+          y: getUnitValuePx(node.rect.y.base) + getUnitValuePx(child.rect.y.base),
+          width: getUnitValuePx(child.rect.width.base),
+          height: getUnitValuePx(child.rect.height.base),
+        }];
+      });
+    }
+    if (!node || node.contentType === 'site') {
+      return [];
+    }
+    return [{
+      id,
+      x: getUnitValuePx(node.rect.x.base),
+      y: getUnitValuePx(node.rect.y.base),
+      width: getUnitValuePx(node.rect.width.base),
+      height: getUnitValuePx(node.rect.height.base),
+    }];
+  });
+  if (memberEntries.length !== members.length) {
+    return document;
+  }
+
+  const bounds = getEntryBounds(memberEntries);
+
+  let group = createContainerNode('group', parentId);
+  while (next.nodes[group.id]) {
+    group = createContainerNode('group', parentId);
+  }
+  group.rect.x.base = parseUnitValue(`${bounds.x}px`);
+  group.rect.y.base = parseUnitValue(`${bounds.y}px`);
+  group.rect.width.base = parseWidthValue('fit-content');
+  group.rect.height.base = parseHeightValue('auto');
+  group.children = [];
+  next.nodes[group.id] = group;
+
+  const firstSourceIndex = Math.min(...sourceIds.map((id) => nextParent.children.indexOf(id)).filter((index) => index >= 0));
+  const sourceSet = new Set(sourceIds);
+  nextParent.children = nextParent.children.filter((id) => !sourceSet.has(id));
+  nextParent.children.splice(firstSourceIndex, 0, group.id);
+
+  for (const id of sourceIds) {
+    const node = next.nodes[id];
+    if (node && isContainerNode(node) && node.subtype === 'group') {
+      for (const childId of [...node.children]) {
+        const child = next.nodes[childId];
+        if (!child || child.contentType === 'site') {
+          continue;
+        }
+        const entry = memberEntries.find((candidate) => candidate.id === childId);
+        if (!entry) {
+          continue;
+        }
+        child.parentId = group.id;
+        child.rect.x.base = parseUnitValue(`${entry.x - bounds.x}px`);
+        child.rect.y.base = parseUnitValue(`${entry.y - bounds.y}px`);
+        group.children.push(childId);
+      }
+      delete next.nodes[id];
+      continue;
+    }
+
+    if (!node || node.contentType === 'site') {
+      continue;
+    }
+    const entry = memberEntries.find((candidate) => candidate.id === id);
+    if (!entry) {
+      continue;
+    }
+    node.parentId = group.id;
+    node.rect.x.base = parseUnitValue(`${entry.x - bounds.x}px`);
+    node.rect.y.base = parseUnitValue(`${entry.y - bounds.y}px`);
+    group.children.push(id);
+  }
+
+  return next;
+}
+
+export function ungroupNodeDoc(document: DocumentModel, groupId: NodeId): DocumentModel {
+  const group = document.nodes[groupId];
+  if (!group || !isContainerNode(group) || group.subtype !== 'group' || !group.parentId) {
+    return document;
+  }
+  const parent = document.nodes[group.parentId];
+  if (!parent || !isContainerNode(parent)) {
+    return document;
+  }
+
+  const next = cloneDocument(document);
+  const nextGroup = next.nodes[groupId];
+  const nextParent = next.nodes[group.parentId];
+  if (!nextGroup || !isContainerNode(nextGroup) || !nextParent || !isContainerNode(nextParent)) {
+    return document;
+  }
+
+  const groupIndex = nextParent.children.indexOf(groupId);
+  const childIds = [...nextGroup.children];
+  for (const childId of childIds) {
+    const child = next.nodes[childId];
+    if (!child || child.contentType === 'site') {
+      continue;
+    }
+    child.parentId = nextParent.id;
+    child.rect.x.base = parseUnitValue(`${getUnitValuePx(nextGroup.rect.x.base) + getUnitValuePx(child.rect.x.base)}px`);
+    child.rect.y.base = parseUnitValue(`${getUnitValuePx(nextGroup.rect.y.base) + getUnitValuePx(child.rect.y.base)}px`);
+  }
+
+  nextParent.children.splice(groupIndex >= 0 ? groupIndex : nextParent.children.length, 1, ...childIds);
+  delete next.nodes[groupId];
+  return next;
+}
+
+export function convertGroupToContainerDoc(document: DocumentModel, groupId: NodeId): DocumentModel {
+  const group = document.nodes[groupId];
+  if (!group || !isContainerNode(group) || group.subtype !== 'group') {
+    return document;
+  }
+  const next = cloneDocument(document);
+  const wrapper = next.nodes[groupId];
+  if (!wrapper || !isContainerNode(wrapper) || wrapper.subtype !== 'group') {
+    return document;
+  }
+  wrapper.subtype = 'container';
+  return next;
+}
+
 export function promoteWrapperRoleDoc(
   document: DocumentModel,
   wrapperId: NodeId,
@@ -701,7 +932,7 @@ function moveWrapperToRoot(
 function isReorderableNode(node: DocumentNode): boolean {
   if (node.contentType === 'site') return false;
   if (isLeafNode(node)) return true;
-  return isContainerNode(node) && node.subtype === 'container';
+  return isContainerNode(node) && isSemanticContainerSubtype(node.subtype);
 }
 
 function isSiteSectionRole(subtype: ContainerSubtype): boolean {
@@ -712,9 +943,25 @@ function canAcceptChild(parent: DocumentNode, child: DocumentNode): boolean {
   if (!isContainerNode(parent)) return false;
   if (isLeafNode(child)) return true;
   if (!isContainerNode(child)) return false;
-  if (child.subtype !== 'container') return false;
-  if (parent.subtype === 'container') return true;
+  if (!isSemanticContainerSubtype(child.subtype) && child.subtype !== 'group') return false;
+  if (isSemanticContainerSubtype(parent.subtype) || parent.subtype === 'group') return true;
   return isSiteSectionRole(parent.subtype);
+}
+
+type NumericParsedValue = { parsed: { value: number; unit: string } | { keyword: string } };
+
+function getUnitValuePx(value: NumericParsedValue): number {
+  return 'unit' in value.parsed ? value.parsed.value : 0;
+}
+
+function getEntryBounds(
+  entries: Array<{ x: number; y: number; width: number; height: number }>,
+): { x: number; y: number; width: number; height: number } {
+  const left = Math.min(...entries.map((entry) => entry.x));
+  const top = Math.min(...entries.map((entry) => entry.y));
+  const right = Math.max(...entries.map((entry) => entry.x + entry.width));
+  const bottom = Math.max(...entries.map((entry) => entry.y + entry.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
 function findSiblingSectionIndex(

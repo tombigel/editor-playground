@@ -37,6 +37,8 @@ function createHandlers() {
       copySelection: vi.fn(),
       pasteClipboard: vi.fn(),
       duplicateSelection: vi.fn(),
+      groupSelection: vi.fn(),
+      ungroupSelection: vi.fn(),
       toggleBoldSelection: vi.fn(),
       toggleItalicSelection: vi.fn(),
       toggleUnderlineSelection: vi.fn(),
@@ -125,6 +127,8 @@ describe('app/shortcutController', () => {
     executeEditorShortcut(getShortcut('copySelection'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('pasteClipboard'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('duplicateSelection'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('groupSelection'), baseState, false, handlers);
+    executeEditorShortcut(getShortcut('ungroupSelection'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('toggleUnderlineSelection'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('alignSelectionLeft'), baseState, false, handlers);
     executeEditorShortcut(getShortcut('distributeSelectionBottom'), baseState, false, handlers);
@@ -143,6 +147,8 @@ describe('app/shortcutController', () => {
     expect(handlers.selection.copySelection).toHaveBeenCalledOnce();
     expect(handlers.selection.pasteClipboard).toHaveBeenCalledOnce();
     expect(handlers.selection.duplicateSelection).toHaveBeenCalledOnce();
+    expect(handlers.selection.groupSelection).toHaveBeenCalledOnce();
+    expect(handlers.selection.ungroupSelection).toHaveBeenCalledOnce();
     expect(handlers.selection.toggleUnderlineSelection).toHaveBeenCalledOnce();
     expect(handlers.selection.alignSelection).toHaveBeenCalledWith('left');
     expect(handlers.selection.distributeSelection).toHaveBeenCalledWith('bottom');

@@ -1,5 +1,6 @@
 import { getNode, type EditorState, type NodeId } from '../api/editorApi';
 import { isContainerNode, isLeafNode, isSiteNode } from '../api/documentViewApi';
+import type { ContainerSubtype } from '../api/documentApi';
 
 export function selectedNodeHasTopEdge(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
@@ -19,7 +20,7 @@ export function selectedNodeHasBottomEdge(state: EditorState, selectedId: string
 
 export function selectedNodeDisallowsContentWrapperTarget(state: EditorState, selectedId: string) {
   const node = getNode(state.document, selectedId);
-  return Boolean(node && isContainerNode(node) && node.subtype === 'container');
+  return Boolean(node && isContainerNode(node) && isSemanticContainerSubtype(node.subtype));
 }
 
 export function getNodeOrderState(
@@ -46,7 +47,7 @@ export function getNodeOrderState(
         (selectedNode) =>
           isSiteNode(selectedNode) ||
           selectedNode.parentId !== parentId ||
-          (isContainerNode(selectedNode) && selectedNode.subtype !== 'container'),
+          (isContainerNode(selectedNode) && !isSemanticContainerSubtype(selectedNode.subtype)),
       )
     ) {
       return { show: false, canBack: false, canForward: false };
@@ -79,7 +80,7 @@ export function getNodeOrderState(
     return { show: false, canBack: false, canForward: false };
   }
 
-  const isReorderable = isLeafNode(node) || (isContainerNode(node) && node.subtype === 'container');
+  const isReorderable = isLeafNode(node) || (isContainerNode(node) && isSemanticContainerSubtype(node.subtype));
   if (!isReorderable) {
     return { show: false, canBack: false, canForward: false };
   }
@@ -99,6 +100,10 @@ export function getNodeOrderState(
     canBack: index > 0,
     canForward: index < parent.children.length - 1,
   };
+}
+
+function isSemanticContainerSubtype(subtype: ContainerSubtype) {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }
 
 export function getSectionOrderState(

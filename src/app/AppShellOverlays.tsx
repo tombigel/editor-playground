@@ -28,7 +28,7 @@ import {
 	PagesPanel,
 	SettingsPanel,
 } from "./AppShell.lazyPanels";
-import { MediaTypePopover, SectionTemplatePopover, TextTypePopover } from "./AppChrome";
+import { ContainerTypePopover, MediaTypePopover, SectionTemplatePopover, TextTypePopover } from "./AppChrome";
 import { openManageFontsWithOptions } from "./manageFontsActions";
 import { ShowcaseTourOverlay } from "./showcaseTour/ShowcaseTourOverlay";
 import { SHOWCASE_TOUR_CONFIG } from "./showcaseTour/showcaseTourConfig";
@@ -42,6 +42,7 @@ type AppShellOverlaysProps = {
 export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 	const {
 		sectionTemplateOpen,
+		containerTypeOpen,
 		textTypeOpen,
 		mediaTypeOpen,
 		setRequestedPageSettingsId,
@@ -70,6 +71,7 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		pagesPanelRef,
 		aiPanelRef,
 		sectionTemplatePanelRef,
+		containerTypePanelRef,
 		textTypePanelRef,
 		mediaTypePanelRef,
 		documentJson,
@@ -84,6 +86,9 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 		onOpenAiSettings,
 		onSectionTemplateOpenChange,
 		onCloseSectionTemplates,
+		onContainerTypeOpenChange,
+		onCloseContainerTypes,
+		onInsertContainerType,
 		onTextTypeOpenChange,
 		onCloseTextTypes,
 		onInsertTextType,
@@ -181,6 +186,16 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onWrapperStyleChange={(field, value) =>
 							dispatch({ type: "wrapperStyle", field, value })
 						}
+						onContainerSemanticTypeChange={(id, subtype) =>
+							dispatch({ type: "containerSemanticType", id, subtype })
+						}
+						onContainerAriaLabelChange={(id, value) =>
+							dispatch({ type: "containerAriaLabel", id, value })
+						}
+						onConvertGroupToContainer={(id) =>
+							dispatch({ type: "convertGroupToContainer", id })
+						}
+						onUngroupNode={(id) => dispatch({ type: "ungroupNode", id })}
 						onContainerChildBoundaryChange={(value) =>
 							dispatch({ type: "containerChildBoundary", value })
 						}
@@ -304,6 +319,18 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 				onInsertTemplate={(templateId) => {
 					dispatch({ type: "insertSectionTemplate", templateId });
 					onCloseSectionTemplates();
+				}}
+			/>
+
+			<ContainerTypePopover
+				panelRef={containerTypePanelRef}
+				open={containerTypeOpen}
+				style={{ top: "76px", left: "80px" }}
+				onOpenChange={onContainerTypeOpenChange}
+				onClose={onCloseContainerTypes}
+				onInsert={(role) => {
+					onInsertContainerType(role);
+					onCloseContainerTypes();
 				}}
 			/>
 

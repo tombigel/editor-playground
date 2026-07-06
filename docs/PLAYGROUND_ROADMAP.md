@@ -59,7 +59,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | --- | --- | --- | --- | --- | --- | --- |
 | `RI-11` | `🟢 In progress` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Video + inline SVG + gradients shipped 2026-07-05; embed/divider/icon/audio backlog |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream B |
-| `RI-12B` | `🟣 Partially present` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream A |
+| `RI-12B` | `🟢 In progress` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | Workstream A core shipped: semantic containers, grouping API/shortcut, inspector/add panel |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 done; migration wired into import paths, idempotency fixed. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
 | `RI-45` | `⚪ Not started` | [Form and input authoring platform](#form-and-input-authoring-platform) | `🔴 Next` | Feature | Shared | Requires behavior/backoffice/docs/a11y spec before implementation |
 | `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
@@ -446,8 +446,8 @@ None yet.
 - `Status`: `Partially present`
 - `Source`: `RI-12B`
 - `Why it matters`: Group-level semantics such as `nav`, `aside`, or `article` can change both exported meaning and the editor UX for how grouped content is handled.
-- `Current state`: The editor already has structural wrapper roles such as `section`, `header`, `footer`, and `container`, but it does not yet expose a broader grouping semantics layer that can reinterpret child meaning or authoring behavior.
-- `Next move`: Execute Workstream A of [SEMANTICS_AND_TABLE_TASKLIST.md](./SEMANTICS_AND_TABLE_TASKLIST.md) (`nav`/`aside`/`article` subtypes behaving like containers, exported as semantic tags, with an inspector Role selector; `main` stays hardcoded).
+- `Current state`: Workstream A is in progress: `nav`, `aside`, and `article` are semantic container subtypes with matching export tags and `aria-label`; groups are a separate editor wrapper created by `Cmd/Ctrl+G`, removed by `Shift+Cmd/Ctrl+G`, and convertible one-way to containers. The left add panel opens a container-type picker for Container/Nav/Aside/Article, and the inspector separates semantic container content controls from group conversion.
+- `Next move`: Complete Workstream A closeout checks, then continue with Workstream B link types and Workstream C table support from [SEMANTICS_AND_TABLE_TASKLIST.md](./SEMANTICS_AND_TABLE_TASKLIST.md).
 
 ##### Editor URL deep links outside the tour
 

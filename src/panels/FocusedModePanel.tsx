@@ -39,6 +39,10 @@ type Props = Pick<
   | 'activePageId'
   | 'onTextChange'
   | 'onWrapperStyleChange'
+  | 'onContainerSemanticTypeChange'
+  | 'onContainerAriaLabelChange'
+  | 'onConvertGroupToContainer'
+  | 'onUngroupNode'
   | 'onContainerChildBoundaryChange'
   | 'onRectChange'
   | 'onSetNodeVisibility'
@@ -104,6 +108,10 @@ export function FocusedModePanel({
   activePageId,
   onTextChange,
   onWrapperStyleChange,
+  onContainerSemanticTypeChange = () => undefined,
+  onContainerAriaLabelChange = () => undefined,
+  onConvertGroupToContainer = () => undefined,
+  onUngroupNode = () => undefined,
   onContainerChildBoundaryChange,
   onRectChange,
   onSetNodeVisibility,
@@ -147,6 +155,10 @@ export function FocusedModePanel({
   const actions: InspectorActionHandlers = {
     onTextChange,
     onWrapperStyleChange,
+    onContainerSemanticTypeChange,
+    onContainerAriaLabelChange,
+    onConvertGroupToContainer,
+    onUngroupNode,
     onContainerChildBoundaryChange,
     onRectChange,
     onSetNodeVisibility,

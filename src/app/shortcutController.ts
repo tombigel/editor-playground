@@ -99,6 +99,12 @@ const SHORTCUT_EXECUTION_REGISTRY: Record<
   duplicateSelection: (_state, _shiftKey, handlers) => {
     handlers.selection.duplicateSelection();
   },
+  groupSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.groupSelection();
+  },
+  ungroupSelection: (_state, _shiftKey, handlers) => {
+    handlers.selection.ungroupSelection();
+  },
   toggleBoldSelection: (_state, _shiftKey, handlers) => {
     handlers.selection.toggleBoldSelection();
   },

@@ -58,6 +58,10 @@ describe('panels/InspectorPanel', () => {
       onTextChange: () => {},
       onWrapperStyleChange: () => {},
       onContainerChildBoundaryChange: () => {},
+      onContainerSemanticTypeChange: () => {},
+      onContainerAriaLabelChange: () => {},
+      onConvertGroupToContainer: () => {},
+      onUngroupNode: () => {},
       onRectChange: () => {},
       onSetNodeVisibility: () => {},
       onSetTopLevelWrapperVisibility: () => {},
@@ -161,10 +165,39 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('>Border<');
     expect(markup).toContain('>Shadow<');
     expect(markup).toContain('>Spread<');
+    expect(markup).not.toContain('Section type');
     expect(markup).not.toContain('Divider');
     expect(markup).toContain('data-allow-alpha="true"');
     expect(markup.indexOf('>Layout<')).toBeLessThan(markup.indexOf('>Sticky<'));
     expect(markup.indexOf('>Sticky<')).toBeLessThan(markup.indexOf('>Design<'));
+  });
+
+  it('renders semantic content controls for containers and conversion-only controls for groups', () => {
+    const document = createInitialDocument();
+    const navNode = createContainerNode('nav', 'root');
+    navNode.ariaLabel = 'Primary navigation';
+    const groupNode = createContainerNode('group', 'root');
+    document.nodes[navNode.id] = navNode;
+    document.nodes[groupNode.id] = groupNode;
+    document.nodes[document.rootId]?.children.push(navNode.id, groupNode.id);
+
+    const navMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: navNode })} />,
+    );
+    const groupMarkup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: groupNode })} />,
+    );
+
+    expect(navMarkup).toContain('>Content<');
+    expect(navMarkup).toContain('>Semantic type<');
+    expect(navMarkup).toContain('>Accessible name<');
+    expect(navMarkup).toContain('Navigation landmark for primary or local menus.');
+    expect(navMarkup).toContain('value="Primary navigation"');
+    expect(navMarkup).not.toContain('>Ungroup<');
+    expect(groupMarkup).toContain('>Convert<');
+    expect(groupMarkup).toContain('>Ungroup<');
+    expect(groupMarkup).not.toContain('>Accessible name<');
+    expect(groupMarkup).not.toContain('>Design<');
   });
 
   it('renders top-level wrapper visibility controls in the layout section', () => {

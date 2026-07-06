@@ -373,6 +373,8 @@ export function App({
         void pasteClipboard();
       },
       duplicateSelection,
+      groupSelection: () => dispatch({ type: "groupSelection" }),
+      ungroupSelection: () => dispatch({ type: "ungroupSelection" }),
       toggleBoldSelection: () => dispatchBoldToggleSelection(),
       toggleItalicSelection: () =>
         dispatchSelectedTextEdit("fontStyle", (nodes) =>
@@ -484,10 +486,12 @@ export function App({
 			layersPanelRef={panels.layersPanelRef}
 			pagesPanelRef={panels.pagesPanelRef}
 			sectionTemplateOpen={panels.sectionTemplateOpen}
+			containerTypeOpen={panels.containerTypeOpen}
 			textTypeOpen={panels.textTypeOpen}
 			mediaTypeOpen={panels.mediaTypeOpen}
 			settingsPanelRef={panels.settingsPanelRef}
 			sectionTemplatePanelRef={panels.sectionTemplatePanelRef}
+			containerTypePanelRef={panels.containerTypePanelRef}
 			textTypePanelRef={panels.textTypePanelRef}
 			mediaTypePanelRef={panels.mediaTypePanelRef}
 			documentJson={viewModel.documentJson}
@@ -509,6 +513,10 @@ export function App({
 			onOpenSectionTemplates={panels.openSectionTemplates}
 			onSectionTemplateOpenChange={panels.handleSectionTemplateOpenChange}
 			onCloseSectionTemplates={panels.closeSectionTemplatePopover}
+			onOpenContainerTypes={panels.openContainerTypePopover}
+			onContainerTypeOpenChange={panels.handleContainerTypeOpenChange}
+			onCloseContainerTypes={panels.closeContainerTypePopover}
+			onInsertContainerType={(role) => dispatch({ type: "insertWrapper", role })}
 			onOpenTextTypes={panels.openTextTypePopover}
 			onTextTypeOpenChange={panels.handleTextTypeOpenChange}
 			onCloseTextTypes={panels.closeTextTypePopover}

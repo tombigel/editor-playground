@@ -257,6 +257,7 @@ export function NodeBasicsSection({
   const hidesPositionFields =
     isContainerNode(node) &&
     (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer');
+  const hidesSizeFields = isContainerNode(node) && node.subtype === 'group';
   const isSectionHeight = isContainerNode(node) && node.subtype === 'section';
   const widthKeywordFamily: WidthKeywordFamily | undefined =
     node.contentType === 'container' ? 'container'
@@ -272,7 +273,7 @@ export function NodeBasicsSection({
     );
   const wrapperPaddingNode: WrapperInspectorNode | null =
     isContainerNode(node) &&
-    (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer' || node.subtype === 'container')
+    (node.subtype === 'section' || node.subtype === 'header' || node.subtype === 'footer' || isSemanticContainerSubtype(node.subtype))
       ? node
       : null;
   const isTopLevelVisibilityWrapper =
@@ -307,23 +308,27 @@ export function NodeBasicsSection({
               />
             </>
           ) : null}
-          <SizeInlineField
-            label="W"
-            nodeId={node.id}
-            value={node.rect.width.base.raw}
-            onChange={(value) => actions.onRectChange('width', value)}
-            axis="width"
-            widthKeywordFamily={widthKeywordFamily}
-            disabled={topLevelWidthLocked}
-          />
-          <SizeInlineField
-            label="H"
-            nodeId={node.id}
-            value={node.rect.height.base.raw}
-            onChange={(value) => actions.onRectChange('height', value)}
-            axis="height"
-            isSectionHeight={isSectionHeight}
-          />
+          {!hidesSizeFields ? (
+            <>
+              <SizeInlineField
+                label="W"
+                nodeId={node.id}
+                value={node.rect.width.base.raw}
+                onChange={(value) => actions.onRectChange('width', value)}
+                axis="width"
+                widthKeywordFamily={widthKeywordFamily}
+                disabled={topLevelWidthLocked}
+              />
+              <SizeInlineField
+                label="H"
+                nodeId={node.id}
+                value={node.rect.height.base.raw}
+                onChange={(value) => actions.onRectChange('height', value)}
+                axis="height"
+                isSectionHeight={isSectionHeight}
+              />
+            </>
+          ) : null}
         </div>
       ) : null}
       {fitContentPercentChildrenWarning ? (
@@ -430,7 +435,7 @@ export function NodeBasicsSection({
         </FormField>
       ) : null}
 
-      {isContainerNode(node) ? (
+      {isContainerNode(node) && isEligibleTopLevelWrapper(node) ? (
         <WrapperActions
           node={node}
           canSectionBack={orderState.canSectionBack}
@@ -516,11 +521,11 @@ export function WrapperDesignSection({
   headerAction?: InspectorSectionHeaderAction;
   contentClassName?: string;
 }) {
-  const supportsContainerSurfaceStyling = node.subtype === 'container';
-  const allowsBackgroundOpacity = node.subtype === 'container';
+  const supportsContainerSurfaceStyling = isSemanticContainerSubtype(node.subtype);
+  const allowsBackgroundOpacity = isSemanticContainerSubtype(node.subtype);
   // Sections, headers, and footers are all section-like backgrounds.
   const supportsGradient =
-    node.subtype === 'container' ||
+    isSemanticContainerSubtype(node.subtype) ||
     node.subtype === 'section' ||
     node.subtype === 'header' ||
     node.subtype === 'footer';
@@ -789,4 +794,8 @@ export function createFocusedModeEntry(
     ariaLabel: getFocusedModeButtonAriaLabel(targetMode),
     onEnter: onEnterFocusedMode,
   };
+}
+
+function isSemanticContainerSubtype(subtype: WrapperInspectorNode['subtype']) {
+  return subtype === 'container' || subtype === 'nav' || subtype === 'aside' || subtype === 'article';
 }

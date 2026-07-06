@@ -255,27 +255,36 @@ export function useStageDragDrop({
     if (!node || isSiteNode(node)) {
       return;
     }
+    const selectionNodeId = resolveGroupContentSelectionId(document, nodeId, selectedIds);
+    const selectionNode = document.nodes[selectionNodeId];
+    if (!selectionNode || isSiteNode(selectionNode)) {
+      return;
+    }
 
     const mode: 'replace' | 'toggle' =
       event.metaKey || event.ctrlKey || event.shiftKey ? 'toggle' : 'replace';
     const preservedSelection =
-      mode === 'replace' && selectedIds.includes(nodeId) && selectedIds.length > 1;
+      mode === 'replace' && selectedIds.includes(selectionNodeId) && selectedIds.length > 1;
 
     if (!preservedSelection) {
-      onSelect(nodeId, mode);
+      onSelect(selectionNodeId, mode);
     }
 
+    const selectionElement =
+      selectionNodeId === nodeId
+        ? nodeElement
+        : stageElement?.querySelector<HTMLElement>(`#stage-node-${selectionNodeId}`) ?? nodeElement;
     pendingInteractionRef.current = {
-      nodeId,
+      nodeId: selectionNodeId,
       mode,
       preservedSelection,
       startClientX: event.clientX,
       startClientY: event.clientY,
       startTimestampMs: event.timeStamp,
-      originX: parseFloat(node.rect.x.base.raw) || 0,
-      originY: parseFloat(node.rect.y.base.raw) || 0,
-      parentId: node.parentId ?? undefined,
-      element: nodeElement,
+      originX: parseFloat(selectionNode.rect.x.base.raw) || 0,
+      originY: parseFloat(selectionNode.rect.y.base.raw) || 0,
+      parentId: selectionNode.parentId ?? undefined,
+      element: selectionElement,
     };
 
     latestInputRef.current = {
@@ -292,7 +301,7 @@ export function useStageDragDrop({
     activePointerIdRef.current = event.pointerId;
     // Pointer capture is deferred to beginSessionFromPending so that
     // simple clicks (including dblclick) are never redirected to the stage.
-  }, [document, onSelect, selectedIds, snapSettings]);
+  }, [document, onSelect, selectedIds, snapSettings, stageElement]);
 
   const handlePointerMove = useCallback((event: PointerEvent<HTMLElement>) => {
     if (activePointerIdRef.current !== event.pointerId) {
@@ -556,6 +565,9 @@ function resolveNodeSnapSource(
     if (subtype === 'section' || subtype === 'header' || subtype === 'footer' || subtype === 'container') {
       return subtype;
     }
+    if (subtype === 'nav' || subtype === 'aside' || subtype === 'article' || subtype === 'group') {
+      return 'container';
+    }
   }
   return 'component';
 }
@@ -707,4 +719,28 @@ function measureContentBox(element: HTMLElement | null) {
 
 function areIdsEqual(left: NodeId[], right: NodeId[]) {
   return left.length === right.length && left.every((id, index) => right[index] === id);
+}
+
+function resolveGroupContentSelectionId(
+  document: DocumentModel,
+  nodeId: NodeId,
+  selectedIds: NodeId[],
+) {
+  const groupId = findNearestGroupAncestor(document, nodeId);
+  if (!groupId) {
+    return nodeId;
+  }
+  return selectedIds.length === 1 && selectedIds[0] === groupId ? nodeId : groupId;
+}
+
+function findNearestGroupAncestor(document: DocumentModel, nodeId: NodeId) {
+  let current = document.nodes[nodeId];
+  while (current?.parentId) {
+    const parent = document.nodes[current.parentId];
+    if (parent && isContainerNode(parent) && parent.subtype === 'group') {
+      return parent.id;
+    }
+    current = parent;
+  }
+  return null;
 }
