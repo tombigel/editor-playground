@@ -2818,6 +2818,105 @@ describe("stage/Stage e2e", () => {
 		30_000,
 	);
 
+	stageIt(
+		"selects group content by click while dragging selected children rebounds the group",
+		async () => {
+			const { document, ids } = createGroupedE2EDocument();
+			await openEditor({ document, snapEnabled: false });
+
+			const first = page.locator(`[data-node-id="${ids.firstChildId}"]`).first();
+			await first.click();
+
+			await page.waitForSelector(
+				`.stage-single-selection-overlay[data-node-id="${ids.groupId}"]`,
+			);
+			expect(await page.locator(".resize-handle").count()).toBe(0);
+			let state = await readPersistedState();
+			expect(state.selectedId).toBe(ids.groupId);
+
+			await first.click();
+			await page.waitForSelector(
+				`.stage-single-selection-overlay[data-node-id="${ids.firstChildId}"]`,
+			);
+			state = await readPersistedState();
+			expect(state.selectedId).toBe(ids.firstChildId);
+
+			const before = state.document;
+			const groupBefore = before.nodes[ids.groupId];
+			const firstBefore = before.nodes[ids.firstChildId];
+			if (
+				!groupBefore ||
+				groupBefore.contentType !== "container" ||
+				!firstBefore ||
+				firstBefore.contentType === "site"
+			) {
+				throw new Error("Expected grouped test nodes");
+			}
+
+			const firstBox = await first.boundingBox();
+			expect(firstBox).not.toBeNull();
+			await dragLocatorToPoint(
+				`[data-node-id="${ids.firstChildId}"]`,
+				(firstBox?.x ?? 0) + 130,
+				(firstBox?.y ?? 0) + 60,
+			);
+
+			await page.waitForFunction(
+				({ storageKey, groupId, beforeX, beforeY }) => {
+					const state = JSON.parse(
+						window.localStorage.getItem(storageKey) ?? "null",
+					);
+					const group = state?.document?.nodes?.[groupId];
+					return (
+						group?.rect?.x?.base?.raw !== beforeX ||
+						group?.rect?.y?.base?.raw !== beforeY
+					);
+				},
+				{
+					storageKey: STORAGE_KEY,
+					groupId: ids.groupId,
+					beforeX: groupBefore.rect.x.base.raw,
+					beforeY: groupBefore.rect.y.base.raw,
+				},
+			);
+
+			state = await readPersistedState();
+			const movedGroup = state.document.nodes[ids.groupId];
+			const movedFirst = state.document.nodes[ids.firstChildId];
+			const movedSecond = state.document.nodes[ids.secondChildId];
+			if (
+				!movedGroup ||
+				movedGroup.contentType !== "container" ||
+				!movedFirst ||
+				movedFirst.contentType === "site" ||
+				!movedSecond ||
+				movedSecond.contentType === "site"
+			) {
+				throw new Error("Expected moved grouped test nodes");
+			}
+
+			expect(state.selectedId).toBe(ids.firstChildId);
+			expect(movedGroup.rect.x.base.raw).not.toBe(groupBefore.rect.x.base.raw);
+			expect(movedGroup.rect.y.base.raw).not.toBe(groupBefore.rect.y.base.raw);
+			expect(movedGroup.rect.width.base.raw).toBe("fit-content");
+			expect(movedGroup.rect.height.base.raw).toBe("auto");
+			expect(
+				Math.min(
+					Number.parseFloat(movedFirst.rect.x.base.raw),
+					Number.parseFloat(movedSecond.rect.x.base.raw),
+				),
+			).toBe(0);
+			expect(
+				Math.min(
+					Number.parseFloat(movedFirst.rect.y.base.raw),
+					Number.parseFloat(movedSecond.rect.y.base.raw),
+				),
+			).toBe(0);
+			expect(movedSecond.rect.x.base.raw).not.toBe("180px");
+		},
+		30_000,
+	);
+
 	richTextIt(
 		"edits standalone lists on stage with Enter and Shift+Enter list behavior",
 		async () => {
@@ -3289,6 +3388,72 @@ function createE2EDocument(): {
 			otherContainerLeafId: otherContainerLeaf.id,
 			axisLeafId: axisLeaf.id,
 			snapLeafId: snapLeaf.id,
+		},
+	};
+}
+
+function createGroupedE2EDocument(): {
+	document: DocumentModel;
+	ids: {
+		sectionId: string;
+		groupId: string;
+		firstChildId: string;
+		secondChildId: string;
+	};
+} {
+	const siteId = "site_group_e2e";
+	const section = createContainerNode("section", siteId);
+	section.name = "Group E2E Section";
+	section.rect = createDefaultRect("0px", "0px", "100%", "720px");
+
+	const group = createContainerNode("group", section.id);
+	group.name = "Grouped Card";
+	group.rect = createDefaultRect("120px", "140px", "fit-content", "auto");
+
+	const firstChild = createTextNode("block", group.id) as TextNode;
+	firstChild.name = "Grouped First";
+	firstChild.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Grouped first child" }] },
+	]);
+	firstChild.rect = createDefaultRect("0px", "0px", "160px", "auto");
+
+	const secondChild = createTextNode("block", group.id) as TextNode;
+	secondChild.name = "Grouped Second";
+	secondChild.content = createTextDocumentContent([
+		{ type: "paragraph", children: [{ text: "Grouped second child" }] },
+	]);
+	secondChild.rect = createDefaultRect("180px", "50px", "160px", "auto");
+
+	group.children = [firstChild.id, secondChild.id];
+	section.children = [group.id];
+
+	const document: DocumentModel = {
+		rootId: siteId,
+		nodes: {
+			[siteId]: {
+				id: siteId,
+				contentType: "site",
+				type: "site",
+				parentId: null,
+				children: [section.id],
+				name: "Site",
+				visible: true,
+				locked: false,
+			},
+			[section.id]: section,
+			[group.id]: group,
+			[firstChild.id]: firstChild,
+			[secondChild.id]: secondChild,
+		},
+	};
+
+	return {
+		document,
+		ids: {
+			sectionId: section.id,
+			groupId: group.id,
+			firstChildId: firstChild.id,
+			secondChildId: secondChild.id,
 		},
 	};
 }

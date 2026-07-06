@@ -8,6 +8,7 @@ import {
   deleteNodesDoc,
   demoteWrapperRoleDoc,
   groupNodesDoc,
+  moveNodeDoc,
   moveNodeInTreeDoc,
   promoteWrapperRoleDoc,
   reorderNodeDoc,
@@ -121,6 +122,52 @@ describe('api/documentApi tree operations', () => {
       expect(ungroupedSecond.rect.x.base.raw).toBe('260px');
       expect(ungroupedSecond.rect.y.base.raw).toBe('140px');
       expect(ungrouped.nodes[group.id]).toBeUndefined();
+    });
+
+    it('rebounds a group to moved child bounds while preserving visual coordinates', () => {
+      const document = structuredClone(createInitialDocument());
+      const section = getSection(document);
+      const first = createTextNode('block', section.id);
+      const second = createTextNode('block', section.id);
+      first.rect.x.base = parseUnitValue('80px');
+      first.rect.y.base = parseUnitValue('90px');
+      first.rect.width.base = parseUnitValue('120px');
+      first.rect.height.base = parseUnitValue('40px');
+      second.rect.x.base = parseUnitValue('260px');
+      second.rect.y.base = parseUnitValue('140px');
+      second.rect.width.base = parseUnitValue('100px');
+      second.rect.height.base = parseUnitValue('50px');
+      section.children.push(first.id, second.id);
+      document.nodes[first.id] = first;
+      document.nodes[second.id] = second;
+
+      const grouped = groupNodesDoc(document, [first.id, second.id]);
+      const group = Object.values(grouped.nodes).find(
+        (node) => node.contentType === 'container' && node.subtype === 'group' && node.children.includes(first.id),
+      );
+      if (!group || group.contentType !== 'container') {
+        throw new Error('Expected group');
+      }
+
+      const moved = moveNodeDoc(grouped, first.id, { x: '40px', y: '30px' });
+      const movedGroup = moved.nodes[group.id];
+      const movedFirst = getRectNode(moved, first.id);
+      const movedSecond = getRectNode(moved, second.id);
+
+      expect(movedGroup?.contentType === 'container' ? movedGroup.rect.x.base.raw : null).toBe('120px');
+      expect(movedGroup?.contentType === 'container' ? movedGroup.rect.y.base.raw : null).toBe('120px');
+      expect(movedGroup?.contentType === 'container' ? movedGroup.rect.width.base.raw : null).toBe('fit-content');
+      expect(movedGroup?.contentType === 'container' ? movedGroup.rect.height.base.raw : null).toBe('auto');
+      expect(movedFirst.rect.x.base.raw).toBe('0px');
+      expect(movedFirst.rect.y.base.raw).toBe('0px');
+      expect(movedSecond.rect.x.base.raw).toBe('140px');
+      expect(movedSecond.rect.y.base.raw).toBe('20px');
+
+      const ungrouped = ungroupNodeDoc(moved, group.id);
+      expect(getRectNode(ungrouped, first.id).rect.x.base.raw).toBe('120px');
+      expect(getRectNode(ungrouped, first.id).rect.y.base.raw).toBe('120px');
+      expect(getRectNode(ungrouped, second.id).rect.x.base.raw).toBe('260px');
+      expect(getRectNode(ungrouped, second.id).rect.y.base.raw).toBe('140px');
     });
 
     it('converts groups to containers without allowing reverse conversion', () => {

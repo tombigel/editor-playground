@@ -444,6 +444,9 @@ export function isStructuralTopLevelWrapper(node: ContainerNode, isTopLevel: boo
 }
 
 export function getContainerResizeHandles(node: ContainerNode, isTopLevel: boolean): ResizeHandle[] {
+  if (node.subtype === 'group') {
+    return [];
+  }
   if (isStructuralTopLevelWrapper(node, isTopLevel)) {
     return usesAspectRatioHeight(node) ? [] : ['s'];
   }

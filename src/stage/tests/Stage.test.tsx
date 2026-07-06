@@ -1339,6 +1339,12 @@ describe('stage/Stage', () => {
     },
   );
 
+  it('does not expose resize handles for groups', () => {
+    const group = createContainerNode('group', 'section_1');
+
+    expect(getWrapperResizeHandles(group, false)).toEqual([]);
+  });
+
   it('keeps the bottom resize handle round for selected non-structural wrappers in the overlay', () => {
     const markup = renderToStaticMarkup(
       <SingleSelectionOverlay

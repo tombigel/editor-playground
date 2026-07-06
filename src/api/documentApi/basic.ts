@@ -89,6 +89,9 @@ export function moveNodeDoc(
     }
   }
 
+  if (changed) {
+    normalizeMovedNodeGroupAncestors(next, [nodeId]);
+  }
   const moved = changed ? next : document;
   return expandParentHeightDoc(moved, options.parentExpansion);
 }
@@ -123,6 +126,9 @@ export function moveNodesDoc(
     }
   }
 
+  if (changed) {
+    normalizeMovedNodeGroupAncestors(next, moves.map((move) => move.id));
+  }
   const moved = changed ? next : document;
   return expandParentHeightDoc(moved, options.parentExpansion);
 }
@@ -436,4 +442,52 @@ function hasSelectedAncestor(document: DocumentModel, nodeId: NodeId, selectedId
 function readCoordinatePx(raw: string) {
   const parsed = Number.parseFloat(raw);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeMovedNodeGroupAncestors(document: DocumentModel, movedIds: NodeId[]) {
+  const groupIds = new Set<NodeId>();
+  for (const movedId of movedIds) {
+    let current = document.nodes[movedId];
+    while (current?.parentId) {
+      const parent = document.nodes[current.parentId];
+      if (parent && isContainerNode(parent) && parent.subtype === 'group') {
+        groupIds.add(parent.id);
+      }
+      current = parent;
+    }
+  }
+
+  for (const groupId of groupIds) {
+    normalizeGroupToChildrenBounds(document, groupId);
+  }
+}
+
+function normalizeGroupToChildrenBounds(document: DocumentModel, groupId: NodeId) {
+  const group = document.nodes[groupId];
+  if (!group || !isContainerNode(group) || group.subtype !== 'group' || group.children.length === 0) {
+    return;
+  }
+
+  const children = group.children
+    .map((childId) => document.nodes[childId])
+    .filter((child): child is Exclude<DocumentNode, { contentType: 'site' }> => Boolean(child && child.contentType !== 'site'));
+  if (children.length === 0) {
+    return;
+  }
+
+  const minX = Math.min(...children.map((child) => readCoordinatePx(child.rect.x.base.raw)));
+  const minY = Math.min(...children.map((child) => readCoordinatePx(child.rect.y.base.raw)));
+  if (minX === 0 && minY === 0) {
+    return;
+  }
+
+  group.rect.x.base = parseUnitValue(`${readCoordinatePx(group.rect.x.base.raw) + minX}px`);
+  group.rect.y.base = parseUnitValue(`${readCoordinatePx(group.rect.y.base.raw) + minY}px`);
+  group.rect.width.base = parseWidthValue('fit-content');
+  group.rect.height.base = parseHeightValue('auto');
+
+  for (const child of children) {
+    child.rect.x.base = parseUnitValue(`${readCoordinatePx(child.rect.x.base.raw) - minX}px`);
+    child.rect.y.base = parseUnitValue(`${readCoordinatePx(child.rect.y.base.raw) - minY}px`);
+  }
 }

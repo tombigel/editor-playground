@@ -21,7 +21,8 @@ import type { SnapSettings } from '../../editor/types';
 import type { StageProps } from '../types';
 
 type PendingNodeInteraction = {
-  nodeId: NodeId;
+  dragNodeId: NodeId;
+  clickNodeId: NodeId;
   mode: 'replace' | 'toggle';
   preservedSelection: boolean;
   startClientX: number;
@@ -164,14 +165,14 @@ export function useStageDragDrop({
       return null;
     }
 
-    const candidateIds = selectedIds.includes(pending.nodeId)
+    const candidateIds = selectedIds.includes(pending.dragNodeId)
       ? getTopLevelSelectedIds(document, selectedIds)
-      : [pending.nodeId];
+      : [pending.dragNodeId];
     const firstGeometry = buildGeometrySnapshot({
       document,
-      dragIds: candidateIds.length > 0 ? candidateIds : [pending.nodeId],
-      anchorId: pending.nodeId,
-      anchorElement: draggableElementsRef.current.get(pending.nodeId) ?? pending.element,
+      dragIds: candidateIds.length > 0 ? candidateIds : [pending.dragNodeId],
+      anchorId: pending.dragNodeId,
+      anchorElement: draggableElementsRef.current.get(pending.dragNodeId) ?? pending.element,
       dragElements: draggableElementsRef.current,
       dropTargetElements: dropTargetElementsRef.current,
       stageElement,
@@ -180,7 +181,7 @@ export function useStageDragDrop({
     });
     let session = beginDragSession({
       document,
-      anchorId: pending.nodeId,
+      anchorId: pending.dragNodeId,
       selectedIds,
       startClientX: pending.startClientX,
       startClientY: pending.startClientY,
@@ -189,7 +190,7 @@ export function useStageDragDrop({
     });
 
     if (
-      session.anchorId !== pending.nodeId ||
+      session.anchorId !== pending.dragNodeId ||
       !areIdsEqual(session.dragIds, candidateIds)
     ) {
       session = beginDragSession({
@@ -205,7 +206,7 @@ export function useStageDragDrop({
           anchorId: session.anchorId,
           anchorElement:
             draggableElementsRef.current.get(session.anchorId) ??
-            draggableElementsRef.current.get(pending.nodeId) ??
+            draggableElementsRef.current.get(pending.dragNodeId) ??
             pending.element,
           dragElements: draggableElementsRef.current,
           dropTargetElements: dropTargetElementsRef.current,
@@ -255,35 +256,33 @@ export function useStageDragDrop({
     if (!node || isSiteNode(node)) {
       return;
     }
-    const selectionNodeId = resolveGroupContentSelectionId(document, nodeId, selectedIds);
-    const selectionNode = document.nodes[selectionNodeId];
-    if (!selectionNode || isSiteNode(selectionNode)) {
+    const groupSelection = resolveGroupContentSelection(document, nodeId, selectedIds);
+    const dragNode = document.nodes[groupSelection.dragNodeId];
+    const clickNode = document.nodes[groupSelection.clickNodeId];
+    if (!dragNode || !clickNode || isSiteNode(dragNode) || isSiteNode(clickNode)) {
       return;
     }
 
     const mode: 'replace' | 'toggle' =
       event.metaKey || event.ctrlKey || event.shiftKey ? 'toggle' : 'replace';
     const preservedSelection =
-      mode === 'replace' && selectedIds.includes(selectionNodeId) && selectedIds.length > 1;
-
-    if (!preservedSelection) {
-      onSelect(selectionNodeId, mode);
-    }
+      mode === 'replace' && selectedIds.includes(groupSelection.dragNodeId) && selectedIds.length > 1;
 
     const selectionElement =
-      selectionNodeId === nodeId
+      groupSelection.dragNodeId === nodeId
         ? nodeElement
-        : stageElement?.querySelector<HTMLElement>(`#stage-node-${selectionNodeId}`) ?? nodeElement;
+        : stageElement?.querySelector<HTMLElement>(`#stage-node-${groupSelection.dragNodeId}`) ?? nodeElement;
     pendingInteractionRef.current = {
-      nodeId: selectionNodeId,
+      dragNodeId: groupSelection.dragNodeId,
+      clickNodeId: groupSelection.clickNodeId,
       mode,
       preservedSelection,
       startClientX: event.clientX,
       startClientY: event.clientY,
       startTimestampMs: event.timeStamp,
-      originX: parseFloat(selectionNode.rect.x.base.raw) || 0,
-      originY: parseFloat(selectionNode.rect.y.base.raw) || 0,
-      parentId: selectionNode.parentId ?? undefined,
+      originX: parseFloat(dragNode.rect.x.base.raw) || 0,
+      originY: parseFloat(dragNode.rect.y.base.raw) || 0,
+      parentId: dragNode.parentId ?? undefined,
       element: selectionElement,
     };
 
@@ -358,8 +357,8 @@ export function useStageDragDrop({
       if (session) {
         commitSession(session, input);
       }
-    } else if (pendingInteractionRef.current?.preservedSelection) {
-      onSelect(pendingInteractionRef.current.nodeId);
+    } else if (pendingInteractionRef.current) {
+      onSelect(pendingInteractionRef.current.clickNodeId, pendingInteractionRef.current.mode);
     }
 
     cleanupInteraction(true);
@@ -721,16 +720,22 @@ function areIdsEqual(left: NodeId[], right: NodeId[]) {
   return left.length === right.length && left.every((id, index) => right[index] === id);
 }
 
-function resolveGroupContentSelectionId(
+function resolveGroupContentSelection(
   document: DocumentModel,
   nodeId: NodeId,
   selectedIds: NodeId[],
 ) {
   const groupId = findNearestGroupAncestor(document, nodeId);
   if (!groupId) {
-    return nodeId;
+    return { clickNodeId: nodeId, dragNodeId: nodeId };
   }
-  return selectedIds.length === 1 && selectedIds[0] === groupId ? nodeId : groupId;
+  if (selectedIds.includes(nodeId)) {
+    return { clickNodeId: nodeId, dragNodeId: nodeId };
+  }
+  if (selectedIds.length === 1 && selectedIds[0] === groupId) {
+    return { clickNodeId: nodeId, dragNodeId: groupId };
+  }
+  return { clickNodeId: groupId, dragNodeId: groupId };
 }
 
 function findNearestGroupAncestor(document: DocumentModel, nodeId: NodeId) {
