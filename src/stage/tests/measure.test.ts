@@ -159,6 +159,25 @@ describe('measureStageNodeSizes', () => {
     expect(measureStageNodeSizes(root, document)).toEqual({});
   });
 
+  it('does not feed measured auto height back into group layout', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+    const group = createContainerNode('group', section.id);
+    document.nodes[group.id] = group;
+    section.children.push(group.id);
+
+    const root = {
+      querySelectorAll: () => [makeElement(group.id, 320, 480)] as unknown as NodeListOf<HTMLElement>,
+    } as unknown as HTMLElement;
+
+    expect(measureStageNodeSizes(root, document)).toEqual({});
+  });
+
   it('measures percentage width nodes', () => {
     const document = structuredClone(createInitialDocument());
     const section = Object.values(document.nodes).find(

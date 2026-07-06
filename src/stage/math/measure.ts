@@ -1,4 +1,5 @@
 import type { DocumentModel, ViewportMeasurement } from '../../model/types';
+import { isContainerNode } from '../../model/types';
 import type { MeasuredNodeSizes } from '../types';
 import { DEFAULT_STAGE_VIEWPORT } from './nodeGeometry';
 
@@ -130,6 +131,10 @@ function shouldMeasureNodeWidth(node: Exclude<import('../../model/types').Docume
 }
 
 function shouldMeasureNodeHeight(node: Exclude<import('../../model/types').DocumentNode, { contentType: 'site' }>) {
+  if (isContainerNode(node) && node.subtype === 'group') {
+    return false;
+  }
+
   const height = node.rect.height.base.parsed;
   if ('unit' in height) {
     return height.unit === '%';
