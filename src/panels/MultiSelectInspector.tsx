@@ -130,6 +130,9 @@ export function MultiSelectInspector({
   const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { contentType: 'site' }> => !isSiteNode(node));
   const canAlign = canAlignSelection(selectedNodes);
   const canDistribute = canAlign && selectedNodes.length >= 3;
+  const hasOnlyTextSelection =
+    selectedNodes.length >= 2 &&
+    standaloneTextNodes.length === selectedNodes.length;
   const canMergeTextSelectionToRich =
     standaloneTextNodes.length >= 2 &&
     standaloneTextNodes.length === selectedNodes.length &&
@@ -302,7 +305,7 @@ export function MultiSelectInspector({
           </CardContent>
         </Card>
 
-        {selectedNodes.length >= 2 ? (
+        {hasOnlyTextSelection ? (
           <Card className="editor-border-subtle rounded-lg shadow-none">
             <CardHeader className="px-3 pt-3 pb-1">
               <CardTitle className="text-xs">Text Merge</CardTitle>

@@ -322,6 +322,27 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('>Merge into rich text<');
   });
 
+  it('hides text merge controls for mixed multi-selections', () => {
+    const textNode = createTextNode('block', 'section_1');
+    const containerNode = createContainerNode('container', 'section_1');
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel
+        {...makeBaseInspectorProps({
+          node: textNode,
+          selectedNodes: [textNode, containerNode],
+          onAlignSelection: () => {},
+          onDistributeSelection: () => {},
+          onBulkEdit: () => {},
+        })}
+      />,
+    );
+
+    expect(markup).toContain('>Layout<');
+    expect(markup).not.toContain('>Text Merge<');
+    expect(markup).not.toContain('>Merge into rich text<');
+  });
+
   it('renders list content controls for standalone list text nodes', () => {
     const listNode = createTextNode('list', 'section_1');
     listNode.content = createTextDocumentContent([listContentToRichListBlock(createDefaultListContent())]);
