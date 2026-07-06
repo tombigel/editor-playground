@@ -35,6 +35,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - complete group action integration
 - keep group wrappers boxed in editor
 - detach group height measurement
+- keep group height snug to children
 
 ---
 

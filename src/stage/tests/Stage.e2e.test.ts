@@ -2831,6 +2831,27 @@ describe("stage/Stage e2e", () => {
 				`.stage-single-selection-overlay[data-node-id="${ids.groupId}"]`,
 			);
 			expect(await page.locator(".resize-handle").count()).toBe(0);
+			const groupOverlayBox = await page
+				.locator(`.stage-single-selection-overlay[data-node-id="${ids.groupId}"]`)
+				.boundingBox();
+			const firstBoxBeforeDrillIn = await first.boundingBox();
+			const secondBoxBeforeDrillIn = await page
+				.locator(`[data-node-id="${ids.secondChildId}"]`)
+				.first()
+				.boundingBox();
+			expect(groupOverlayBox).not.toBeNull();
+			expect(firstBoxBeforeDrillIn).not.toBeNull();
+			expect(secondBoxBeforeDrillIn).not.toBeNull();
+			const childUnionTop = Math.min(
+				firstBoxBeforeDrillIn?.y ?? 0,
+				secondBoxBeforeDrillIn?.y ?? 0,
+			);
+			const childUnionBottom = Math.max(
+				(firstBoxBeforeDrillIn?.y ?? 0) + (firstBoxBeforeDrillIn?.height ?? 0),
+				(secondBoxBeforeDrillIn?.y ?? 0) +
+					(secondBoxBeforeDrillIn?.height ?? 0),
+			);
+			expect(Math.abs((groupOverlayBox?.height ?? 0) - (childUnionBottom - childUnionTop + 4))).toBeLessThan(8);
 			let state = await readPersistedState();
 			expect(state.selectedId).toBe(ids.groupId);
 

@@ -55,6 +55,7 @@ export function resolveWrapperRenderPlan(
     stickyState.registrations.map((registration) => [registration.ownerId, registration]),
   );
   const childWrapperExtraExtentMap = new Map<string, number>();
+  const childWrapperFlowHeightMap = new Map<string, number>();
 
   for (const child of children) {
     if (!isContainerNode(child)) {
@@ -64,10 +65,12 @@ export function resolveWrapperRenderPlan(
       (candidate): candidate is ExportableNode =>
         candidate.contentType !== 'site' && (options.includeHidden || candidate.visible),
     );
-    childWrapperExtraExtentMap.set(
-      child.id,
-      resolveWrapperStickyState(child, childChildren, stickyGeometry).totalExtraExtentPx,
-    );
+    const childStickyState = resolveWrapperStickyState(child, childChildren, stickyGeometry);
+    childWrapperExtraExtentMap.set(child.id, childStickyState.totalExtraExtentPx);
+    if (child.subtype === 'group') {
+      const childRenderPlan = resolveWrapperRenderPlan(document, child, measuredNodeSizes, viewport, options);
+      childWrapperFlowHeightMap.set(child.id, childRenderPlan.meshLayout.bottomLanePx + childRenderPlan.extraExtent);
+    }
   }
 
   return {
@@ -75,7 +78,15 @@ export function resolveWrapperRenderPlan(
     stickyState,
     registrationMap,
     extraExtent: stickyState.totalExtraExtentPx,
-    meshLayout: computeMeshLayout(children, node, registrationMap, childWrapperExtraExtentMap, measuredNodeSizes, viewport),
+    meshLayout: computeMeshLayout(
+      children,
+      node,
+      registrationMap,
+      childWrapperExtraExtentMap,
+      childWrapperFlowHeightMap,
+      measuredNodeSizes,
+      viewport,
+    ),
   };
 }
 
@@ -381,6 +392,7 @@ function computeMeshLayout(
   wrapper: ContainerNode,
   registrations: Map<string, ComputedWrapperStickyState['registrations'][number]>,
   childWrapperExtraExtents: Map<string, number>,
+  childWrapperFlowHeights: Map<string, number>,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ): MeshLayout {
@@ -397,6 +409,7 @@ function computeMeshLayout(
       child,
       registrations.get(child.id),
       childWrapperExtraExtents.get(child.id) ?? 0,
+      childWrapperFlowHeights.get(child.id),
       measuredNodeSizes,
       viewport,
     );
@@ -418,6 +431,7 @@ function computeMeshLayout(
       child,
       registrations.get(child.id),
       childWrapperExtraExtents.get(child.id) ?? 0,
+      childWrapperFlowHeights.get(child.id),
       measuredNodeSizes,
       viewport,
     );
@@ -450,10 +464,15 @@ function getMeshNodeHeight(
   node: ExportableNode,
   registration?: ComputedWrapperStickyState['registrations'][number],
   childWrapperExtraExtentPx = 0,
+  childWrapperFlowHeightPx?: number,
   measuredNodeSizes: RenderMeasuredNodeSizes = {},
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
-  let baseHeight = getNodeHeight(node, measuredNodeSizes, viewport);
+  const height = node.rect.height.base.parsed;
+  let baseHeight =
+    isContainerNode(node) && node.subtype === 'group' && !('unit' in height) && height.keyword === 'auto'
+      ? (childWrapperFlowHeightPx ?? 0)
+      : getNodeHeight(node, measuredNodeSizes, viewport);
   if (isContainerNode(node) && childWrapperExtraExtentPx > 0) {
     baseHeight += childWrapperExtraExtentPx;
   }
@@ -475,6 +494,9 @@ function getWrapperMeshBaseHeight(
   viewport: ViewportMeasurement = DEFAULT_RENDER_VIEWPORT,
 ) {
   const height = wrapper.rect.height.base.parsed;
+  if (wrapper.subtype === 'group' && !('unit' in height) && height.keyword === 'auto') {
+    return 0;
+  }
   if ('unit' in height || height.keyword === 'aspect-ratio') {
     return getNodeHeight(wrapper, measuredNodeSizes, viewport);
   }

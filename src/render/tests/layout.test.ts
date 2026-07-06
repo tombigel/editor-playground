@@ -303,6 +303,40 @@ describe('render/layout', () => {
     expect(plan.meshLayout.rowTemplate).not.toContain('640px');
   });
 
+  it('uses grouped child bounds instead of the generic auto container fallback', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const group = createContainerNode('group', section.id);
+    group.rect = createDefaultRect('120px', '90px', 'fit-content', 'auto');
+    const title = createTextNode('block', group.id);
+    title.rect = createDefaultRect('0px', '0px', '320px', 'auto');
+    const subtitle = createTextNode('block', group.id);
+    subtitle.rect = createDefaultRect('0px', '110px', '260px', 'auto');
+    group.children = [title.id, subtitle.id];
+    section.children = [group.id];
+    document.nodes[group.id] = group;
+    document.nodes[title.id] = title;
+    document.nodes[subtitle.id] = subtitle;
+
+    const plan = resolveWrapperRenderPlan(document, section, {
+      [title.id]: { width: 320, height: 80 },
+      [subtitle.id]: { width: 260, height: 44 },
+    });
+
+    expect(plan.meshLayout.rowLines).toContain(90);
+    expect(plan.meshLayout.rowLines).toContain(244);
+    expect(plan.meshLayout.rowLines).not.toContain(570);
+    expect(plan.meshLayout.childPlacements[group.id]).toMatchObject({
+      gridRow: expect.any(String),
+    });
+  });
+
   it('preserves mesh lines for children that overflow the wrapper on the right and bottom', () => {
     const section = createContainerNode('section', 'root');
     section.rect = createDefaultRect('0px', '0px', '200px', '120px');
