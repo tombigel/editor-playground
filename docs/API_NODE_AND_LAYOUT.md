@@ -44,6 +44,8 @@ Semantic container subtypes are `container`, `nav`, `aside`, and `article`. They
 
 Groups are editor control wrappers, not semantic containers. `groupNodesDoc` wraps selected sibling nodes in a `group`, consolidating selected groups into the new group and preserving visual placement through authored coordinate adjustment. `ungroupNodeDoc` removes only group wrappers and preserves child placement. `convertGroupToContainerDoc` is intentionally one-way: a group can become a plain `container`, but a container cannot become a group.
 
+Group geometry is child-bound and editor-owned: authored group height remains `auto`, grouping/ungrouping/conversion preserve descendant placement, and renderer measurements must not feed measured group height back into the document. Editor stage interaction treats a group as a selectable/draggable wrapper first, then lets a second click select a child inside the already-selected group.
+
 ## Geometry And Layout
 
 ### Rect Mutations

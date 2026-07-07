@@ -231,6 +231,8 @@ Shared rules:
 - Wrapper visual styling is applied on the inner `contentWrapper` surface rather than on the outer layout shell.
 - `nav`, `aside`, and `article` behave like nestable containers for layout, insertion, drag/drop, snapping, ordering, padding, design controls, and export classes, but export as their matching semantic HTML tags.
 - `group` is an editor control wrapper for grouping selected nodes. It is not offered as an add-panel type, has no full container design surface, and can only be converted one-way into a plain `container`.
+- In the editor, `group` wrappers keep a real box while selected, edited, dragged, or targeted so selection chrome and drag previews have measurable geometry. Export and site rendering may flatten groups with `display: contents` because groups are not semantic site structure.
+- Group height stays `auto` and follows child bounds. Editor relayout must not write measured group height back into the authored rect, because that creates feedback loops and breaks snug group bounds.
 
 ### Section type
 
@@ -313,6 +315,8 @@ Drag modifiers:
 Drag preview and drop targeting:
 
 - The dragged source node fades and suppresses local box/filter shadows so the drag silhouette stays clean.
+- Drag previews for `container`, `nav`, `aside`, `article`, and `group` render their descendant content, not just the wrapper outline.
+- Video drag previews are inert poster previews: the replicated media uses the poster/preview frame, has explicit preview sizing, does not preload, and does not play while dragging.
 - The drag source ghost is pointer-transparent (`pointer-events: none`) so drop target detection sees through it.
 - Pointer-up commits preserve the last visible drag preview position; releasing without moving the pointer does not introduce a new snap target.
 - Hovering a valid drop target (`section`, `container`, `nav`, `aside`, `article`, or `group`) highlights that wrapper with an accent-colored outline and tinted background.
@@ -1418,7 +1422,7 @@ Language behavior:
   - the open menu chain stays active until an item is chosen, `Esc` is pressed, or an outside click occurs
   - nested submenus open on hover/focus and overlap their parent menu slightly so there is no dead hover gap
 - `Settings` menu routes to `Start fresh...`, `Import JSON`, `Export JSON`, `Export site`, and deep-links into `UI`, `Defaults`, `Fonts`, and `Advanced`
-- `Edit` menu exposes undo/redo, active copy/duplicate/paste entries, and contextual delete
+- `Edit` menu exposes undo/redo, active copy/duplicate/paste entries, contextual delete, and a final contextual group action. `Group` appears for a compatible multi-selection; `Ungroup` appears for a selected group. They are interchangeable and are never shown together.
 - `View` menu exposes grouped theme selection, preview/grid/debug toggles, snap toggle-plus-more, focus mode, and panel shortcuts for Components and Pages
 - `Help` menu opens detached `Shortcuts`, documentation browsing, the design-system showcase, and a detached `About` panel
 - Design system showcase left-navigation jumps use URL-addressable hashes in the form `#/design-system#section-id`; they scroll only the main showcase pane and keep the top bar/back-to-editor affordance visible.
@@ -1513,6 +1517,9 @@ Selection rules:
 - Hidden selections are also single-select only; if a hidden node enters the selection, the selection collapses to that hidden node.
 - `Cmd/Ctrl+G` groups selected same-parent nodes through `groupNodesDoc`; `Shift+Cmd/Ctrl+G` ungroups a selected group through `ungroupNodeDoc`.
 - Multiple selected groups are consolidated into one group. Grouping, ungrouping, and converting a group to a container preserve visual placement.
+- A plain click on an unselected group descendant selects the group first and shows the group selection rectangle. A second plain click on a descendant of the already-selected group selects that internal element.
+- Pointer-down that becomes a drag or otherwise does not finish as a click must not change selection before the drag operation resolves.
+- Selected groups are draggable but not resizable. Dragging a child inside a group moves that child and lets the group return to the new child boundary.
 
 Supported operations:
 
@@ -1541,8 +1548,8 @@ Single-node inspector:
 - Text-bearing leaves split further into `Content`, `Text style`, and `Design`, while image uses `Content` and `Design`.
 - Standalone block text keeps its editable HTML tag in `Content`; `Text style` remains typography-only.
 - Top-level `section`, `header`, and `footer` wrappers keep the width field visible in the inspector, but the field is disabled when authored width is locked to `100%`.
-- Semantic containers expose a `Content` section with a type selector for `Container`, `Nav`, `Aside`, and `Article`, plus an `ARIA label` field. `aria-labelledby` is deferred until stable element ids are available.
-- Group inspectors expose only a `Convert to container` control in `Content`; containers cannot be converted back into groups.
+- Semantic containers expose a `Content` section with a type selector for `Container`, `Nav`, `Aside`, and `Article`, plus an `ARIA label` field. The selected value shows the short type label only; longer explanatory text appears inside the dropdown options. `aria-labelledby` is deferred until stable element ids are available.
+- Group inspectors expose only a self-explanatory `Make container` / `Convert to container` control in `Content`; containers cannot be converted back into groups. Group and ungroup actions live in the `Edit` menu instead of the inspector.
 - Link-enabled standalone text nodes show a follow-link popup when `linkType: 'page'` is selected, allowing navigation to the target page.
 - Hidden selections keep `Layout` editable, including visibility controls, and disable all other inspector blocks.
 
@@ -1557,7 +1564,7 @@ Multi-select inspector:
 |---|---|---|
 | `Layout` | compatible selections | Align uses the first selected node as the anchor; distribution uses outermost selected items as endpoints. |
 | `Reorder` | same-parent movable nodes | Section wrappers never participate; reorder preserves relative order. |
-| `Text Merge` | same-parent standalone text nodes | Calls `mergeTextNodesToRichDoc()` and keeps the first selected node as the surviving anchor. |
+| `Text Merge` | same-parent standalone text nodes only | Calls `mergeTextNodesToRichDoc()` and keeps the first selected node as the surviving anchor. The action is hidden whenever the selection contains any non-text node. |
 | `Typography` | text, link, button | Shared typography controls. |
 | `Text Design` | text, link, button | Shared foreground color and filter-shadow controls. |
 | `Surface Design` | compatible surface nodes | Shared background, border radius, and box shadow. |
