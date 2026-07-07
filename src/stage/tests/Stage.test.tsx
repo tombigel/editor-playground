@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { PencilLine } from 'lucide-react';
-import { createDefaultRect, createInitialDocument, createContainerNode, createTextNode } from '../../model/defaults';
+import { createDefaultRect, createInitialDocument, createContainerNode, createMediaNode, createTextNode } from '../../model/defaults';
 import { createTextDocumentFromCode, createTextDocumentFromText } from '../../model/richContent';
 import type { DocumentModel, TextNode } from '../../model/types';
 import { DEFAULT_SNAP_SETTINGS } from '../../editor/types';
@@ -793,6 +793,58 @@ describe('stage/Stage', () => {
 
     expect(markup).toContain('Container ghost text');
     expect(markup).toContain('Group ghost text');
+  });
+
+  it('renders video drag previews as paused poster-only media with explicit size', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const video = createMediaNode('video', section.id);
+    video.src = 'https://example.com/video.mp4';
+    video.alt = 'Preview video';
+    video.video = {
+      ...video.video,
+      poster: 'https://example.com/poster.jpg',
+      autoplay: true,
+      controls: true,
+      preload: 'auto',
+    };
+    section.children = [...section.children, video.id];
+    document.nodes[video.id] = video;
+
+    const markup = renderToStaticMarkup(
+      <DragPreviewOverlay
+        document={document}
+        previewItems={[
+          {
+            nodeId: video.id,
+            offsetX: 0,
+            offsetY: 0,
+            width: 320,
+            height: 180,
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain('<video');
+    expect(markup).toContain('poster="https://example.com/poster.jpg"');
+    expect(markup).toContain('preload="none"');
+    expect(markup).toContain('muted');
+    expect(markup).toContain('playsInline');
+    expect(markup).toContain('width:100%');
+    expect(markup).toContain('height:100%');
+    expect(markup).toContain('pointer-events:none');
+    expect(markup).not.toContain('<source');
+    expect(markup).not.toContain('src="https://example.com/video.mp4"');
+    expect(markup.toLowerCase()).not.toContain('autoplay');
+    expect(markup).not.toContain('controls');
   });
 
   it('compensates editor sticky offsets against the stage shell padding', () => {

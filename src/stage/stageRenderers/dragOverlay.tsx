@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { DragGuide, DragPreviewItem } from '../../api/types';
-import type { DocumentModel, DocumentNode } from '../../model/types';
+import type { DocumentModel, DocumentNode, MediaNode } from '../../model/types';
 import { isSiteNode, isContainerNode, isLeafNode, isMediaNode } from '../../model/types';
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
 import { isBrandMark, renderLeafContent } from '../../render/nodePresentation';
@@ -167,14 +167,45 @@ function renderDragPreviewNode(
         className="stage-leaf-body"
         style={isMediaNode(node) ? styleRecordToReactStyle(getLeafInlineStyle(node)) : undefined}
       >
-        {renderLeafContent(node, {
-          contentStyle: isMediaNode(node) ? undefined : styleRecordToReactStyle(getLeafInlineStyle(node)),
-          imageClassName: 'stage-image',
-          imagePlaceholderClassName: 'image-placeholder',
-          imageDraggable: false,
-          disableTabNavigation: true,
-        })}
+        {isMediaNode(node) && node.subtype === 'video'
+          ? renderDragPreviewVideo(node)
+          : renderLeafContent(node, {
+              contentStyle: isMediaNode(node) ? undefined : styleRecordToReactStyle(getLeafInlineStyle(node)),
+              imageClassName: 'stage-image',
+              imagePlaceholderClassName: 'image-placeholder',
+              imageDraggable: false,
+              disableTabNavigation: true,
+            })}
       </div>
     </div>
+  );
+}
+
+function renderDragPreviewVideo(node: MediaNode) {
+  if (!node.src) {
+    return (
+      <div className="image-placeholder" style={{ width: '100%', height: '100%' }}>
+        Video
+      </div>
+    );
+  }
+
+  const fitStyle = styleRecordToReactStyle(getLeafInlineStyle(node));
+  return (
+    <video
+      className="stage-video"
+      poster={node.video?.poster || undefined}
+      preload="none"
+      muted
+      playsInline
+      tabIndex={-1}
+      aria-label={node.video?.title || node.alt || 'Video'}
+      style={{
+        ...fitStyle,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+      }}
+    />
   );
 }
