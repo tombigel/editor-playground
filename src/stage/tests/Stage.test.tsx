@@ -847,6 +847,52 @@ describe('stage/Stage', () => {
     expect(markup).not.toContain('controls');
   });
 
+  it('sizes grouped video drag previews to their allocated cell', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const group = createContainerNode('group', section.id);
+    group.rect = createDefaultRect('40px', '40px', 'fit-content', 'auto');
+    const video = createMediaNode('video', group.id);
+    video.rect = createDefaultRect('0px', '0px', '320px', '180px');
+    video.src = 'https://example.com/video.mp4';
+    video.video = {
+      ...video.video,
+      poster: 'https://example.com/poster.jpg',
+      autoplay: true,
+    };
+    group.children = [video.id];
+    section.children = [...section.children, group.id];
+    document.nodes[group.id] = group;
+    document.nodes[video.id] = video;
+
+    const markup = renderToStaticMarkup(
+      <DragPreviewOverlay
+        document={document}
+        previewItems={[
+          {
+            nodeId: group.id,
+            offsetX: 0,
+            offsetY: 0,
+            width: 320,
+            height: 180,
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain('class="stage-leaf-body" style="');
+    expect(markup).toContain('width:100%;height:100%');
+    expect(markup).toContain('poster="https://example.com/poster.jpg"');
+    expect(markup).not.toContain('src="https://example.com/video.mp4"');
+  });
+
   it('compensates editor sticky offsets against the stage shell padding', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(

@@ -38,6 +38,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - keep group height snug to children
 - render wrapper contents in drag preview
 - pause video drag previews
+- size grouped video drag previews
 
 ---
 

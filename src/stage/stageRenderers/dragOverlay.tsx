@@ -165,7 +165,7 @@ function renderDragPreviewNode(
     >
       <div
         className="stage-leaf-body"
-        style={isMediaNode(node) ? styleRecordToReactStyle(getLeafInlineStyle(node)) : undefined}
+        style={isMediaNode(node) ? getDragPreviewMediaBodyStyle(node) : undefined}
       >
         {isMediaNode(node) && node.subtype === 'video'
           ? renderDragPreviewVideo(node)
@@ -208,4 +208,12 @@ function renderDragPreviewVideo(node: MediaNode) {
       }}
     />
   );
+}
+
+function getDragPreviewMediaBodyStyle(node: MediaNode): CSSProperties {
+  return {
+    ...styleRecordToReactStyle(getLeafInlineStyle(node)),
+    width: '100%',
+    height: '100%',
+  };
 }
