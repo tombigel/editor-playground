@@ -2,6 +2,7 @@ import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createInitialState, insertLeaf } from "../../api/editorApi";
+import { createContainerNode, createTextNode } from "../../model/defaults";
 import { AppShell } from "../AppShell";
 import { LayersPanel } from "../../panels/LayersPanel";
 import { LOCAL_STORAGE_WARNING_THRESHOLD_BYTES } from "../../editor/editorPersistence";
@@ -69,6 +70,12 @@ function createProps(): ComponentProps<typeof AppShell> {
 }
 
 describe("app/AppShell", () => {
+	function getEditMenuMarkup(markup: string) {
+		const start = markup.indexOf('data-menu-id="edit"');
+		const end = markup.indexOf('data-menu-id="view"', start);
+		return markup.slice(start, end);
+	}
+
 	it("injects exported site css into preview mode", () => {
 		vi.stubGlobal("window", {
 			location: { origin: "http://localhost", pathname: "/" },
@@ -99,13 +106,54 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("--editor-accent:#ff6b4a");
 	});
 
-	it("renders group and ungroup actions in the Edit menu with shortcuts", () => {
-		const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+	it("renders group as the last Edit menu action when selection can be grouped", () => {
+		const props = createProps();
+		const first = createTextNode("block", "section_hero");
+		const second = createTextNode("block", "section_hero");
+		props.state.document.nodes[first.id] = first;
+		props.state.document.nodes[second.id] = second;
+		const section = props.state.document.nodes.section_hero;
+		if (section?.contentType === "container") {
+			section.children.push(first.id, second.id);
+		}
+		props.state = {
+			...props.state,
+			selectedId: first.id,
+			selectedIds: [first.id, second.id],
+		};
+		props.selectedNode = first;
+		props.selectedNodes = [first, second];
 
-		expect(markup).toContain(">Group<");
-		expect(markup).toContain(">Ungroup<");
-		expect(markup).toContain("Cmd + G");
-		expect(markup).toContain("Cmd + Shift + G");
+		const editMenuMarkup = getEditMenuMarkup(renderToStaticMarkup(<AppShell {...props} />));
+
+		expect(editMenuMarkup).toContain(">Group<");
+		expect(editMenuMarkup).not.toContain(">Ungroup<");
+		expect(editMenuMarkup).toContain("Cmd + G");
+		expect(editMenuMarkup).not.toContain("Cmd + Shift + G");
+		expect(editMenuMarkup.indexOf(">Copy<")).toBeLessThan(editMenuMarkup.indexOf(">Paste<"));
+		expect(editMenuMarkup.indexOf(">Paste<")).toBeLessThan(editMenuMarkup.indexOf(">Delete<"));
+		expect(editMenuMarkup.indexOf(">Delete<")).toBeLessThan(editMenuMarkup.indexOf(">Group<"));
+	});
+
+	it("renders ungroup as the last Edit menu action when a group is selected", () => {
+		const props = createProps();
+		const group = createContainerNode("group", "section_hero");
+		props.state.document.nodes[group.id] = group;
+		props.state = {
+			...props.state,
+			selectedId: group.id,
+			selectedIds: [group.id],
+		};
+		props.selectedNode = group;
+		props.selectedNodes = [group];
+
+		const editMenuMarkup = getEditMenuMarkup(renderToStaticMarkup(<AppShell {...props} />));
+
+		expect(editMenuMarkup).toContain(">Ungroup<");
+		expect(editMenuMarkup).not.toContain(">Group<");
+		expect(editMenuMarkup).toContain("Cmd + Shift + G");
+		expect(editMenuMarkup).not.toContain("Cmd + G</span>");
+		expect(editMenuMarkup.indexOf(">Delete<")).toBeLessThan(editMenuMarkup.indexOf(">Ungroup<"));
 	});
 
 	it("uses the shared accent for paper and monokai shells", () => {

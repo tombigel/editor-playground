@@ -197,6 +197,21 @@ export function EditorTopbar({
 }) {
 	const activePage =
 		pages.find((page) => page.id === activePageId) ?? pages[0] ?? null;
+	const groupMenuAction = canUngroupSelection
+		? {
+				icon: Ungroup,
+				label: "Ungroup",
+				shortcut: getShortcutLabel("ungroupSelection", shortcutPlatform),
+				disabled: false,
+				onClick: onUngroupSelection,
+			}
+		: {
+				icon: Group,
+				label: "Group",
+				shortcut: getShortcutLabel("groupSelection", shortcutPlatform),
+				disabled: !canGroupSelection,
+				onClick: onGroupSelection,
+			};
 	const pageOptions = useMemo(
 		() =>
 			pages.map((page) => ({
@@ -284,23 +299,6 @@ export function EditorTopbar({
 							>
 								Duplicate
 							</MenubarItem>
-							<MenubarSeparator />
-							<MenubarItem
-								icon={Group}
-								shortcut={getShortcutLabel("groupSelection", shortcutPlatform)}
-								disabled={!canGroupSelection}
-								onClick={onGroupSelection}
-							>
-								Group
-							</MenubarItem>
-							<MenubarItem
-								icon={Ungroup}
-								shortcut={getShortcutLabel("ungroupSelection", shortcutPlatform)}
-								disabled={!canUngroupSelection}
-								onClick={onUngroupSelection}
-							>
-								Ungroup
-							</MenubarItem>
 							<MenubarItem
 								icon={ClipboardPaste}
 								shortcut={getShortcutLabel("pasteClipboard", shortcutPlatform)}
@@ -315,6 +313,15 @@ export function EditorTopbar({
 								onClick={onDeleteSelection}
 							>
 								Delete
+							</MenubarItem>
+							<MenubarSeparator />
+							<MenubarItem
+								icon={groupMenuAction.icon}
+								shortcut={groupMenuAction.shortcut}
+								disabled={groupMenuAction.disabled}
+								onClick={groupMenuAction.onClick}
+							>
+								{groupMenuAction.label}
 							</MenubarItem>
 						</MenubarContent>
 					</MenubarMenu>
