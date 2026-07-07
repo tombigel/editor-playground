@@ -19,7 +19,6 @@ import {
   ArrowBigDownDash,
   ArrowBigUp,
   ArrowBigUpDash,
-  Group,
   PilcrowLeft,
   PilcrowRight,
   Settings2,
@@ -91,7 +90,6 @@ type Props = {
   debugInfoItems?: NodeDebugInfo[];
   onAlignSelection: (mode: 'left' | 'center-x' | 'right' | 'top' | 'center-y' | 'bottom') => void;
   onDistributeSelection: (mode: 'horizontal' | 'vertical' | 'left' | 'right' | 'top' | 'bottom') => void;
-  onGroupSelection?: () => void;
   onBulkEdit: (operations: BulkEditOperation[]) => void;
 };
 
@@ -105,7 +103,6 @@ export function MultiSelectInspector({
   debugInfoItems = [],
   onAlignSelection,
   onDistributeSelection,
-  onGroupSelection,
   onBulkEdit,
 }: Props) {
   const textNodes = selectedNodes.filter(isTypographyNode);
@@ -133,7 +130,6 @@ export function MultiSelectInspector({
   const stickyNodes = selectedNodes.filter((node): node is Exclude<DocumentNode, { contentType: 'site' }> => !isSiteNode(node));
   const canAlign = canAlignSelection(selectedNodes);
   const canDistribute = canAlign && selectedNodes.length >= 3;
-  const canGroup = canGroupSelection(selectedNodes);
   const hasOnlyTextSelection =
     selectedNodes.length >= 2 &&
     standaloneTextNodes.length === selectedNodes.length;
@@ -307,16 +303,6 @@ export function MultiSelectInspector({
               </FormField>
             ) : null}
 
-            <FormField label="Group" layout="inline-group">
-              <TextStyleIconButton
-                label="Group selection"
-                active={false}
-                disabled={!canGroup || !onGroupSelection}
-                onClick={() => onGroupSelection?.()}
-              >
-                <Group className="h-4 w-4" />
-              </TextStyleIconButton>
-            </FormField>
           </CardContent>
         </Card>
 
@@ -615,10 +601,6 @@ function canAlignSelection(selectedNodes: DocumentNode[]) {
     isMovableAlignmentNode(firstNode) &&
     restNodes.every((node) => !isSiteNode(node) && isMovableAlignmentNode(node) && node.parentId === firstNode.parentId)
   );
-}
-
-function canGroupSelection(selectedNodes: DocumentNode[]) {
-  return canAlignSelection(selectedNodes);
 }
 
 function isMovableAlignmentNode(node: DocumentNode) {

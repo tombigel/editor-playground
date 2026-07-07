@@ -99,6 +99,15 @@ describe("app/AppShell", () => {
 		expect(markup).toContain("--editor-accent:#ff6b4a");
 	});
 
+	it("renders group and ungroup actions in the Edit menu with shortcuts", () => {
+		const markup = renderToStaticMarkup(<AppShell {...createProps()} />);
+
+		expect(markup).toContain(">Group<");
+		expect(markup).toContain(">Ungroup<");
+		expect(markup).toContain("Cmd + G");
+		expect(markup).toContain("Cmd + Shift + G");
+	});
+
 	it("uses the shared accent for paper and monokai shells", () => {
 		const paperProps = createProps();
 		paperProps.state.ui.accentColor = "#b07a3a";

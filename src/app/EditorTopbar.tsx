@@ -10,6 +10,7 @@ import {
 	FileJson,
 	FilePlus2,
 	FileUp,
+	Group,
 	Info,
 	Keyboard,
 	Layers2,
@@ -22,6 +23,7 @@ import {
 	Trash2,
 	Type,
 	Undo2,
+	Ungroup,
 } from "lucide-react";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
 import {
@@ -94,6 +96,8 @@ export function EditorTopbar({
 	historyState,
 	canDeleteSelection,
 	canCopySelection,
+	canGroupSelection,
+	canUngroupSelection,
 	layersOpen,
 	pagesOpen,
 	onSetActivePage,
@@ -110,6 +114,8 @@ export function EditorTopbar({
 	onCopySelection,
 	onPasteClipboard,
 	onDuplicateSelection,
+	onGroupSelection,
+	onUngroupSelection,
 	onSetLightTheme,
 	onSetDarkTheme,
 	onTogglePreviewSticky,
@@ -148,6 +154,8 @@ export function EditorTopbar({
 	historyState: { past: unknown[]; future: unknown[] };
 	canDeleteSelection: boolean;
 	canCopySelection: boolean;
+	canGroupSelection: boolean;
+	canUngroupSelection: boolean;
 	layersOpen: boolean;
 	pagesOpen: boolean;
 	onSetActivePage: (pageId: PageId) => void;
@@ -166,6 +174,8 @@ export function EditorTopbar({
 	onCopySelection: () => void;
 	onPasteClipboard: () => void;
 	onDuplicateSelection: () => void;
+	onGroupSelection: () => void;
+	onUngroupSelection: () => void;
 	onSetLightTheme: (theme: EditorLightTheme) => void;
 	onSetDarkTheme: (theme: EditorDarkTheme) => void;
 	onTogglePreviewSticky: () => void;
@@ -273,6 +283,23 @@ export function EditorTopbar({
 								onClick={onDuplicateSelection}
 							>
 								Duplicate
+							</MenubarItem>
+							<MenubarSeparator />
+							<MenubarItem
+								icon={Group}
+								shortcut={getShortcutLabel("groupSelection", shortcutPlatform)}
+								disabled={!canGroupSelection}
+								onClick={onGroupSelection}
+							>
+								Group
+							</MenubarItem>
+							<MenubarItem
+								icon={Ungroup}
+								shortcut={getShortcutLabel("ungroupSelection", shortcutPlatform)}
+								disabled={!canUngroupSelection}
+								onClick={onUngroupSelection}
+							>
+								Ungroup
 							</MenubarItem>
 							<MenubarItem
 								icon={ClipboardPaste}

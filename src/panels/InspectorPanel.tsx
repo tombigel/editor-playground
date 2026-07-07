@@ -52,7 +52,6 @@ export type InspectorPanelProps = {
   activePageId?: PageId | null;
   onAlignSelection?: (mode: AlignmentAction) => void;
   onDistributeSelection?: (mode: DistributionMode) => void;
-  onGroupSelection?: () => void;
   onBulkEdit?: (operations: BulkEditOperation[]) => void;
   onTextChange: (field: EditorTextField, value: string) => void;
   onWrapperStyleChange: (field: WrapperStyleField, value: string) => void;
@@ -128,7 +127,6 @@ export function InspectorPanel({
   activePageId = null,
   onAlignSelection = () => undefined,
   onDistributeSelection = () => undefined,
-  onGroupSelection,
   onBulkEdit = () => undefined,
   onTextChange,
   onWrapperStyleChange,
@@ -315,7 +313,6 @@ export function InspectorPanel({
         debugInfoItems={debugInfoItems}
         onAlignSelection={onAlignSelection}
         onDistributeSelection={onDistributeSelection}
-        onGroupSelection={onGroupSelection}
         onBulkEdit={onBulkEdit}
       />
     );

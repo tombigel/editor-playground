@@ -196,10 +196,9 @@ describe('panels/InspectorPanel', () => {
     expect(navMarkup).not.toContain('>Ungroup<');
     expect(groupMarkup).toContain('>Make container<');
     expect(groupMarkup).not.toContain('>Convert<');
-    expect(groupMarkup).toContain('>Ungroup<');
+    expect(groupMarkup).not.toContain('>Ungroup<');
     expect(groupMarkup).not.toContain('>Accessible name<');
     expect(groupMarkup).not.toContain('>Design<');
-    expect(groupMarkup.indexOf('>Visibility<')).toBeLessThan(groupMarkup.indexOf('>Ungroup<'));
   });
 
   it('renders top-level wrapper visibility controls in the layout section', () => {
@@ -320,7 +319,7 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('class="shrink-0" style="width:112px"');
     expect(markup).toContain('class="shrink-0" style="width:56px"');
     expect(markup).toContain('aria-label="Manage fonts"');
-    expect(markup).toContain('aria-label="Group selection"');
+    expect(markup).not.toContain('aria-label="Group selection"');
     expect(markup).toContain('>Text Merge<');
     expect(markup).toContain('>Merge into rich text<');
   });

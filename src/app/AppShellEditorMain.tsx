@@ -101,6 +101,11 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				historyState={historyState}
 				canDeleteSelection={selectedNodes.length > 0}
 				canCopySelection={selectedNodes.length > 0}
+				canGroupSelection={selectedNodes.length > 1}
+				canUngroupSelection={
+					selectedNode?.contentType === "container" &&
+					selectedNode.subtype === "group"
+				}
 				layersOpen={layersOpen}
 				pagesOpen={pagesOpen}
 				onSetActivePage={(pageId) =>
@@ -121,6 +126,8 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 				onCopySelection={() => void onCopySelection()}
 				onPasteClipboard={() => void onPasteClipboard()}
 				onDuplicateSelection={onDuplicateSelection}
+				onGroupSelection={() => dispatch({ type: "groupSelection" })}
+				onUngroupSelection={() => dispatch({ type: "ungroupSelection" })}
 				onSetLightTheme={handleSetLightTheme}
 				onSetDarkTheme={handleSetDarkTheme}
 				onTogglePreviewSticky={() =>
@@ -492,7 +499,6 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 								rects: collectSelectionRects(),
 							})
 						}
-						onGroupSelection={() => dispatch({ type: "groupSelection" })}
 						onBulkEdit={(operations) =>
 							dispatch({ type: "bulkEdit", operations })
 						}

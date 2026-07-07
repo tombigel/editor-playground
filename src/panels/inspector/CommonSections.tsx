@@ -11,7 +11,6 @@ import {
   PencilLine,
   SquareArrowOutUpRight,
   TypeOutline,
-  Ungroup,
 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { DocumentModel, FocusedMode } from '../../api/editorApi';
@@ -467,20 +466,6 @@ export function NodeBasicsSection({
               />
             </div>
           )}
-        </FormField>
-      ) : null}
-      {isContainerNode(node) && node.subtype === 'group' ? (
-        <FormField label="Group" layout="inline-group">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 justify-center text-[11px]"
-            onClick={() => actions.onUngroupNode(node.id)}
-          >
-            <Ungroup className="h-3.5 w-3.5" />
-            Ungroup
-          </Button>
         </FormField>
       ) : null}
     </InspectorSectionCard>
