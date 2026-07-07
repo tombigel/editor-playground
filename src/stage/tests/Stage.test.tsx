@@ -744,6 +744,57 @@ describe('stage/Stage', () => {
     expect(markup).toContain('box-shadow:0px 12px 18px 6px rgba(40, 20, 10, 0.2)');
   });
 
+  it('renders container and group contents in the drag preview', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const container = createContainerNode('container', section.id);
+    const containerText = createTextNode('block', container.id);
+    containerText.content = createTextDocumentFromText('Container ghost text');
+    container.children = [containerText.id];
+    const group = createContainerNode('group', section.id);
+    group.rect = createDefaultRect('40px', '40px', 'fit-content', 'auto');
+    const groupText = createTextNode('block', group.id);
+    groupText.content = createTextDocumentFromText('Group ghost text');
+    group.children = [groupText.id];
+    section.children = [...section.children, container.id, group.id];
+    document.nodes[container.id] = container;
+    document.nodes[containerText.id] = containerText;
+    document.nodes[group.id] = group;
+    document.nodes[groupText.id] = groupText;
+
+    const markup = renderToStaticMarkup(
+      <DragPreviewOverlay
+        document={document}
+        previewItems={[
+          {
+            nodeId: container.id,
+            offsetX: 0,
+            offsetY: 0,
+            width: 360,
+            height: 240,
+          },
+          {
+            nodeId: group.id,
+            offsetX: 380,
+            offsetY: 0,
+            width: 320,
+            height: 80,
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain('Container ghost text');
+    expect(markup).toContain('Group ghost text');
+  });
+
   it('compensates editor sticky offsets against the stage shell padding', () => {
     const document = structuredClone(createInitialDocument());
     const target = Object.values(document.nodes).find(

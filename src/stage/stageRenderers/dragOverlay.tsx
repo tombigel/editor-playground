@@ -5,9 +5,11 @@ import { isSiteNode, isContainerNode, isLeafNode, isMediaNode } from '../../mode
 import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPresentation';
 import { isBrandMark, renderLeafContent } from '../../render/nodePresentation';
 import {
+  getContentWrapperBaseStyle,
   getContentWrapperPaddingStyle,
   getContentWrapperSurfaceStyle,
   getWrapperBorderStyle,
+  resolveWrapperRenderPlan,
 } from '../../render/layout';
 import type { DragState } from '../types';
 
@@ -68,7 +70,7 @@ export function DragPreviewOverlay(props: DragPreviewOverlayProps) {
 
         return (
           <div key={item.nodeId} className="drag-preview" style={style}>
-            {renderDragPreviewNode(node)}
+            {renderDragPreviewNode(document, node)}
           </div>
         );
       })}
@@ -111,24 +113,39 @@ export function SnapGuideOverlay(props: SnapGuideOverlayProps) {
   );
 }
 
-function renderDragPreviewNode(node: Exclude<DocumentNode, { contentType: 'site' }>) {
+function renderDragPreviewNode(
+  document: DocumentModel,
+  node: Exclude<DocumentNode, { contentType: 'site' }>,
+  placementStyle: CSSProperties = {},
+) {
   if (isContainerNode(node)) {
+    const plan = resolveWrapperRenderPlan(document, node, {}, undefined, { includeHidden: true });
     return (
       <div
         className={`drag-preview-inner drag-preview-wrapper role-${node.subtype}`}
         style={{
+          ...placementStyle,
           ...getWrapperBorderStyle(node),
         }}
       >
         <div
           className="drag-preview-content-wrapper content-wrapper"
           style={{
-            width: '100%',
-            height: '100%',
+            ...getContentWrapperBaseStyle(node),
             ...getContentWrapperPaddingStyle(node),
+            display: 'grid',
+            gridTemplateColumns: plan.meshLayout.columnTemplate,
+            gridTemplateRows: plan.meshLayout.rowTemplate,
           }}
         >
           <div className="content-wrapper-surface" aria-hidden="true" style={getContentWrapperSurfaceStyle(node)} />
+          {plan.children.map((child) =>
+            renderDragPreviewNode(
+              document,
+              child,
+              plan.meshLayout.childPlacements[child.id],
+            ),
+          )}
         </div>
       </div>
     );
@@ -141,6 +158,7 @@ function renderDragPreviewNode(node: Exclude<DocumentNode, { contentType: 'site'
       data-node-id={node.id}
       className={`drag-preview-inner stage-leaf role-${node.subtype} ${isBrandMark(node) ? 'is-brand-mark' : ''}`}
       style={{
+        ...placementStyle,
         width: '100%',
         height: '100%',
       }}
