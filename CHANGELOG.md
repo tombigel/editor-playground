@@ -55,6 +55,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - move group actions to edit menu
 - show one group action in edit menu
 - cover table direction semantics
+- polish table control regressions
 
 ---
 

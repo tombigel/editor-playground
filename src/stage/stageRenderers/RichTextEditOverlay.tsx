@@ -392,10 +392,8 @@ export function RichTextEditOverlay({
 	const currentBlockGap =
 		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle);
 	const currentBlockSpacingValue = `${String(currentBlockGap)}px`;
-	const activeTableContext = useMemo(
-		() => (editMode === "table" ? getActiveTableContext(editor) : null),
-		[editMode, editor, selectionRevision, toolbarState],
-	);
+	const activeTableContext =
+		editMode === "table" ? getActiveTableContext(editor) : null;
 
 	useEffect(() => {
 		if (

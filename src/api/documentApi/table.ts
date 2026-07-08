@@ -538,10 +538,10 @@ export function setTableSelectionBorderBlock(
     if (edges.length === 0) {
       return style;
     }
-    const mergedPatch = edges.reduce<TableCellStylePatch>(
-      (nextPatch, edge) => ({ ...nextPatch, ...edgePatch(edge, patch) }),
-      {},
-    );
+    const mergedPatch: TableCellStylePatch = {};
+    for (const edge of edges) {
+      Object.assign(mergedPatch, edgePatch(edge, patch));
+    }
     return mergeTableCellStyle(style, mergedPatch);
   });
 
