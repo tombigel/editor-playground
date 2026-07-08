@@ -24,6 +24,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add table toolbar actions
 - show clipped text color sources
 - add site background setting
+- derive active table cell context
 
 ### Changed
 

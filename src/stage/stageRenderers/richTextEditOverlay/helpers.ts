@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
-import type { BaseSelection } from "slate";
+import { Editor, Element } from "slate";
+import type { BaseSelection, Path } from "slate";
 
 import {
 	BOLD_FONT_WEIGHT,
@@ -8,6 +9,7 @@ import {
 } from "../../../api/fontApi";
 import { formatDisplayValue } from "../../../model/conversion";
 import { parseFontSizeValue } from "../../../model/units";
+import type { RichTableBlock, RichTableCell, TableColumnAlignment } from "../../../model/types";
 import {
 	getMarkValue,
 	getSelectedBlockType,
@@ -186,6 +188,71 @@ export function isTargetWithinValueFieldLayer(
 
 export function isTargetWithinToolbar(target: EventTarget | null): boolean {
 	return isTargetWithinSelector(target, '[data-stage-rich-toolbar="true"]');
+}
+
+export type ActiveTableContext = {
+	rowIndex: number;
+	columnIndex: number;
+	rowCount: number;
+	columnCount: number;
+	columnWidth: string | null;
+	rowHeight: string | null;
+	columnAlignment: TableColumnAlignment;
+	cellStyle: (RichTableCell & { style?: Record<string, string> })["style"];
+	direction: "ltr" | "rtl" | null;
+	hasHeader: boolean;
+};
+
+export function getActiveTableContext(editor: RichEditor): ActiveTableContext | null {
+	if (!editor.selection) {
+		return null;
+	}
+
+	const cellEntry = Editor.above(editor, {
+		match: (node) =>
+			Element.isElement(node) &&
+			(node as { type?: string }).type === "table-cell",
+	}) as [RichTableCell & { style?: Record<string, string> }, Path] | undefined;
+	if (!cellEntry) {
+		return null;
+	}
+
+	const tableEntry = Editor.above(editor, {
+		at: cellEntry[1],
+		match: (node) =>
+			Element.isElement(node) &&
+			(node as { type?: string }).type === "table",
+	}) as [RichTableBlock, Path] | undefined;
+	if (!tableEntry) {
+		return null;
+	}
+
+	const [cell, cellPath] = cellEntry;
+	const [table] = tableEntry;
+	const rowIndex = cellPath.at(-2);
+	const columnIndex = cellPath.at(-1);
+	if (rowIndex == null || columnIndex == null) {
+		return null;
+	}
+
+	const rowCount = table.children.length;
+	const columnCount = Math.max(1, ...table.children.map((row) => row.children.length));
+	if (rowIndex < 0 || rowIndex >= rowCount || columnIndex < 0 || columnIndex >= columnCount) {
+		return null;
+	}
+
+	return {
+		rowIndex,
+		columnIndex,
+		rowCount,
+		columnCount,
+		columnWidth: table.columnWidths?.[columnIndex] ?? null,
+		rowHeight: table.rowHeights?.[rowIndex] ?? null,
+		columnAlignment: table.columnAlignments?.[columnIndex] ?? null,
+		cellStyle: cell.style,
+		direction: table.direction ?? null,
+		hasHeader: table.children[0]?.header === true,
+	};
 }
 
 export function normalizeColorInputValue(
