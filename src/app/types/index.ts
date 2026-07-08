@@ -4,6 +4,7 @@ import type {
   EditorTextField,
   FontLibrary,
   NodeId,
+  RichTableCellStyle,
   RichTableStyle,
   SectionTemplateId,
   StickyDefinition,
@@ -12,7 +13,13 @@ import type {
   WrapperStyleField,
   ContainerChildBoundary,
 } from '../../api/documentViewApi';
-import type { ContainerSubtype, SemanticContainerSubtype } from '../../api/documentApi';
+import type {
+  ContainerSubtype,
+  SemanticContainerSubtype,
+  TableBorderScope,
+  TableCellBorderPatch,
+  TableSelectionDescriptor,
+} from '../../api/documentApi';
 import type { EditorState, FocusedMode, FocusedPanelOffset, SnapSettings, AnimationPreviewState } from '../../editor/types';
 import type { PageId, DocumentPage, SiteSettings } from '../../api/documentViewApi';
 import type { TopLevelWrapperVisibility } from '../../api/editorApi';
@@ -114,6 +121,9 @@ export type EditorAction =
   | { type: 'setTableColumnWidth'; nodeId: NodeId; columnIndex: number; width: string | null }
   | { type: 'setTableRowHeight'; nodeId: NodeId; rowIndex: number; height: string | null }
   | { type: 'setTableStyle'; nodeId: NodeId; patch: Partial<Record<keyof RichTableStyle, string | null>> }
+  | { type: 'setTableCellStyle'; nodeId: NodeId; rowIndex: number; columnIndex: number; patch: Partial<Record<keyof RichTableCellStyle, string | null>> }
+  | { type: 'setTableSelectionStyle'; nodeId: NodeId; selection: TableSelectionDescriptor; patch: Partial<Record<keyof RichTableCellStyle, string | null>> }
+  | { type: 'setTableSelectionBorder'; nodeId: NodeId; selection: TableSelectionDescriptor; scope: TableBorderScope; patch: TableCellBorderPatch }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }
   | { type: 'move'; id: string; x: string; y: string; options?: DragCommitOptions }

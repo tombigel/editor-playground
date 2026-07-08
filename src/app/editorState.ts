@@ -64,9 +64,12 @@ import {
   removeTableRowDoc,
   setTableColumnAlignmentDoc,
   setTableColumnWidthDoc,
+  setTableCellStyleDoc,
   setTableDirectionDoc,
   setTableHeaderRowDoc,
   setTableRowHeightDoc,
+  setTableSelectionBorderDoc,
+  setTableSelectionStyleDoc,
   setTableStyleDoc,
 } from '../api/documentApi';
 import {
@@ -233,6 +236,12 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTableRowHeightDoc(state.document, action.nodeId, action.rowIndex, action.height) };
     case 'setTableStyle':
       return { ...state, document: setTableStyleDoc(state.document, action.nodeId, action.patch) };
+    case 'setTableCellStyle':
+      return { ...state, document: setTableCellStyleDoc(state.document, action.nodeId, action.rowIndex, action.columnIndex, action.patch) };
+    case 'setTableSelectionStyle':
+      return { ...state, document: setTableSelectionStyleDoc(state.document, action.nodeId, action.selection, action.patch) };
+    case 'setTableSelectionBorder':
+      return { ...state, document: setTableSelectionBorderDoc(state.document, action.nodeId, action.selection, action.scope, action.patch) };
     case 'mergeTextSelectionToRich': {
       const nodeIds = action.nodeIds ?? selectedIds;
       if (nodeIds.length < 2) {

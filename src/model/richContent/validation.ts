@@ -11,6 +11,38 @@ import {
 import { isObjectRecord, normalizeBlockGap } from './shared';
 import { MAX_LIST_ITEM_DEPTH } from './shared';
 
+const TABLE_CELL_STYLE_KEYS = new Set([
+  'background',
+  'padding',
+  'borderTopWidth',
+  'borderTopColor',
+  'borderRightWidth',
+  'borderRightColor',
+  'borderBottomWidth',
+  'borderBottomColor',
+  'borderLeftWidth',
+  'borderLeftColor',
+]);
+
+function validateTableCellStyle(style: unknown, path: string, errors: string[]) {
+  if (style === undefined) {
+    return;
+  }
+  if (!isObjectRecord(style)) {
+    errors.push(`${path} style must be an object.`);
+    return;
+  }
+  for (const [key, value] of Object.entries(style)) {
+    if (!TABLE_CELL_STYLE_KEYS.has(key)) {
+      errors.push(`${path} style field "${key}" is not supported.`);
+      continue;
+    }
+    if (typeof value !== 'string') {
+      errors.push(`${path} style field "${key}" must be a string.`);
+    }
+  }
+}
+
 export function validateRichContentStructure(content: unknown): string[] {
   if (!Array.isArray(content)) {
     return ['Rich content root must be an array of blocks.'];
@@ -249,6 +281,7 @@ export function validateRichContentStructure(content: unknown): string[] {
             errors.push(`Rich table cell ${blockIndex}.${rowIndex}.${cellIndex} must be a table-cell element.`);
             return;
           }
+          validateTableCellStyle(cell.style, `Rich table cell ${blockIndex}.${rowIndex}.${cellIndex}`, errors);
           cell.children.forEach((cellChild, cellChildIndex) => {
             if (isObjectRecord(cellChild) && cellChild.type === 'link') {
               if (!Array.isArray(cellChild.children)) {

@@ -483,7 +483,15 @@ describe('model/richContent', () => {
               {
                 type: 'table-row',
                 children: [
-                  { type: 'table-cell', children: [makeLeaf('A')] },
+                  {
+                    type: 'table-cell',
+                    style: {
+                      background: ' #ffeeaa ',
+                      borderTopWidth: '2px',
+                      borderLeftColor: '',
+                    },
+                    children: [makeLeaf('A')],
+                  },
                   { type: 'table-cell', children: [makeLeaf('B')] },
                 ],
               },
@@ -510,6 +518,10 @@ describe('model/richContent', () => {
       expect(tableBlock?.columnWidths).toEqual(['12rem', null]);
       expect(tableBlock?.rowHeights).toEqual(['44px', null]);
       expect(tableBlock?.style).toEqual({ tableBackground: '#fff', cellPadding: '8px' });
+      expect(tableBlock?.children[0]?.children[0]?.style).toEqual({
+        background: '#ffeeaa',
+        borderTopWidth: '2px',
+      });
     });
   });
 
@@ -544,6 +556,22 @@ describe('model/richContent', () => {
         'Rich table block 0 columnWidths length must match the column count.',
         'Rich table block 0 row height 1 must be a string or null.',
         'Rich table block 0 style cellPadding must be a string.',
+      ]);
+    });
+
+    it('reports invalid table cell style values', () => {
+      expect(validateRichContentStructure([
+        createRichTableBlock([
+          createRichTableRow([
+            {
+              ...createRichTableCell([makeLeaf('A')]),
+              style: { background: 4, unsupported: 'x' },
+            } as unknown as ReturnType<typeof createRichTableCell>,
+          ]),
+        ]),
+      ])).toEqual([
+        'Rich table cell 0.0.0 style field "background" must be a string.',
+        'Rich table cell 0.0.0 style field "unsupported" is not supported.',
       ]);
     });
 

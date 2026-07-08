@@ -5,6 +5,7 @@ import type {
   RichInlineNode,
   RichListItem,
   RichTableCell,
+  RichTableCellStyle,
   RichTableRow,
   RichTextLeaf,
   RichTextLink,
@@ -204,7 +205,36 @@ function normalizeTableCell(node: unknown): RichTableCell | null {
   if (!isObjectRecord(node) || node.type !== 'table-cell') {
     return null;
   }
-  return createRichTableCell(normalizeInlineChildren(node.children));
+  return createRichTableCell(normalizeInlineChildren(node.children), {
+    style: normalizeTableCellStyle(node.style),
+  });
+}
+
+const TABLE_CELL_STYLE_KEYS = [
+  'background',
+  'padding',
+  'borderTopWidth',
+  'borderTopColor',
+  'borderRightWidth',
+  'borderRightColor',
+  'borderBottomWidth',
+  'borderBottomColor',
+  'borderLeftWidth',
+  'borderLeftColor',
+] as const satisfies ReadonlyArray<keyof RichTableCellStyle>;
+
+function normalizeTableCellStyle(style: unknown): RichTableCellStyle | undefined {
+  if (!isObjectRecord(style)) {
+    return undefined;
+  }
+  const normalized: RichTableCellStyle = {};
+  for (const key of TABLE_CELL_STYLE_KEYS) {
+    const value = style[key];
+    if (typeof value === 'string' && value.trim()) {
+      normalized[key] = value.trim();
+    }
+  }
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
 function normalizeTableRow(node: unknown, rowIndex: number): RichTableRow | null {

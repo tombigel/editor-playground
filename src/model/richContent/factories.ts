@@ -11,6 +11,7 @@ import type {
   RichListItem,
   RichTableBlock,
   RichTableCell,
+  RichTableCellStyle,
   RichTableRow,
   RichTableStyle,
   RichTextBlock,
@@ -202,6 +203,19 @@ const TABLE_STYLE_KEYS = [
   'headerColor',
 ] as const satisfies ReadonlyArray<keyof RichTableStyle>;
 
+const TABLE_CELL_STYLE_KEYS = [
+  'background',
+  'padding',
+  'borderTopWidth',
+  'borderTopColor',
+  'borderRightWidth',
+  'borderRightColor',
+  'borderBottomWidth',
+  'borderBottomColor',
+  'borderLeftWidth',
+  'borderLeftColor',
+] as const satisfies ReadonlyArray<keyof RichTableCellStyle>;
+
 function normalizeRichTableStyle(style: unknown): RichTableStyle | undefined {
   if (!style || typeof style !== 'object') {
     return undefined;
@@ -217,9 +231,29 @@ function normalizeRichTableStyle(style: unknown): RichTableStyle | undefined {
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
-export function createRichTableCell(children: RichInlineNode[] = [createRichTextLeaf('')]): RichTableCell {
+function normalizeRichTableCellStyle(style: unknown): RichTableCellStyle | undefined {
+  if (!style || typeof style !== 'object') {
+    return undefined;
+  }
+  const source = style as Record<string, unknown>;
+  const normalized: RichTableCellStyle = {};
+  for (const key of TABLE_CELL_STYLE_KEYS) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) {
+      normalized[key] = value.trim();
+    }
+  }
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
+export function createRichTableCell(
+  children: RichInlineNode[] = [createRichTextLeaf('')],
+  options: Pick<RichTableCell, 'style'> = {},
+): RichTableCell {
+  const style = normalizeRichTableCellStyle(options.style);
   return {
     type: 'table-cell',
+    ...(style ? { style } : {}),
     children: children.length > 0 ? children : [createRichTextLeaf('')],
   };
 }

@@ -92,9 +92,16 @@ export {
   setTableColumnAlignmentDoc,
   setTableColumnWidthDoc,
   setTableDirectionDoc,
+  setTableCellStyleDoc,
   setTableHeaderRowDoc,
   setTableRowHeightDoc,
+  setTableSelectionBorderDoc,
+  setTableSelectionStyleDoc,
   setTableStyleDoc,
+  type TableBorderScope,
+  type TableCellBorderPatch,
+  type TableCellStylePatch,
+  type TableSelectionDescriptor,
 } from './documentApi/table';
 export {
   applyMarkdownToTextNodeDoc,

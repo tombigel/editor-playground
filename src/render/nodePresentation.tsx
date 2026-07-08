@@ -178,7 +178,26 @@ function getTableCellAlignment(block: RichTableBlock, cellIndex: number): CSSPro
   return alignment ? { textAlign: alignment } : undefined;
 }
 
-function getTableCellStyle(block: RichTableBlock, cellIndex: number, header = false): CSSProperties | undefined {
+function getTableCellEdgeStyle(cell: RichTableCell): CSSProperties {
+  const style = cell.style;
+  if (!style) {
+    return {};
+  }
+  return {
+    ...(style.background ? { background: style.background } : {}),
+    ...(style.padding ? { padding: style.padding } : {}),
+    ...(style.borderTopColor ? { borderTopColor: style.borderTopColor } : {}),
+    ...(style.borderTopWidth ? { borderTopStyle: 'solid', borderTopWidth: style.borderTopWidth } : {}),
+    ...(style.borderRightColor ? { borderRightColor: style.borderRightColor } : {}),
+    ...(style.borderRightWidth ? { borderRightStyle: 'solid', borderRightWidth: style.borderRightWidth } : {}),
+    ...(style.borderBottomColor ? { borderBottomColor: style.borderBottomColor } : {}),
+    ...(style.borderBottomWidth ? { borderBottomStyle: 'solid', borderBottomWidth: style.borderBottomWidth } : {}),
+    ...(style.borderLeftColor ? { borderLeftColor: style.borderLeftColor } : {}),
+    ...(style.borderLeftWidth ? { borderLeftStyle: 'solid', borderLeftWidth: style.borderLeftWidth } : {}),
+  };
+}
+
+function getTableCellStyle(block: RichTableBlock, cell: RichTableCell, cellIndex: number, header = false): CSSProperties | undefined {
   const alignmentStyle = getTableCellAlignment(block, cellIndex);
   const width = block.columnWidths?.[cellIndex];
   const style = block.style;
@@ -187,7 +206,8 @@ function getTableCellStyle(block: RichTableBlock, cellIndex: number, header = fa
   const cellPadding = style?.cellPadding;
   const headerBackground = header ? style?.headerBackground : undefined;
   const headerColor = header ? style?.headerColor : undefined;
-  return alignmentStyle || width || cellBorderColor || cellBorderWidth || cellPadding || headerBackground || headerColor
+  const cellStyle = getTableCellEdgeStyle(cell);
+  return alignmentStyle || width || cellBorderColor || cellBorderWidth || cellPadding || headerBackground || headerColor || Object.keys(cellStyle).length > 0
     ? {
         ...alignmentStyle,
         ...(width ? { width } : {}),
@@ -196,6 +216,7 @@ function getTableCellStyle(block: RichTableBlock, cellIndex: number, header = fa
         ...(cellPadding ? { padding: cellPadding } : {}),
         ...(headerBackground ? { background: headerBackground } : {}),
         ...(headerColor ? { color: headerColor } : {}),
+        ...cellStyle,
       }
     : undefined;
 }
@@ -257,7 +278,7 @@ function renderRichTableBlock(
                 key={cellPath}
                 scope="col"
                 tabIndex={tabIndex}
-                style={getTableCellStyle(block, cellIndex, true)}
+                style={getTableCellStyle(block, cell, cellIndex, true)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </th>
@@ -272,7 +293,7 @@ function renderRichTableBlock(
               <td
                 key={cellPath}
                 tabIndex={tabIndex}
-                style={getTableCellStyle(block, cellIndex)}
+                style={getTableCellStyle(block, cell, cellIndex)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </td>

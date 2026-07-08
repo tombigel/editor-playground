@@ -1,7 +1,7 @@
 {
   "name": "editor-playground",
   "private": true,
-  "version": "0.13.35",
+  "version": "0.13.36",
   "type": "module",
   "packageManager": "pnpm@10.34.3",
   "engines": {

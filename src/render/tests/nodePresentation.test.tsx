@@ -705,7 +705,14 @@ describe('render/nodePresentation', () => {
               href: 'https://example.com/ada',
               children: [{ text: 'Details', italic: true }],
             },
-          ]),
+          ], {
+            style: {
+              background: '#ffeeaa',
+              padding: '1em',
+              borderLeftWidth: '2px',
+              borderLeftColor: '#123456',
+            },
+          }),
         ]),
       ], {
         direction: 'rtl',
@@ -733,7 +740,7 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('<tr style="height:44px;min-height:44px">');
     expect(markup).toContain('<th scope="col" style="text-align:left;width:12rem;border-color:#cccccc;border-style:solid;border-width:1px;padding:8px;background:#eeeeee;color:#111111"><span style="font-weight:bold">Name</span></th>');
     expect(markup).toContain('<tbody>');
-    expect(markup).toContain('<td style="text-align:right;border-color:#cccccc;border-style:solid;border-width:1px;padding:8px"><a href="https://example.com/ada"');
+    expect(markup).toContain('<td style="text-align:right;border-color:#cccccc;border-style:solid;border-width:1px;padding:1em;background:#ffeeaa;border-left-color:#123456;border-left-style:solid;border-left-width:2px"><a href="https://example.com/ada"');
     expect(markup).toContain('font-style:italic');
 
     const rich = createTextNode('rich', 'root');

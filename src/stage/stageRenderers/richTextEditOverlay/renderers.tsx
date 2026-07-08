@@ -1,4 +1,5 @@
 import type { RenderElementProps, RenderLeafProps } from "slate-react";
+import type { CSSProperties } from "react";
 
 import { getLinkHref } from "../../../model/links";
 import type {
@@ -6,6 +7,7 @@ import type {
 	RichBlock,
 	RichListItem,
 	RichTableCell,
+	RichTableCellStyle,
 	TableColumnAlignment,
 	RichTableStyle,
 	RichTextLeaf,
@@ -29,6 +31,24 @@ type EditableTableRow = {
 	type?: string;
 	height?: string | null;
 };
+
+function tableCellStyleToCss(style: RichTableCellStyle | undefined): CSSProperties {
+	if (!style) {
+		return {};
+	}
+	return {
+		...(style.background ? { background: style.background } : {}),
+		...(style.padding ? { padding: style.padding } : {}),
+		...(style.borderTopColor ? { borderTopColor: style.borderTopColor } : {}),
+		...(style.borderTopWidth ? { borderTopStyle: "solid", borderTopWidth: style.borderTopWidth } : {}),
+		...(style.borderRightColor ? { borderRightColor: style.borderRightColor } : {}),
+		...(style.borderRightWidth ? { borderRightStyle: "solid", borderRightWidth: style.borderRightWidth } : {}),
+		...(style.borderBottomColor ? { borderBottomColor: style.borderBottomColor } : {}),
+		...(style.borderBottomWidth ? { borderBottomStyle: "solid", borderBottomWidth: style.borderBottomWidth } : {}),
+		...(style.borderLeftColor ? { borderLeftColor: style.borderLeftColor } : {}),
+		...(style.borderLeftWidth ? { borderLeftStyle: "solid", borderLeftWidth: style.borderLeftWidth } : {}),
+	};
+}
 
 export function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
 	const editLeaf = leaf as RetainedSelectionLeaf;
@@ -118,6 +138,7 @@ export function renderEditElement(
 					...(cell.tableStyle?.cellPadding ? { padding: cell.tableStyle.cellPadding } : {}),
 					...(cell.header && cell.tableStyle?.headerBackground ? { background: cell.tableStyle.headerBackground } : {}),
 					...(cell.header && cell.tableStyle?.headerColor ? { color: cell.tableStyle.headerColor } : {}),
+					...tableCellStyleToCss(cell.style),
 				}}
 			>
 				{children}

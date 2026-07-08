@@ -46,6 +46,7 @@ export type {
   RichListBlock,
   RichTableBlock,
   RichTableCell,
+  RichTableCellStyle,
   RichTableRow,
   RichTableStyle,
   RichTextLeaf,

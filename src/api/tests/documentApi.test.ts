@@ -47,9 +47,12 @@ import {
   setCodeBlockWrapDoc,
   setTableColumnAlignmentDoc,
   setTableColumnWidthDoc,
+  setTableCellStyleDoc,
   setTableDirectionDoc,
   setTableHeaderRowDoc,
   setTableRowHeightDoc,
+  setTableSelectionBorderDoc,
+  setTableSelectionStyleDoc,
   setTableStyleDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
@@ -1339,6 +1342,48 @@ describe('api/documentApi', () => {
       tableBackground: '#ffffff',
       cellPadding: '8px',
     });
+
+    const styledCell = setTableCellStyleDoc(clearedStyle, tableNode.id, 1, 1, {
+      background: ' #ffeeaa ',
+      padding: '1em',
+    });
+    expect(readTable(styledCell).children[1]?.children[1]?.style).toEqual({
+      background: '#ffeeaa',
+      padding: '1em',
+    });
+    expect(setTableCellStyleDoc(styledCell, tableNode.id, 99, 1, { background: '#fff' })).toBe(styledCell);
+
+    const styledRow = setTableSelectionStyleDoc(styledCell, tableNode.id, { type: 'row', rowIndex: 2 }, {
+      background: '#eef6ff',
+    });
+    expect(readTable(styledRow).children[2]?.children.map((cell) => cell.style?.background)).toEqual([
+      '#eef6ff',
+      '#eef6ff',
+      '#eef6ff',
+    ]);
+
+    const borderedColumn = setTableSelectionBorderDoc(styledRow, tableNode.id, { type: 'column', columnIndex: 1 }, 'outer', {
+      width: '2px',
+      color: '#123456',
+    });
+    expect(readTable(borderedColumn).children[0]?.children[1]?.style).toMatchObject({
+      borderTopWidth: '2px',
+      borderTopColor: '#123456',
+      borderLeftWidth: '2px',
+      borderLeftColor: '#123456',
+      borderRightWidth: '2px',
+      borderRightColor: '#123456',
+    });
+    expect(readTable(borderedColumn).children[2]?.children[1]?.style).toMatchObject({
+      borderBottomWidth: '2px',
+      borderBottomColor: '#123456',
+    });
+
+    const innerBorders = setTableSelectionBorderDoc(borderedColumn, tableNode.id, { type: 'table' }, 'inner', {
+      width: '1px',
+    });
+    expect(readTable(innerBorders).children[0]?.children[0]?.style?.borderRightWidth).toBe('1px');
+    expect(readTable(innerBorders).children[0]?.children[0]?.style?.borderBottomWidth).toBe('1px');
 
     const defaultDirection = setTableDirectionDoc(clearedStyle, tableNode.id, null);
     expect(readTable(defaultDirection).direction).toBeUndefined();

@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { Editor, Element } from "slate";
+import { Editor, Element as SlateElement } from "slate";
 import type { BaseSelection, Path } from "slate";
 
 import {
@@ -9,7 +9,7 @@ import {
 } from "../../../api/fontApi";
 import { formatDisplayValue } from "../../../model/conversion";
 import { parseFontSizeValue } from "../../../model/units";
-import type { RichTableBlock, RichTableCell, TableColumnAlignment } from "../../../model/types";
+import type { RichTableBlock, RichTableCell, RichTableCellStyle, TableColumnAlignment } from "../../../model/types";
 import {
 	getMarkValue,
 	getSelectedBlockType,
@@ -198,7 +198,7 @@ export type ActiveTableContext = {
 	columnWidth: string | null;
 	rowHeight: string | null;
 	columnAlignment: TableColumnAlignment;
-	cellStyle: (RichTableCell & { style?: Record<string, string> })["style"];
+	cellStyle: RichTableCellStyle | undefined;
 	direction: "ltr" | "rtl" | null;
 	hasHeader: boolean;
 };
@@ -210,9 +210,9 @@ export function getActiveTableContext(editor: RichEditor): ActiveTableContext | 
 
 	const cellEntry = Editor.above(editor, {
 		match: (node) =>
-			Element.isElement(node) &&
+			SlateElement.isElement(node) &&
 			(node as { type?: string }).type === "table-cell",
-	}) as [RichTableCell & { style?: Record<string, string> }, Path] | undefined;
+	}) as [RichTableCell, Path] | undefined;
 	if (!cellEntry) {
 		return null;
 	}
@@ -220,7 +220,7 @@ export function getActiveTableContext(editor: RichEditor): ActiveTableContext | 
 	const tableEntry = Editor.above(editor, {
 		at: cellEntry[1],
 		match: (node) =>
-			Element.isElement(node) &&
+			SlateElement.isElement(node) &&
 			(node as { type?: string }).type === "table",
 	}) as [RichTableBlock, Path] | undefined;
 	if (!tableEntry) {

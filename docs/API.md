@@ -101,8 +101,13 @@ Ordered marker styles: `'decimal'` | `'lower-alpha'` | `'upper-alpha'` | `'lower
 | `setTableColumnWidthDoc` | `(document, nodeId, columnIndex: number, width: string \| null)` | Set or clear a column width |
 | `setTableRowHeightDoc` | `(document, nodeId, rowIndex: number, height: string \| null)` | Set or clear a row height |
 | `setTableStyleDoc` | `(document, nodeId, patch: Partial<Record<keyof RichTableStyle, string \| null>>)` | Patch table-wide style fields |
+| `setTableCellStyleDoc` | `(document, nodeId, rowIndex: number, columnIndex: number, patch: TableCellStylePatch)` | Patch one Slate table cell style |
+| `setTableSelectionStyleDoc` | `(document, nodeId, selection: TableSelectionDescriptor, patch: TableCellStylePatch)` | Patch cells addressed by a table selection descriptor |
+| `setTableSelectionBorderDoc` | `(document, nodeId, selection: TableSelectionDescriptor, scope: TableBorderScope, patch: TableCellBorderPatch)` | Expand a border scope into per-cell edge styles |
 
 `TableColumnAlignment`: `'left'` | `'center'` | `'right'` | `null`
+`TableSelectionDescriptor`: `{ type: 'cell'; rowIndex; columnIndex }` | `{ type: 'row'; rowIndex }` | `{ type: 'column'; columnIndex }` | `{ type: 'table' }`
+`TableBorderScope`: `'all'` | `'outer'` | `'inner'` | `'horizontal'` | `'vertical'` | `'top'` | `'right'` | `'bottom'` | `'left'`
 
 ### Split and merge
 
@@ -1226,7 +1231,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Document and Editor API
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
-- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `insertTableRowDoc`, `insertTableColumnDoc`, `removeTableRowDoc`, `removeTableColumnDoc`, `setTableHeaderRowDoc`, `setTableColumnAlignmentDoc`, `setTableDirectionDoc`, `setTableColumnWidthDoc`, `setTableRowHeightDoc`, `setTableStyleDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
+- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `insertTableRowDoc`, `insertTableColumnDoc`, `removeTableRowDoc`, `removeTableColumnDoc`, `setTableHeaderRowDoc`, `setTableColumnAlignmentDoc`, `setTableDirectionDoc`, `setTableColumnWidthDoc`, `setTableRowHeightDoc`, `setTableStyleDoc`, `setTableCellStyleDoc`, `setTableSelectionStyleDoc`, `setTableSelectionBorderDoc`, `TableSelectionDescriptor`, `TableBorderScope`, `TableCellStylePatch`, `TableCellBorderPatch`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
 - `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgStrokeCap`, `SvgStrokeJoin`, `SvgStrokePaintOrder`, `SvgStrokeStyle`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
@@ -1262,7 +1267,7 @@ This index keeps the split API reference synchronized with the public export sur
 - `LinkKind`, `ListDirection`, `ListContentType`, `StickyEdges`, `StickyTarget`, `ViewportMeasurement`
 - `RichTextLeaf`, `RichTextLink`, `RichInlineNode`, `RichBlockStyle`, `StandaloneTextNodeSnapshot`
 - `RichCodeLine`, `RichCodeBlock`, `RichListItem`, `RichUnorderedListBlock`, `RichOrderedListBlock`, `RichListBlock`
-- `TableColumnAlignment`, `RichTableCell`, `RichTableRow`, `RichTableBlock`, `TableBlockContent`
+- `TableColumnAlignment`, `RichTableStyle`, `RichTableCellStyle`, `RichTableCell`, `RichTableRow`, `RichTableBlock`, `TableBlockContent`
 - `TextDocumentBlocks`, `TemplateBuild`, `TemplateNode`, `TextStyleOptions`, `BoxPadding`
 - `ContainerSubtype`, `ContainerLayout`, `ContainerChildBoundary`, `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
 

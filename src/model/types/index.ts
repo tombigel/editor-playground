@@ -206,6 +206,19 @@ export type RichTableStyle = {
   headerColor?: string;
 };
 
+export type RichTableCellStyle = {
+  background?: string;
+  padding?: string;
+  borderTopWidth?: string;
+  borderTopColor?: string;
+  borderRightWidth?: string;
+  borderRightColor?: string;
+  borderBottomWidth?: string;
+  borderBottomColor?: string;
+  borderLeftWidth?: string;
+  borderLeftColor?: string;
+};
+
 export type StandaloneTextNodeSnapshot = {
   subtype: 'block' | 'code' | 'list' | 'table';
   name: string;
@@ -277,6 +290,7 @@ export type TableColumnAlignment = 'left' | 'center' | 'right' | null;
 
 export interface RichTableCell extends SlateElement {
   type: 'table-cell';
+  style?: RichTableCellStyle;
   children: RichInlineNode[];
 }
 

@@ -53,7 +53,7 @@ describe("rich table context", () => {
 
 	it("returns null without an active table cell", () => {
 		const editor = createRichEditor();
-		editor.children = [{ type: "paragraph", children: [{ text: "Plain" }] }] as Descendant[];
+		editor.children = [{ type: "paragraph", children: [{ text: "Plain" }] }] as unknown as Descendant[];
 		editor.selection = {
 			anchor: { path: [0, 0], offset: 0 },
 			focus: { path: [0, 0], offset: 0 },

@@ -9,6 +9,7 @@ import type {
   DocumentModel,
   NodeId,
   RichTableBlock,
+  RichTableCellStyle,
   RichTableStyle,
   TableColumnAlignment,
 } from '../../model/types';
@@ -57,6 +58,36 @@ function normalizeTableCssLength(value: string | null): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
+export type TableSelectionDescriptor =
+  | { type: 'cell'; rowIndex: number; columnIndex: number }
+  | { type: 'row'; rowIndex: number }
+  | { type: 'column'; columnIndex: number }
+  | { type: 'table' };
+
+export type TableBorderScope =
+  | 'all'
+  | 'outer'
+  | 'inner'
+  | 'horizontal'
+  | 'vertical'
+  | 'top'
+  | 'right'
+  | 'bottom'
+  | 'left';
+
+export type TableCellStylePatch = Partial<Record<keyof RichTableCellStyle, string | null>>;
+export type TableCellBorderPatch = {
+  width?: string | null;
+  color?: string | null;
+};
+
+type TableSelectionRect = {
+  rowStart: number;
+  rowEnd: number;
+  columnStart: number;
+  columnEnd: number;
+};
+
 const TABLE_STYLE_KEYS = [
   'tableBackground',
   'tableBorderColor',
@@ -67,6 +98,19 @@ const TABLE_STYLE_KEYS = [
   'headerBackground',
   'headerColor',
 ] as const satisfies ReadonlyArray<keyof RichTableStyle>;
+
+const TABLE_CELL_STYLE_KEYS = [
+  'background',
+  'padding',
+  'borderTopWidth',
+  'borderTopColor',
+  'borderRightWidth',
+  'borderRightColor',
+  'borderBottomWidth',
+  'borderBottomColor',
+  'borderLeftWidth',
+  'borderLeftColor',
+] as const satisfies ReadonlyArray<keyof RichTableCellStyle>;
 
 function mergeTableStyle(
   style: RichTableStyle | undefined,
@@ -85,6 +129,154 @@ function mergeTableStyle(
     }
   }
   return Object.keys(next).length > 0 ? next : undefined;
+}
+
+function mergeTableCellStyle(
+  style: RichTableCellStyle | undefined,
+  patch: TableCellStylePatch,
+): RichTableCellStyle | undefined {
+  const next: RichTableCellStyle = { ...(style ?? {}) };
+  for (const key of TABLE_CELL_STYLE_KEYS) {
+    if (!(key in patch)) {
+      continue;
+    }
+    const value = patch[key];
+    if (typeof value === 'string' && value.trim()) {
+      next[key] = value.trim();
+    } else {
+      delete next[key];
+    }
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
+function resolveTableSelectionRect(
+  block: RichTableBlock,
+  selection: TableSelectionDescriptor,
+): TableSelectionRect | null {
+  const rowCount = block.children.length;
+  const columnCount = getColumnCount(block);
+  if (rowCount <= 0 || columnCount <= 0) {
+    return null;
+  }
+
+  if (selection.type === 'table') {
+    return {
+      rowStart: 0,
+      rowEnd: rowCount - 1,
+      columnStart: 0,
+      columnEnd: columnCount - 1,
+    };
+  }
+
+  if (selection.type === 'row') {
+    const rowIndex = normalizeExistingIndex(selection.rowIndex, rowCount);
+    return rowIndex == null
+      ? null
+      : {
+          rowStart: rowIndex,
+          rowEnd: rowIndex,
+          columnStart: 0,
+          columnEnd: columnCount - 1,
+        };
+  }
+
+  if (selection.type === 'column') {
+    const columnIndex = normalizeExistingIndex(selection.columnIndex, columnCount);
+    return columnIndex == null
+      ? null
+      : {
+          rowStart: 0,
+          rowEnd: rowCount - 1,
+          columnStart: columnIndex,
+          columnEnd: columnIndex,
+        };
+  }
+
+  const rowIndex = normalizeExistingIndex(selection.rowIndex, rowCount);
+  const columnIndex = normalizeExistingIndex(selection.columnIndex, columnCount);
+  return rowIndex == null || columnIndex == null
+    ? null
+    : {
+        rowStart: rowIndex,
+        rowEnd: rowIndex,
+        columnStart: columnIndex,
+        columnEnd: columnIndex,
+      };
+}
+
+function patchCellsInRect(
+  block: RichTableBlock,
+  rect: TableSelectionRect,
+  patchCell: (style: RichTableCellStyle | undefined, rowIndex: number, columnIndex: number) => RichTableCellStyle | undefined,
+) {
+  const nextRows = structuredClone(block.children);
+  for (let rowIndex = rect.rowStart; rowIndex <= rect.rowEnd; rowIndex += 1) {
+    const row = nextRows[rowIndex];
+    if (!row) {
+      continue;
+    }
+    for (let columnIndex = rect.columnStart; columnIndex <= rect.columnEnd; columnIndex += 1) {
+      const cell = row.children[columnIndex];
+      if (!cell) {
+        continue;
+      }
+      const nextStyle = patchCell(cell.style, rowIndex, columnIndex);
+      if (nextStyle) {
+        cell.style = nextStyle;
+      } else {
+        delete cell.style;
+      }
+    }
+  }
+  return nextRows;
+}
+
+function edgePatch(edge: 'Top' | 'Right' | 'Bottom' | 'Left', patch: TableCellBorderPatch): TableCellStylePatch {
+  const stylePatch: TableCellStylePatch = {};
+  if ('width' in patch) {
+    stylePatch[`border${edge}Width` as keyof RichTableCellStyle] = normalizeTableCssLength(patch.width ?? null);
+  }
+  if ('color' in patch) {
+    stylePatch[`border${edge}Color` as keyof RichTableCellStyle] = normalizeTableCssLength(patch.color ?? null);
+  }
+  return stylePatch;
+}
+
+function borderEdgesForCell(
+  scope: TableBorderScope,
+  rect: TableSelectionRect,
+  rowIndex: number,
+  columnIndex: number,
+): Array<'Top' | 'Right' | 'Bottom' | 'Left'> {
+  switch (scope) {
+    case 'all':
+      return ['Top', 'Right', 'Bottom', 'Left'];
+    case 'outer':
+      return [
+        ...(rowIndex === rect.rowStart ? ['Top' as const] : []),
+        ...(columnIndex === rect.columnEnd ? ['Right' as const] : []),
+        ...(rowIndex === rect.rowEnd ? ['Bottom' as const] : []),
+        ...(columnIndex === rect.columnStart ? ['Left' as const] : []),
+      ];
+    case 'inner':
+      return [
+        ...(rowIndex < rect.rowEnd ? ['Bottom' as const] : []),
+        ...(columnIndex < rect.columnEnd ? ['Right' as const] : []),
+      ];
+    case 'horizontal':
+      return rowIndex < rect.rowEnd ? ['Bottom'] : [];
+    case 'vertical':
+      return columnIndex < rect.columnEnd ? ['Right'] : [];
+    case 'top':
+      return rowIndex === rect.rowStart ? ['Top'] : [];
+    case 'right':
+      return columnIndex === rect.columnEnd ? ['Right'] : [];
+    case 'bottom':
+      return rowIndex === rect.rowEnd ? ['Bottom'] : [];
+    case 'left':
+      return columnIndex === rect.columnStart ? ['Left'] : [];
+  }
 }
 
 function normalizeInsertIndex(index: number, length: number): number {
@@ -344,4 +536,70 @@ export function setTableStyleDoc(
     ...getTableBlockOptions(block),
     style: mergeTableStyle(block.style, patch),
   }));
+}
+
+export function setTableCellStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  rowIndex: number,
+  columnIndex: number,
+  patch: TableCellStylePatch,
+): DocumentModel {
+  return setTableSelectionStyleDoc(document, nodeId, {
+    type: 'cell',
+    rowIndex,
+    columnIndex,
+  }, patch);
+}
+
+export function setTableSelectionStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  selection: TableSelectionDescriptor,
+  patch: TableCellStylePatch,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  if (!block) {
+    return document;
+  }
+
+  const rect = resolveTableSelectionRect(block, selection);
+  if (!rect) {
+    return document;
+  }
+
+  const nextRows = patchCellsInRect(block, rect, (style) => mergeTableCellStyle(style, patch));
+  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
+}
+
+export function setTableSelectionBorderDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  selection: TableSelectionDescriptor,
+  scope: TableBorderScope,
+  patch: TableCellBorderPatch,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  if (!block) {
+    return document;
+  }
+
+  const rect = resolveTableSelectionRect(block, selection);
+  if (!rect) {
+    return document;
+  }
+
+  const nextRows = patchCellsInRect(block, rect, (style, rowIndex, columnIndex) => {
+    const edges = borderEdgesForCell(scope, rect, rowIndex, columnIndex);
+    if (edges.length === 0) {
+      return style;
+    }
+    const mergedPatch = edges.reduce<TableCellStylePatch>(
+      (nextPatch, edge) => ({ ...nextPatch, ...edgePatch(edge, patch) }),
+      {},
+    );
+    return mergeTableCellStyle(style, mergedPatch);
+  });
+
+  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
 }
