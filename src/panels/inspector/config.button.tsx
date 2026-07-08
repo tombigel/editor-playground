@@ -34,11 +34,13 @@ const buttonAnimationSection: InspectorSectionDefinition = {
 
 const buttonDesignSection: InspectorSectionDefinition = {
   id: 'button-design',
-  render: ({ node, actions, focusedMode }) =>
+  render: ({ document, node, actions, focusedMode }) =>
     isButtonNode(node) ? (
       <ButtonDesignSection
+        document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSelectNode={actions.onSelectNode}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />
@@ -68,6 +70,7 @@ export const buttonAppearanceSection: InspectorSectionDefinition = {
         document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSelectNode={actions.onSelectNode}
         onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}

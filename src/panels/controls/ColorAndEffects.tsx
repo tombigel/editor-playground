@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react';
+import { memo, useRef, type ReactNode } from 'react';
 import { forceOpaqueColorValue } from '../../api/documentViewApi';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,8 @@ export function HoverColorField({
   fallback = '#ffffff',
   showOpacity = true,
   mixed = false,
+  indicatorIcon,
+  disabled = false,
 }: {
   value: string | undefined;
   onChange: (value: string) => void;
@@ -22,6 +24,8 @@ export function HoverColorField({
   fallback?: string;
   showOpacity?: boolean;
   mixed?: boolean;
+  indicatorIcon?: ReactNode;
+  disabled?: boolean;
 }) {
   const resolvedValue = showOpacity ? value : forceOpaqueColorValue(value);
   const resolvedFallback = showOpacity ? fallback : forceOpaqueColorValue(fallback) || '#ffffff';
@@ -47,11 +51,17 @@ export function HoverColorField({
           ariaLabel={ariaLabel}
           variant="swatch"
           onChange={stableOnChange}
+          disabled={disabled}
         />
         {mixed ? (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="h-0.5 w-3 rounded-full bg-white/95 shadow-[0_0_0_1px_rgba(18,32,51,0.24)]" />
           </div>
+        ) : null}
+        {indicatorIcon ? (
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-white drop-shadow-[0_1px_1px_rgba(18,32,51,0.72)]">
+            {indicatorIcon}
+          </span>
         ) : null}
       </div>
     </div>

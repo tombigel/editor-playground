@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   ArrowUpDown,
+  LockKeyhole,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
@@ -41,9 +42,11 @@ import {
   InspectorSectionCard,
 } from '../CommonSections';
 import {
+  ClipTextColorSourceButton,
   type FocusModeCardProps,
   createShadowFallback,
   NavigationFields,
+  resolveClipTextColorSource,
   TypographyTextStyleFields,
 } from './shared';
 import { createTextDocumentFromText, getSingleTextBlockContent, getTextContent } from '../../../api/documentViewApi';
@@ -130,16 +133,20 @@ export function ButtonTextStyleSection({
 }
 
 export function ButtonDesignSection({
+  document,
   node,
   onTextChange,
+  onSelectNode,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
   headerAction,
   contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
+  document: DocumentModel;
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSelectNode?: (id: string) => void;
 } & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
     DEFAULT_BUTTON_SHADOW_COLOR,
@@ -149,6 +156,7 @@ export function ButtonDesignSection({
     DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
   );
   const shadow = readShadowFieldValues(node.style, shadowFallback);
+  const clipSource = resolveClipTextColorSource(document, node);
 
   return (
     <InspectorSectionCard
@@ -159,11 +167,14 @@ export function ButtonDesignSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
         <FormField label="Color" layout="inline" controlClassName="gap-2">
+          <ClipTextColorSourceButton source={clipSource} onSelectNode={onSelectNode} />
           <HoverColorField
             value={node.style?.color}
             onChange={(value) => onTextChange('color', value)}
             ariaLabel="Text color"
             fallback={DEFAULT_BUTTON_TEXT_COLOR}
+            indicatorIcon={clipSource ? <LockKeyhole className="h-4 w-4" aria-hidden="true" /> : undefined}
+            disabled={Boolean(clipSource)}
           />
         </FormField>
         <FormField label="Background" layout="inline" controlClassName="gap-2">
@@ -231,6 +242,7 @@ export function ButtonAppearanceSection({
   document,
   node,
   onTextChange,
+  onSelectNode,
   onOpenManageFonts,
   focusedMode,
   onEnterFocusedMode,
@@ -241,6 +253,7 @@ export function ButtonAppearanceSection({
   document: DocumentModel;
   node: ButtonInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSelectNode?: (id: string) => void;
   onOpenManageFonts: () => void;
 } & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
@@ -251,6 +264,7 @@ export function ButtonAppearanceSection({
     DEFAULT_BUTTON_SHADOW_OFFSET_Y_PX,
   );
   const shadow = readShadowFieldValues(node.style, shadowFallback);
+  const clipSource = resolveClipTextColorSource(document, node);
 
   return (
     <InspectorSectionCard
@@ -270,11 +284,14 @@ export function ButtonAppearanceSection({
       />
       <div className="editor-border-subtle border-t pt-2.5">
         <FormField label="Color" layout="inline" controlClassName="gap-2">
+            <ClipTextColorSourceButton source={clipSource} onSelectNode={onSelectNode} />
             <HoverColorField
               value={node.style?.color}
               onChange={(value) => onTextChange('color', value)}
               ariaLabel="Text color"
               fallback={DEFAULT_BUTTON_TEXT_COLOR}
+              indicatorIcon={clipSource ? <LockKeyhole className="h-4 w-4" aria-hidden="true" /> : undefined}
+              disabled={Boolean(clipSource)}
             />
         </FormField>
         <div className="mt-2.5">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LockKeyhole } from "lucide-react";
 import { HoverColorField } from "@/panels/InspectorControls";
 import { ComponentPreview } from "../../previews/ComponentPreview";
 import type { PropDefinition } from "../../types";
@@ -21,6 +22,17 @@ const COLOR_PICKER_PROPS: PropDefinition[] = [
 		type: '"default" | "swatch"',
 		default: '"default"',
 		description: "Host sizing and trigger chrome contract owned by the local wrapper.",
+	},
+	{
+		name: "indicatorIcon",
+		type: "ReactNode",
+		description: "Optional centered overlay icon for constrained or source-derived swatches.",
+	},
+	{
+		name: "disabled",
+		type: "boolean",
+		default: "false",
+		description: "Locks the swatch when the displayed color is controlled by another source.",
 	},
 	{ name: "ariaLabel", type: "string", description: "Accessible label." },
 	{
@@ -78,6 +90,19 @@ function ColorDemo() {
 						onChange={() => {}}
 						ariaLabel="Color field with alpha mixed"
 						mixed
+					/>
+				</div>
+			</div>
+			<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Source-derived</div>
+			<div className="flex gap-4">
+				<div>
+					<div className="editor-text-muted mb-1 text-[10px]">Locked color</div>
+					<HoverColorField
+						value="#7c3aed"
+						onChange={() => {}}
+						ariaLabel="Color field using parent background"
+						indicatorIcon={<LockKeyhole className="h-4 w-4" aria-hidden="true" />}
+						disabled
 					/>
 				</div>
 			</div>

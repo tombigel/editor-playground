@@ -109,16 +109,20 @@ export function LinkTextStyleSection({
 }
 
 export function LinkDesignSection({
+  document,
   node,
   onTextChange,
+  onSelectNode,
   focusedMode,
   onEnterFocusedMode,
   headerContent,
   headerAction,
   contentClassName = 'space-y-2.5 px-3 pt-1.5 pb-3',
 }: {
+  document: DocumentModel;
   node: LinkInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSelectNode?: (id: string) => void;
 } & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
     DEFAULT_SHADOW_COLOR,
@@ -138,8 +142,10 @@ export function LinkDesignSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode ?? null, 'design', onEnterFocusedMode)}
     >
         <TypographyDesignFields
+          document={document}
           node={node}
           onTextChange={onTextChange}
+          onSelectNode={onSelectNode}
           colorFallback={DEFAULT_LINK_COLOR}
           shadow={shadow}
           shadowFallback={shadowFallback}
@@ -152,6 +158,7 @@ export function LinkAppearanceSection({
   document,
   node,
   onTextChange,
+  onSelectNode,
   onOpenManageFonts,
   focusedMode,
   onEnterFocusedMode,
@@ -162,6 +169,7 @@ export function LinkAppearanceSection({
   document: DocumentModel;
   node: LinkInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSelectNode?: (id: string) => void;
   onOpenManageFonts: () => void;
 } & FocusModeCardProps) {
   const shadowFallback = createShadowFallback(
@@ -191,8 +199,10 @@ export function LinkAppearanceSection({
       />
       <div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
         <TypographyDesignFields
+          document={document}
           node={node}
           onTextChange={onTextChange}
+          onSelectNode={onSelectNode}
           colorFallback={DEFAULT_LINK_COLOR}
           shadow={shadow}
           shadowFallback={shadowFallback}

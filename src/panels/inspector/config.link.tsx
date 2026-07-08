@@ -34,11 +34,13 @@ const linkAnimationSection: InspectorSectionDefinition = {
 
 const linkDesignSection: InspectorSectionDefinition = {
   id: 'link-design',
-  render: ({ node, actions, focusedMode }) =>
+  render: ({ document, node, actions, focusedMode }) =>
     isLinkNode(node) ? (
       <LinkDesignSection
+        document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSelectNode={actions.onSelectNode}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />
@@ -68,6 +70,7 @@ export const linkAppearanceSection: InspectorSectionDefinition = {
         document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSelectNode={actions.onSelectNode}
         onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}

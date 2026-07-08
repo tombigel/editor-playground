@@ -62,16 +62,20 @@ export function TextTextStyleSection({
 }
 
 export function TextDesignSection({
+	document,
 	node,
 	onTextChange,
+	onSelectNode,
 	focusedMode,
 	onEnterFocusedMode,
 	headerContent,
 	headerAction,
 	contentClassName = "space-y-2.5 px-3 pt-1.5 pb-3",
 }: {
+	document: DocumentModel;
 	node: TextInspectorNode;
 	onTextChange: (field: EditorTextField, value: string) => void;
+	onSelectNode?: (id: string) => void;
 } & FocusModeCardProps) {
 	const shadow = readShadowFieldValues(
 		node.style,
@@ -97,8 +101,10 @@ export function TextDesignSection({
 			)}
 		>
 			<TypographyDesignFields
+				document={document}
 				node={node}
 				onTextChange={onTextChange}
+				onSelectNode={onSelectNode}
 				colorFallback={node.link ? DEFAULT_LINK_COLOR : DEFAULT_TEXT_COLOR}
 				shadow={shadow}
 				shadowFallback={createShadowFallback(
@@ -117,6 +123,7 @@ export function TextAppearanceSection({
 	document,
 	node,
 	onTextChange,
+	onSelectNode,
 	onOpenManageFonts,
 	focusedMode,
 	onEnterFocusedMode,
@@ -127,6 +134,7 @@ export function TextAppearanceSection({
 	document: DocumentModel;
 	node: TextInspectorNode;
 	onTextChange: (field: EditorTextField, value: string) => void;
+	onSelectNode?: (id: string) => void;
 	onOpenManageFonts: () => void;
 } & FocusModeCardProps) {
 	const shadowFallback = createShadowFallback(
@@ -159,8 +167,10 @@ export function TextAppearanceSection({
 			/>
 			<div className="editor-border-subtle space-y-2.5 border-t pt-2.5">
 				<TypographyDesignFields
+					document={document}
 					node={node}
 					onTextChange={onTextChange}
+					onSelectNode={onSelectNode}
 					colorFallback={node.link ? DEFAULT_LINK_COLOR : DEFAULT_TEXT_COLOR}
 					shadow={shadow}
 					shadowFallback={shadowFallback}

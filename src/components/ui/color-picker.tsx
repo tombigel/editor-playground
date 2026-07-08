@@ -233,6 +233,7 @@ function ColorPickerImpl({
 	variant = "default",
 	className,
 	icon,
+	disabled = false,
 	onChange,
 }: {
 	value: string | undefined;
@@ -242,6 +243,7 @@ function ColorPickerImpl({
 	variant?: ColorPickerVariant;
 	className?: string;
 	icon?: ReactNode;
+	disabled?: boolean;
 	onChange: (value: string) => void;
 }) {
 	const elementRef = React.useRef<HdrColorInputElement | null>(null);
@@ -256,6 +258,7 @@ function ColorPickerImpl({
 	const resolvedValue = value?.trim() ? value : fallback;
 	const onChangeRef = React.useRef(onChange);
 	const resolvedValueRef = React.useRef(resolvedValue);
+	const disabledRef = React.useRef(disabled);
 	const frameRef = React.useRef<number | null>(null);
 	const pendingValueRef = React.useRef<string | null>(null);
 	const isOpenRef = React.useRef(false);
@@ -267,6 +270,15 @@ function ColorPickerImpl({
 	React.useEffect(() => {
 		resolvedValueRef.current = resolvedValue;
 	}, [resolvedValue]);
+
+	React.useEffect(() => {
+		disabledRef.current = disabled;
+		const element = elementRef.current;
+		if (!element) {
+			return;
+		}
+		element.toggleAttribute("disabled", disabled);
+	}, [disabled]);
 
 	React.useEffect(() => {
 		if (!loadHdrColorInput) {
@@ -336,6 +348,10 @@ function ColorPickerImpl({
 		};
 
 		const handleChange = (event: Event) => {
+			if (disabledRef.current) {
+				return;
+			}
+
 			const detail = (event as CustomEvent<ChangeDetail>).detail;
 			if (detail?.value) {
 				pendingValueRef.current = detail.value;
@@ -365,6 +381,12 @@ function ColorPickerImpl({
 		};
 
 		const handleTriggerClick = (event: Event) => {
+			if (disabledRef.current) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				return;
+			}
+
 			if (!isOpenRef.current) {
 				return;
 			}
@@ -375,6 +397,12 @@ function ColorPickerImpl({
 		};
 
 		const handleHostClick = (event: Event) => {
+			if (disabledRef.current) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				return;
+			}
+
 			if (!isOpenRef.current) {
 				return;
 			}
@@ -403,6 +431,12 @@ function ColorPickerImpl({
 		};
 
 		const handleKeyDown = (event: KeyboardEvent) => {
+			if (disabledRef.current) {
+				event.preventDefault();
+				event.stopImmediatePropagation();
+				return;
+			}
+
 			if (
 				event.key === "Enter" ||
 				event.key === " " ||
@@ -524,12 +558,15 @@ function ColorPickerImpl({
 				variant === "swatch"
 					? "editor-color-picker editor-icon-button-subtle inline-flex h-7 w-7 shrink-0 overflow-hidden rounded-md border p-0 align-top shadow-sm"
 					: null,
+				disabled ? "pointer-events-none opacity-90" : null,
 				className,
 			)}
 			data-ui="color-picker"
 			data-variant={variant}
 			data-allow-alpha={allowAlpha ? "true" : "false"}
+			data-disabled={disabled ? "true" : undefined}
 			aria-label={ariaLabel}
+			aria-disabled={disabled ? "true" : undefined}
 			title={ariaLabel}
 			value={isReady ? undefined : resolvedValue}
 			theme={!isReady && theme !== "auto" ? theme : undefined}
@@ -570,5 +607,6 @@ export const ColorPicker = React.memo(
 		prev.ariaLabel === next.ariaLabel &&
 		prev.variant === next.variant &&
 		prev.className === next.className &&
+		prev.disabled === next.disabled &&
 		prev.icon === next.icon,
 );
