@@ -13,6 +13,10 @@ import {
 	PilcrowLeft,
 	PilcrowRight,
 	Settings2,
+	Columns3,
+	Rows3,
+	TableProperties,
+	Trash2,
 	Type,
 	UnfoldVertical,
 } from "lucide-react";
@@ -87,6 +91,12 @@ export function RichTextToolbar({
 	currentBlockSpacingValue,
 	onBlockSpacingCommit,
 	resolveSpacingUnitValue,
+	onTableInsertRow,
+	onTableRemoveRow,
+	onTableInsertColumn,
+	onTableRemoveColumn,
+	onTableHeaderToggle,
+	onTableColumnAlignment,
 }: {
 		mode?: "rich" | "block" | "list" | "table";
 	toolbarRef: Ref<HTMLDivElement>;
@@ -146,6 +156,12 @@ export function RichTextToolbar({
 		nextUnit: ToolbarSpacingUnit,
 		currentValue: string,
 	) => string | null;
+	onTableInsertRow?: () => void;
+	onTableRemoveRow?: () => void;
+	onTableInsertColumn?: () => void;
+	onTableRemoveColumn?: () => void;
+	onTableHeaderToggle?: () => void;
+	onTableColumnAlignment?: (value: "left" | "center" | "right") => void;
 }) {
 	const {
 		boldActive,
@@ -166,6 +182,7 @@ export function RichTextToolbar({
 	} = toolbarState;
 	const showBlockControls = mode === "rich";
 	const showListControls = mode === "rich";
+	const showTableControls = mode === "table";
 
 	return (
 		<FloatingPanelShell
@@ -325,7 +342,7 @@ export function RichTextToolbar({
 							</ToolbarControlGroup>
 						) : null}
 					</ToolbarControlRow>
-					{showBlockControls || showListControls ? (
+					{showBlockControls || showListControls || showTableControls ? (
 						<ToolbarControlRow>
 							{showBlockControls ? (
 								<ToolbarControlGroup>
@@ -487,6 +504,38 @@ export function RichTextToolbar({
 										resolveUnitValue={resolveSpacingUnitValue}
 									/>
 								</ToolbarControlGroup>
+							) : null}
+							{showTableControls ? (
+								<>
+									<ToolbarControlGroup>
+										<ToolbarButton label="Add row" active={false} onActivate={() => onTableInsertRow?.()}>
+											<Rows3 size={14} />
+										</ToolbarButton>
+										<ToolbarButton label="Remove row" active={false} onActivate={() => onTableRemoveRow?.()}>
+											<Trash2 size={14} />
+										</ToolbarButton>
+										<ToolbarButton label="Add column" active={false} onActivate={() => onTableInsertColumn?.()}>
+											<Columns3 size={14} />
+										</ToolbarButton>
+										<ToolbarButton label="Remove column" active={false} onActivate={() => onTableRemoveColumn?.()}>
+											<Trash2 size={14} />
+										</ToolbarButton>
+										<ToolbarButton label="Toggle header row" active={false} onActivate={() => onTableHeaderToggle?.()}>
+											<TableProperties size={14} />
+										</ToolbarButton>
+									</ToolbarControlGroup>
+									<ToolbarControlGroup withDividerBefore>
+										<TextAlignButton label="Align table columns left" active={false} onActivate={() => onTableColumnAlignment?.("left")}>
+											<AlignLeft size={14} />
+										</TextAlignButton>
+										<TextAlignButton label="Align table columns center" active={false} onActivate={() => onTableColumnAlignment?.("center")}>
+											<AlignCenter size={14} />
+										</TextAlignButton>
+										<TextAlignButton label="Align table columns right" active={false} onActivate={() => onTableColumnAlignment?.("right")}>
+											<AlignRight size={14} />
+										</TextAlignButton>
+									</ToolbarControlGroup>
+								</>
 							) : null}
 						</ToolbarControlRow>
 					) : null}

@@ -21,6 +21,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add standalone table blocks
 - add table sizing API
 - add table sizing and design controls
+- add table toolbar actions
 
 ### Changed
 

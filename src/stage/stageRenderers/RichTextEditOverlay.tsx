@@ -42,6 +42,7 @@ import {
 import {
 	createTextDocumentContent,
 	createTextDocumentFromText,
+	createRichTableBlock,
 	createRichTableCell,
 	createRichTableRow,
 	getTextDocumentBlockGap,
@@ -55,6 +56,7 @@ import type {
 	RichTextLink,
 	RichTextLeaf,
 	RichTextBlockType,
+	RichTableBlock,
 	TextDocumentBlock,
 	TextDocumentContent,
 } from "../../model/types";
@@ -716,6 +718,97 @@ export function RichTextEditOverlay({
 		[nodeId, onUpdateBlockGap],
 	);
 
+	const mutateActiveTable = useCallback((mutator: (block: RichTableBlock) => RichTableBlock) => {
+		const entry = Array.from(Editor.nodes(editor, {
+			match: (node) => Element.isElement(node) && "type" in node && node.type === "table",
+			mode: "lowest",
+		}))[0] as [RichTableBlock, Path] | undefined;
+		if (!entry) {
+			return;
+		}
+		const [block, path] = entry;
+		Transforms.removeNodes(editor, { at: path });
+		Transforms.insertNodes(editor, mutator(block), { at: path });
+		refreshAfterEdit();
+	}, [editor, refreshAfterEdit]);
+
+	const getTableColumnCount = useCallback((block: RichTableBlock) =>
+		Math.max(1, ...block.children.map((row) => row.children.length)), []);
+
+	const getTableOptions = useCallback((block: RichTableBlock) => ({
+		direction: block.direction,
+		columnAlignments: block.columnAlignments,
+		columnWidths: block.columnWidths,
+		rowHeights: block.rowHeights,
+		style: block.style,
+	}), []);
+
+	const handleTableInsertRow = useCallback(() => {
+		mutateActiveTable((block) => {
+			const columnCount = getTableColumnCount(block);
+			return createRichTableBlock([
+				...block.children,
+				createRichTableRow(Array.from({ length: columnCount }, () => createRichTableCell())),
+			], {
+				...getTableOptions(block),
+				rowHeights: [...(block.rowHeights ?? Array.from({ length: block.children.length }, () => null)), null],
+			});
+		});
+	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+
+	const handleTableRemoveRow = useCallback(() => {
+		mutateActiveTable((block) => block.children.length <= 1
+			? block
+			: createRichTableBlock(block.children.slice(0, -1), {
+					...getTableOptions(block),
+					rowHeights: block.rowHeights?.slice(0, -1),
+				}));
+	}, [getTableOptions, mutateActiveTable]);
+
+	const handleTableInsertColumn = useCallback(() => {
+		mutateActiveTable((block) => {
+			const columnCount = getTableColumnCount(block);
+			return createRichTableBlock(block.children.map((row) => createRichTableRow([
+				...row.children,
+				createRichTableCell(),
+			], { header: row.header })), {
+				...getTableOptions(block),
+				columnAlignments: [...(block.columnAlignments ?? Array.from({ length: columnCount }, () => null)), null],
+				columnWidths: [...(block.columnWidths ?? Array.from({ length: columnCount }, () => null)), null],
+			});
+		});
+	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+
+	const handleTableRemoveColumn = useCallback(() => {
+		mutateActiveTable((block) => {
+			if (getTableColumnCount(block) <= 1) {
+				return block;
+			}
+			return createRichTableBlock(block.children.map((row) => createRichTableRow(
+				row.children.slice(0, -1),
+				{ header: row.header },
+			)), {
+				...getTableOptions(block),
+				columnAlignments: block.columnAlignments?.slice(0, -1),
+				columnWidths: block.columnWidths?.slice(0, -1),
+			});
+		});
+	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+
+	const handleTableHeaderToggle = useCallback(() => {
+		mutateActiveTable((block) => createRichTableBlock(block.children.map((row, index) => createRichTableRow(
+			row.children,
+			{ header: index === 0 ? block.children[0]?.header !== true : false },
+		)), getTableOptions(block)));
+	}, [getTableOptions, mutateActiveTable]);
+
+	const handleTableColumnAlignment = useCallback((alignment: "left" | "center" | "right") => {
+		mutateActiveTable((block) => createRichTableBlock(block.children, {
+			...getTableOptions(block),
+			columnAlignments: Array.from({ length: getTableColumnCount(block) }, () => alignment),
+		}));
+	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+
 	const applyLinkFromPopover = useCallback(() => {
 		if (linkPopover.linkType === "external" && !linkPopover.href.trim()) {
 			return;
@@ -878,6 +971,12 @@ export function RichTextEditOverlay({
 						return null;
 					}
 				}}
+				onTableInsertRow={handleTableInsertRow}
+				onTableRemoveRow={handleTableRemoveRow}
+				onTableInsertColumn={handleTableInsertColumn}
+				onTableRemoveColumn={handleTableRemoveColumn}
+				onTableHeaderToggle={handleTableHeaderToggle}
+				onTableColumnAlignment={handleTableColumnAlignment}
 			/>
 			{linkPopover.open ? (
 				<LinkInsertPopover

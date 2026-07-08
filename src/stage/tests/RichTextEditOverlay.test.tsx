@@ -257,7 +257,7 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).not.toContain('aria-label="Block spacing"');
 	});
 
-	it("restricts table mode to inline controls", () => {
+	it("adds compact table actions in table mode", () => {
 		const markup = renderToStaticMarkup(
 			<RichTextEditOverlay
 				nodeId="table-node"
@@ -280,6 +280,14 @@ describe("stage/RichTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain("<table");
+		expect(markup).toContain('aria-label="Add row"');
+		expect(markup).toContain('aria-label="Remove row"');
+		expect(markup).toContain('aria-label="Add column"');
+		expect(markup).toContain('aria-label="Remove column"');
+		expect(markup).toContain('aria-label="Toggle header row"');
+		expect(markup).toContain('aria-label="Align table columns left"');
+		expect(markup).toContain('aria-label="Align table columns center"');
+		expect(markup).toContain('aria-label="Align table columns right"');
 		expect(markup).not.toContain('aria-label="Use ordered list"');
 		expect(markup).not.toContain('aria-label="Line height"');
 	});
