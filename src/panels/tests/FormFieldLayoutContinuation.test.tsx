@@ -1,12 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { Star } from "lucide-react";
 import type { InspectorActionHandlers, InspectorOrderState } from "../inspector/types";
 import { createInitialDocument, createTextNode } from "../../model/defaults";
 import { MultiSelectInspector } from "../MultiSelectInspector";
 import { PageEditorContent } from "../PageEditorContent";
 import { PagesExportSettingsContent } from "../PagesExportSettingsContent";
 import { PagesSiteSettingsContent } from "../PagesSiteSettingsContent";
-import { FormField } from "../controls/FormLayout";
+import { FormField, SwitchBlock } from "../controls/FormLayout";
 
 const ORDER_STATE: InspectorOrderState = {
 	showOrderControls: false,
@@ -80,6 +81,23 @@ describe("panels/FormField layout continuation", () => {
 		);
 
 		expect(markup).toContain('data-ui="form-field-description"');
+	});
+
+	it("normalizes SwitchBlock icon color to the primary text color", () => {
+		const markup = renderToStaticMarkup(
+			<SwitchBlock
+				icon={<Star className="h-3.5 w-3.5" />}
+				title="Animation"
+				checked
+				onCheckedChange={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain("flex items-center gap-2");
+		expect(markup).toContain("editor-text-strong flex shrink-0 items-center");
+		expect(markup).toContain("[&amp;_svg]:text-[color:var(--editor-utility-text-strong)]");
+		expect(markup).not.toContain("editor-text-accent");
+		expect(markup).not.toContain("editor-text-muted");
 	});
 
 	it("uses FormField layouts in page and site settings surfaces", () => {

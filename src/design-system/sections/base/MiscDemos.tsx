@@ -1,5 +1,5 @@
 import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
-import { Layers2, Pin, Rocket } from "lucide-react";
+import { Layers2, Pin, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageSwitcherSelect } from "@/components/ui/page-switcher-select";
 import { Input } from "@/components/ui/input";
@@ -278,7 +278,7 @@ export function MiscDemos() {
 								Sticky Card
 								<span className="stage-single-selection-label-badges">
 									<Pin className="h-3 w-3" />
-									<Rocket className="h-3 w-3" />
+									<Repeat className="h-3 w-3" />
 									<Layers2 className="h-3 w-3" />
 								</span>
 							</div>
@@ -406,7 +406,7 @@ export function MiscDemos() {
 						</div>
 						<NoticeSurface
 							tone="info"
-							icon={<Rocket className="h-3.5 w-3.5" />}
+							icon={<Repeat className="h-3.5 w-3.5" />}
 						>
 							Animation settings are inherited from the preset.
 						</NoticeSurface>

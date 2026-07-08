@@ -141,7 +141,7 @@ export function InspectorDemos() {
 					<div>
 						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Gradient with nested child</div>
 						<SwitchBlock
-							icon={<PaintBucket className="h-3.5 w-3.5 shrink-0 editor-text-accent" />}
+							icon={<PaintBucket className="h-3.5 w-3.5 shrink-0" />}
 							title="Background gradient"
 							description="Add a gradient layer."
 							checked={true}
@@ -149,7 +149,7 @@ export function InspectorDemos() {
 						>
 							<div className="flex items-center justify-between gap-3">
 								<div className="flex min-w-0 items-start gap-2">
-									<TypeOutline className="mt-0.5 h-3.5 w-3.5 shrink-0 editor-text-accent" />
+									<TypeOutline className="mt-0.5 h-3.5 w-3.5 shrink-0" />
 									<div>
 										<div className="editor-text-strong text-xs font-medium">Clip background to text</div>
 										<div className="editor-text-muted text-[11px]">Paint text with the gradient.</div>
@@ -162,7 +162,7 @@ export function InspectorDemos() {
 					<div>
 						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Standalone divider block</div>
 						<SwitchBlock
-							icon={<LineStyle className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+							icon={<LineStyle className="h-3.5 w-3.5 shrink-0" />}
 							title="Global stroke"
 							description="Use one outline style."
 							checked={false}
@@ -172,7 +172,7 @@ export function InspectorDemos() {
 					<div>
 						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Short description</div>
 						<SwitchBlock
-							icon={<ClosedCaption className="h-3.5 w-3.5 shrink-0 editor-text-accent" />}
+							icon={<ClosedCaption className="h-3.5 w-3.5 shrink-0" />}
 							title="Video captions"
 							description="Attach a WebVTT file."
 							checked={true}
@@ -182,7 +182,7 @@ export function InspectorDemos() {
 					<div>
 						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Existing sticky use</div>
 						<SwitchBlock
-							icon={<Pin className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+							icon={<Pin className="h-3.5 w-3.5 shrink-0" />}
 							title="Global elevation"
 							description="Elevate sticky elements."
 							checked={false}

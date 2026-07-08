@@ -13,7 +13,7 @@ const tabsListVariants = cva('inline-flex border', {
   variants: {
     variant: {
       default: 'editor-bg-subtle gap-0.5 rounded-md p-0.5',
-      segmented: 'editor-pill-subtle editor-border-subtle gap-0.5 rounded-lg p-0.5',
+      segmented: 'editor-bg-subtle editor-border-subtle gap-0.5 rounded-lg p-0.5',
     },
   },
   defaultVariants: {
@@ -25,7 +25,7 @@ const tabsTriggerVariants = cva('font-medium transition-colors', {
   variants: {
     variant: {
       default: 'editor-text-muted',
-      segmented: 'editor-text-muted',
+      segmented: 'text-[color:var(--editor-utility-text-strong)]',
     },
     size: {
       default: 'h-7 rounded-[6px] px-2.5 text-xs',
@@ -33,7 +33,7 @@ const tabsTriggerVariants = cva('font-medium transition-colors', {
       small: 'h-7 rounded-sm px-2 text-[11px]',
     },
     selected: {
-      true: 'editor-bg-surface editor-text-strong shadow-sm',
+      true: '',
       false:
         'hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] hover:text-[color:var(--editor-accent)] focus-visible:bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))] focus-visible:text-[color:var(--editor-accent)]',
     },
@@ -42,6 +42,19 @@ const tabsTriggerVariants = cva('font-medium transition-colors', {
     variant: 'default',
     size: 'default',
   },
+  compoundVariants: [
+    {
+      variant: 'default',
+      selected: true,
+      className: 'editor-bg-surface editor-text-strong shadow-sm',
+    },
+    {
+      variant: 'segmented',
+      selected: true,
+      className:
+        'border-transparent bg-[color:var(--editor-accent)] text-[color:var(--editor-accent-foreground)] shadow-[var(--editor-accent-shadow)] hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_88%,#0f172a)]',
+    },
+  ],
 });
 
 export function Tabs({

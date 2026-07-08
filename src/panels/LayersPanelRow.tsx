@@ -1,4 +1,4 @@
-import { Ban, Layers2, PencilLine, Pin, Rocket } from "lucide-react";
+import { Ban, Layers2, PencilLine, Pin, Repeat } from "lucide-react";
 import type {
 	KeyboardEvent as ReactKeyboardEvent,
 	MouseEvent as ReactMouseEvent,
@@ -96,7 +96,7 @@ export function LayersTreeRowItem({
 			badges={
 				<>
 					{row.isSticky && <Pin className="h-3 w-3" />}
-					{row.hasAnimation && <Rocket className="h-3 w-3" />}
+					{row.hasAnimation && <Repeat className="h-3 w-3" />}
 					{row.isElevated && <Layers2 className="h-3 w-3" />}
 				</>
 			}

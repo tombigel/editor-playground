@@ -301,7 +301,7 @@ export function VideoContentSection({
         <SwitchBlock
           icon={
             <ClosedCaption
-              className={`h-3.5 w-3.5 shrink-0 ${captionsEnabled ? 'editor-text-accent' : 'editor-text-muted'}`}
+              className="h-3.5 w-3.5 shrink-0"
             />
           }
           title="Video captions"

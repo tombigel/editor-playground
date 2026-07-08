@@ -234,7 +234,11 @@ export function SwitchBlock({
     <div className="editor-bg-subtle editor-border-subtle rounded-md border">
       <div className="flex items-center justify-between gap-3 px-2.5 py-2">
         <div className="flex items-center gap-2">
-          {icon}
+          {icon ? (
+            <span className="editor-text-strong flex shrink-0 items-center [&_svg]:text-[color:var(--editor-utility-text-strong)]">
+              {icon}
+            </span>
+          ) : null}
           <div>
             <div className="editor-text-strong text-xs font-medium">{title}</div>
             {description && (

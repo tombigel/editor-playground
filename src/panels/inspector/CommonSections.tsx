@@ -571,7 +571,7 @@ export function WrapperDesignSection({
             <SwitchBlock
               icon={
                 <PaintBucket
-                  className={`h-3.5 w-3.5 shrink-0 ${gradient ? 'editor-text-accent' : 'editor-text-muted'}`}
+                  className="h-3.5 w-3.5 shrink-0"
                 />
               }
               title="Background gradient"
@@ -585,7 +585,7 @@ export function WrapperDesignSection({
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <TypeOutline
-                      className={`h-3.5 w-3.5 shrink-0 ${node.style?.backgroundClipText ? 'editor-text-accent' : 'editor-text-muted'}`}
+                      className="h-3.5 w-3.5 shrink-0"
                     />
                     <div>
                       <div className="editor-text-strong text-xs font-medium">Clip background to text</div>

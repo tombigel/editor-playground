@@ -551,7 +551,7 @@ export function SvgDesignSection({
         <SwitchBlock
           icon={
             <Droplet
-              className={`h-3.5 w-3.5 shrink-0 ${monochrome?.enabled ? 'editor-text-accent' : 'editor-text-muted'}`}
+              className="h-3.5 w-3.5 shrink-0"
             />
           }
           title="Monochrome"
@@ -575,7 +575,7 @@ export function SvgDesignSection({
         <SwitchBlock
           icon={
             <LineStyle
-              className={`h-3.5 w-3.5 shrink-0 ${stroke?.enabled ? 'editor-text-accent' : 'editor-text-muted'}`}
+              className="h-3.5 w-3.5 shrink-0"
             />
           }
           title="Global stroke"

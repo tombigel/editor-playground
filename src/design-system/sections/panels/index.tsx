@@ -8,10 +8,10 @@ import {
   PencilLine,
   Pin,
   RectangleEllipsis,
-  Rocket,
   Rows3,
   SquareArrowRightEnter,
   SquareStack,
+  Repeat,
   Star,
   Trash2,
   ImageIcon,
@@ -445,7 +445,7 @@ export function PanelsSection() {
                             badges={
                               <>
                                 {row.isSticky && <Pin className="h-3 w-3" />}
-                                {row.hasAnimation && <Rocket className="h-3 w-3" />}
+                                {row.hasAnimation && <Repeat className="h-3 w-3" />}
                                 {row.isElevated && <Layers2 className="h-3 w-3" />}
                               </>
                             }

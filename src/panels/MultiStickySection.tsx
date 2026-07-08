@@ -76,11 +76,11 @@ export function MultiStickySection({
     >
       <div className="editor-bg-subtle editor-border-subtle flex items-center justify-between gap-3 rounded-md border px-2.5 py-2">
         <div className="flex items-center gap-2">
-          {stickyEnabledState.mixed
-            ? <Pin className="h-3.5 w-3.5 shrink-0 editor-text-muted" />
-            : stickyEnabledState.value
-              ? <Pin className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
-              : <PinOff className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+          <span className="editor-text-strong flex shrink-0 items-center">
+            {stickyEnabledState.mixed || stickyEnabledState.value
+              ? <Pin className="h-3.5 w-3.5 shrink-0" />
+              : <PinOff className="h-3.5 w-3.5 shrink-0" />}
+          </span>
           <div>
             <div className="editor-text-strong text-xs font-medium">{statusLabel}</div>
             <div className="editor-text-muted text-[11px]">Pin selected nodes inside their structural range.</div>

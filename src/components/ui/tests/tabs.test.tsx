@@ -39,7 +39,10 @@ describe('components/ui/tabs', () => {
     expect(markup).toContain('data-ui="tabs-list"');
     expect(markup).toContain('data-variant="segmented"');
     expect(markup).toContain('data-size="compact"');
-    expect(markup).toContain('editor-pill-subtle');
+    expect(markup).toContain('editor-bg-subtle');
+    expect(markup).toContain('text-[color:var(--editor-utility-text-strong)]');
+    expect(markup).toContain('bg-[color:var(--editor-accent)]');
+    expect(markup).toContain('text-[color:var(--editor-accent-foreground)]');
     expect(markup).toContain(
       'hover:bg-[color:color-mix(in_srgb,var(--editor-accent)_12%,var(--editor-surface-background))]',
     );

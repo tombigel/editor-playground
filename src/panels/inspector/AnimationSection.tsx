@@ -4,7 +4,7 @@ import type { FocusedMode } from '../../api/editorApi';
 import type { AnimationTriggerType } from '../../api/animationApi';
 import type { InspectorActionHandlers, NonSiteInspectorNode } from './types';
 import type { InspectorSectionHeaderAction } from './CommonSections';
-import { Rocket } from 'lucide-react';
+import { Ban, Repeat } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -112,11 +112,7 @@ export function AnimationSection({
       focusedModeEntry={createFocusedModeEntry(focusedMode, 'animation', actions.onEnterFocusedMode)}
     >
       <SwitchBlock
-        icon={
-          enabled
-            ? <Rocket className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
-            : <Rocket className="h-3.5 w-3.5 shrink-0 editor-text-muted" />
-        }
+        icon={enabled ? <Repeat className="h-3.5 w-3.5 shrink-0" /> : <Ban className="h-3.5 w-3.5 shrink-0" />}
         title={enabled ? 'Enabled' : 'Disabled'}
         description="Add motion effects to this element."
         checked={enabled}

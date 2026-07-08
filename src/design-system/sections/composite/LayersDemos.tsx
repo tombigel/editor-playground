@@ -3,7 +3,7 @@ import {
   Heading2,
   List,
   MessageSquareQuote,
-  Rocket,
+  Repeat,
   ImageIcon,
   Layers2,
   Layers3,
@@ -252,7 +252,7 @@ export function LayersDemos() {
                           badges={
                             <>
                               {row.isSticky && <Pin className="h-3 w-3" />}
-                              {row.hasAnimation && <Rocket className="h-3 w-3" />}
+                              {row.hasAnimation && <Repeat className="h-3 w-3" />}
                               {row.isElevated && <Layers2 className="h-3 w-3" />}
                             </>
                           }

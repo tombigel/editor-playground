@@ -57,8 +57,8 @@ export function StickySection({
     >
       <SwitchBlock
         icon={node.sticky?.enabled
-          ? <Pin className="h-3.5 w-3.5 shrink-0 editor-text-accent" />
-          : <PinOff className="h-3.5 w-3.5 shrink-0 editor-text-muted" />}
+          ? <Pin className="h-3.5 w-3.5 shrink-0" />
+          : <PinOff className="h-3.5 w-3.5 shrink-0" />}
         title={node.sticky?.enabled ? 'Enabled' : 'Disabled'}
         description="Pin this node inside its structural range."
         checked={Boolean(node.sticky?.enabled)}
