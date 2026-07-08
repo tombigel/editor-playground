@@ -33,6 +33,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - document grouping and drag preview behavior
 - polish segmented tabs and switch icons
 - remove pnpm store sidecars
+- move table controls into design ownership
 
 ### Fixed
 

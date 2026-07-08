@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { OptionsSelector, type OptionsSelectorOption } from '@/components/ui/options-selector';
 import type { InspectorActionHandlers, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
-import { ListContentSection, TableContentSection } from './contentSections/textSections';
+import { ListContentSection, TableContentSection, TableDesignSection } from './contentSections/textSections';
 
 const textDesignSection: InspectorSectionDefinition = {
   id: 'text-design',
@@ -28,6 +28,16 @@ const textDesignSection: InspectorSectionDefinition = {
         <CodeDesignSection
           node={node}
           onTextChange={actions.onTextChange}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+        />
+      );
+    }
+    if (node.subtype === 'table') {
+      return (
+        <TableDesignSection
+          node={node}
+          actions={actions}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
         />
