@@ -21,6 +21,11 @@ type RetainedSelectionLeaf = RichTextLeaf & { retainedSelection?: boolean };
 type EditableTableCell = RichTableCell & {
 	header?: boolean;
 	alignment?: TableColumnAlignment;
+	width?: string | null;
+};
+type EditableTableRow = {
+	type?: string;
+	height?: string | null;
 };
 
 export function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
@@ -105,6 +110,7 @@ export function renderEditElement(
 					userSelect: "text",
 					WebkitUserSelect: "text",
 					...(cell.alignment ? { textAlign: cell.alignment } : {}),
+					...(cell.width ? { width: cell.width } : {}),
 				}}
 			>
 				{children}
@@ -113,7 +119,15 @@ export function renderEditElement(
 	}
 
 	if ("type" in el && el.type === "table-row") {
-		return <tr {...attributes}>{children}</tr>;
+		const row = el as EditableTableRow;
+		return (
+			<tr
+				{...attributes}
+				style={row.height ? { height: row.height, minHeight: row.height } : undefined}
+			>
+				{children}
+			</tr>
+		);
 	}
 
 	if ("type" in el && el.type === "table") {

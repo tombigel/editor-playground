@@ -90,8 +90,10 @@ export {
   removeTableColumnDoc,
   removeTableRowDoc,
   setTableColumnAlignmentDoc,
+  setTableColumnWidthDoc,
   setTableDirectionDoc,
   setTableHeaderRowDoc,
+  setTableRowHeightDoc,
 } from './documentApi/table';
 export {
   applyMarkdownToTextNodeDoc,

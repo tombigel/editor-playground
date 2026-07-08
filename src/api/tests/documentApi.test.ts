@@ -46,8 +46,10 @@ import {
   setCodeBlockThemeDoc,
   setCodeBlockWrapDoc,
   setTableColumnAlignmentDoc,
+  setTableColumnWidthDoc,
   setTableDirectionDoc,
   setTableHeaderRowDoc,
+  setTableRowHeightDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
   setNodeRect,
@@ -1312,7 +1314,15 @@ describe('api/documentApi', () => {
     expect(readTable(rtl).direction).toBe('rtl');
     expect(setTableDirectionDoc(rtl, blockNode.id, 'ltr')).toBe(rtl);
 
-    const defaultDirection = setTableDirectionDoc(rtl, tableNode.id, null);
+    const sizedColumn = setTableColumnWidthDoc(rtl, tableNode.id, 1, ' 12rem ');
+    expect(readTable(sizedColumn).columnWidths).toEqual([null, '12rem', null]);
+    expect(setTableColumnWidthDoc(sizedColumn, tableNode.id, 99, '20px')).toBe(sizedColumn);
+
+    const sizedRow = setTableRowHeightDoc(sizedColumn, tableNode.id, 0, '44px');
+    expect(readTable(sizedRow).rowHeights).toEqual(['44px', null, null]);
+    expect(setTableRowHeightDoc(sizedRow, tableNode.id, 99, '20px')).toBe(sizedRow);
+
+    const defaultDirection = setTableDirectionDoc(sizedRow, tableNode.id, null);
     expect(readTable(defaultDirection).direction).toBeUndefined();
 
     const noHeader = setTableHeaderRowDoc(defaultDirection, tableNode.id, false);
@@ -1321,10 +1331,13 @@ describe('api/documentApi', () => {
     const removedColumn = removeTableColumnDoc(noHeader, tableNode.id, 1);
     const removedColumnBlock = readTable(removedColumn);
     expect(removedColumnBlock.children[0]?.children).toHaveLength(2);
+    expect(removedColumnBlock.columnWidths).toBeUndefined();
     expect(removedColumnBlock.columnAlignments).toBeUndefined();
 
     const removedRow = removeTableRowDoc(removedColumn, tableNode.id, 2);
-    expect(readTable(removedRow).children).toHaveLength(2);
+    const removedRowBlock = readTable(removedRow);
+    expect(removedRowBlock.children).toHaveLength(2);
+    expect(removedRowBlock.rowHeights).toEqual(['44px', null]);
 
     const oneColumn = removeTableColumnDoc(removeTableColumnDoc(removedRow, tableNode.id, 1), tableNode.id, 0);
     expect(removeTableColumnDoc(oneColumn, tableNode.id, 0)).toBe(oneColumn);

@@ -398,15 +398,17 @@ function prepareStandaloneTableEditContent(node: TextNode) {
 function addTableEditCellMetadata(block: RichTableBlock): RichTableBlock {
   return {
     ...block,
-    children: block.children.map((row) => ({
-      ...row,
-      children: row.children.map((cell, columnIndex) => ({
-        ...cell,
-        header: row.header === true,
-        alignment: block.columnAlignments?.[columnIndex] ?? null,
+      children: block.children.map((row, rowIndex) => ({
+        ...row,
+        height: block.rowHeights?.[rowIndex] ?? null,
+        children: row.children.map((cell, columnIndex) => ({
+          ...cell,
+          header: row.header === true,
+          alignment: block.columnAlignments?.[columnIndex] ?? null,
+          width: block.columnWidths?.[columnIndex] ?? null,
+        })),
       })),
-    })),
-  };
+    };
 }
 
 export function renderLeafSpacerOverlay({

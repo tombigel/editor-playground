@@ -707,14 +707,21 @@ describe('render/nodePresentation', () => {
             },
           ]),
         ]),
-      ], { direction: 'rtl', columnAlignments: ['left', 'right'] }),
+      ], {
+        direction: 'rtl',
+        columnAlignments: ['left', 'right'],
+        columnWidths: ['12rem', null],
+        rowHeights: ['44px', null],
+      }),
     ]);
 
     const markup = renderToStaticMarkup(renderLeafContent(table));
 
     expect(markup).toContain('<table dir="rtl"');
+    expect(markup).toContain('<colgroup><col style="width:12rem"/><col/></colgroup>');
     expect(markup).toContain('<thead>');
-    expect(markup).toContain('<th scope="col" style="text-align:left"><span style="font-weight:bold">Name</span></th>');
+    expect(markup).toContain('<tr style="height:44px;min-height:44px">');
+    expect(markup).toContain('<th scope="col" style="text-align:left;width:12rem"><span style="font-weight:bold">Name</span></th>');
     expect(markup).toContain('<tbody>');
     expect(markup).toContain('<td style="text-align:right"><a href="https://example.com/ada"');
     expect(markup).toContain('font-style:italic');

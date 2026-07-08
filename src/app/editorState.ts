@@ -63,8 +63,10 @@ import {
   removeTableColumnDoc,
   removeTableRowDoc,
   setTableColumnAlignmentDoc,
+  setTableColumnWidthDoc,
   setTableDirectionDoc,
   setTableHeaderRowDoc,
+  setTableRowHeightDoc,
 } from '../api/documentApi';
 import {
   setPresetAnimation,
@@ -224,6 +226,10 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTableColumnAlignmentDoc(state.document, action.nodeId, action.columnIndex, action.alignment) };
     case 'setTableDirection':
       return { ...state, document: setTableDirectionDoc(state.document, action.nodeId, action.direction) };
+    case 'setTableColumnWidth':
+      return { ...state, document: setTableColumnWidthDoc(state.document, action.nodeId, action.columnIndex, action.width) };
+    case 'setTableRowHeight':
+      return { ...state, document: setTableRowHeightDoc(state.document, action.nodeId, action.rowIndex, action.height) };
     case 'mergeTextSelectionToRich': {
       const nodeIds = action.nodeIds ?? selectedIds;
       if (nodeIds.length < 2) {

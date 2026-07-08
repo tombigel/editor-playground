@@ -110,6 +110,8 @@ export type EditorAction =
   | { type: 'setTableHeaderRow'; nodeId: NodeId; enabled: boolean }
   | { type: 'setTableColumnAlignment'; nodeId: NodeId; columnIndex: number; alignment: 'left' | 'center' | 'right' | null }
   | { type: 'setTableDirection'; nodeId: NodeId; direction: 'ltr' | 'rtl' | null }
+  | { type: 'setTableColumnWidth'; nodeId: NodeId; columnIndex: number; width: string | null }
+  | { type: 'setTableRowHeight'; nodeId: NodeId; rowIndex: number; height: string | null }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }
   | { type: 'move'; id: string; x: string; y: string; options?: DragCommitOptions }

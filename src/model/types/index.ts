@@ -279,6 +279,8 @@ export interface RichTableBlock extends SlateElement {
   type: 'table';
   direction?: 'ltr' | 'rtl';
   columnAlignments?: TableColumnAlignment[];
+  columnWidths?: Array<string | null>;
+  rowHeights?: Array<string | null>;
   children: RichTableRow[];
 }
 

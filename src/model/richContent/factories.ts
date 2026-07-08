@@ -178,6 +178,18 @@ function normalizeTableColumnAlignments(
   return normalized.some((alignment) => alignment !== null) ? normalized : undefined;
 }
 
+function normalizeTableCssLength(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function normalizeTableCssLengthArray(
+  values: readonly unknown[] | undefined,
+  length: number,
+): Array<string | null> | undefined {
+  const normalized = Array.from({ length }, (_, index) => normalizeTableCssLength(values?.[index]));
+  return normalized.some((value) => value !== null) ? normalized : undefined;
+}
+
 export function createRichTableCell(children: RichInlineNode[] = [createRichTextLeaf('')]): RichTableCell {
   return {
     type: 'table-cell',
@@ -198,7 +210,12 @@ export function createRichTableRow(
 
 export function createRichTableBlock(
   rows: RichTableRow[] = [],
-  options: { direction?: unknown; columnAlignments?: readonly unknown[] } = {},
+  options: {
+    direction?: unknown;
+    columnAlignments?: readonly unknown[];
+    columnWidths?: readonly unknown[];
+    rowHeights?: readonly unknown[];
+  } = {},
 ): RichTableBlock {
   const sourceRows = rows.length > 0
     ? rows
@@ -212,10 +229,14 @@ export function createRichTableBlock(
 	    { header: row.header === true || (rows.length === 0 && rowIndex === 0) },
 	  ));
   const columnAlignments = normalizeTableColumnAlignments(options.columnAlignments, columnCount);
+  const columnWidths = normalizeTableCssLengthArray(options.columnWidths, columnCount);
+  const rowHeights = normalizeTableCssLengthArray(options.rowHeights, normalizedRows.length);
   return {
     type: 'table',
     ...(options.direction === 'ltr' || options.direction === 'rtl' ? { direction: options.direction } : {}),
     ...(columnAlignments ? { columnAlignments } : {}),
+    ...(columnWidths ? { columnWidths } : {}),
+    ...(rowHeights ? { rowHeights } : {}),
     children: normalizedRows,
   };
 }

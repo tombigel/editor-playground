@@ -179,6 +179,36 @@ export function validateRichContentStructure(content: unknown): string[] {
         }
       }
 
+      if (block.columnWidths !== undefined) {
+        if (!Array.isArray(block.columnWidths)) {
+          errors.push(`Rich table block ${blockIndex} columnWidths must be an array.`);
+        } else {
+          if (block.columnWidths.length !== columnCount) {
+            errors.push(`Rich table block ${blockIndex} columnWidths length must match the column count.`);
+          }
+          block.columnWidths.forEach((width, widthIndex) => {
+            if (width !== null && typeof width !== 'string') {
+              errors.push(`Rich table block ${blockIndex} column width ${widthIndex} must be a string or null.`);
+            }
+          });
+        }
+      }
+
+      if (block.rowHeights !== undefined) {
+        if (!Array.isArray(block.rowHeights)) {
+          errors.push(`Rich table block ${blockIndex} rowHeights must be an array.`);
+        } else {
+          if (block.rowHeights.length !== block.children.length) {
+            errors.push(`Rich table block ${blockIndex} rowHeights length must match the row count.`);
+          }
+          block.rowHeights.forEach((height, heightIndex) => {
+            if (height !== null && typeof height !== 'string') {
+              errors.push(`Rich table block ${blockIndex} row height ${heightIndex} must be a string or null.`);
+            }
+          });
+        }
+      }
+
       block.children.forEach((row, rowIndex) => {
         if (!isObjectRecord(row) || row.type !== 'table-row' || !Array.isArray(row.children)) {
           errors.push(`Rich table block ${blockIndex} child ${rowIndex} must be a table-row element.`);

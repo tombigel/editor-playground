@@ -178,6 +178,22 @@ function getTableCellAlignment(block: RichTableBlock, cellIndex: number): CSSPro
   return alignment ? { textAlign: alignment } : undefined;
 }
 
+function getTableCellStyle(block: RichTableBlock, cellIndex: number): CSSProperties | undefined {
+  const alignmentStyle = getTableCellAlignment(block, cellIndex);
+  const width = block.columnWidths?.[cellIndex];
+  return alignmentStyle || width
+    ? {
+        ...alignmentStyle,
+        ...(width ? { width } : {}),
+      }
+    : undefined;
+}
+
+function getTableRowStyle(block: RichTableBlock, rowIndex: number): CSSProperties | undefined {
+  const height = block.rowHeights?.[rowIndex];
+  return height ? { height, minHeight: height } : undefined;
+}
+
 function renderRichTableBlock(
   block: RichTableBlock,
   path: string,
@@ -192,6 +208,7 @@ function renderRichTableBlock(
   const { style, className, dataNodeId, tabIndex } = options;
   const headerRow = block.children[0]?.header === true ? block.children[0] : undefined;
   const bodyRows = headerRow ? block.children.slice(1) : block.children;
+  const hasColumnWidths = block.columnWidths?.some((width) => typeof width === 'string' && width.length > 0) === true;
 
   return (
     <table
@@ -201,15 +218,26 @@ function renderRichTableBlock(
       dir={block.direction}
       style={style}
     >
+      {hasColumnWidths ? (
+        <colgroup>
+          {Array.from({ length: Math.max(1, ...block.children.map((row) => row.children.length)) }, (_, columnIndex) => (
+            <col
+              // biome-ignore lint/suspicious/noArrayIndexKey: table columns are positional render output.
+              key={columnIndex}
+              style={block.columnWidths?.[columnIndex] ? { width: block.columnWidths[columnIndex] ?? undefined } : undefined}
+            />
+          ))}
+        </colgroup>
+      ) : null}
       {headerRow ? (
         <thead>
-          <tr>
+          <tr style={getTableRowStyle(block, 0)}>
             {mapWithRenderPaths(headerRow.children, `${path}.head.cell`, (cell, cellPath, cellIndex) => (
               <th
                 key={cellPath}
                 scope="col"
                 tabIndex={tabIndex}
-                style={getTableCellAlignment(block, cellIndex)}
+                style={getTableCellStyle(block, cellIndex)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </th>
@@ -218,13 +246,13 @@ function renderRichTableBlock(
         </thead>
       ) : null}
       <tbody>
-        {mapWithRenderPaths(bodyRows, `${path}.body.row`, (row, rowPath) => (
-          <tr key={rowPath}>
+        {mapWithRenderPaths(bodyRows, `${path}.body.row`, (row, rowPath, bodyRowIndex) => (
+          <tr key={rowPath} style={getTableRowStyle(block, headerRow ? bodyRowIndex + 1 : bodyRowIndex)}>
             {mapWithRenderPaths(row.children, `${rowPath}.cell`, (cell, cellPath, cellIndex) => (
               <td
                 key={cellPath}
                 tabIndex={tabIndex}
-                style={getTableCellAlignment(block, cellIndex)}
+                style={getTableCellStyle(block, cellIndex)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </td>

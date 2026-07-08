@@ -472,6 +472,8 @@ describe('model/richContent', () => {
             type: 'table',
             direction: 'rtl',
             columnAlignments: ['left', 'bad', 'right', 'center'],
+            columnWidths: ['12rem', 0, '30px'],
+            rowHeights: ['44px', '', '20px'],
             children: [
               {
                 type: 'table-row',
@@ -500,6 +502,8 @@ describe('model/richContent', () => {
       expect(tableBlock?.children[1]?.children[1]?.children).toEqual([{ text: '' }]);
       expect(tableBlock?.direction).toBe('rtl');
       expect(tableBlock?.columnAlignments).toEqual(['left', null]);
+      expect(tableBlock?.columnWidths).toEqual(['12rem', null]);
+      expect(tableBlock?.rowHeights).toEqual(['44px', null]);
     });
   });
 
@@ -519,6 +523,19 @@ describe('model/richContent', () => {
         },
       ])).toEqual([
         'Rich table block 1 direction must be ltr or rtl.',
+      ]);
+    });
+
+    it('reports invalid table sizing values', () => {
+      expect(validateRichContentStructure([
+        {
+          ...createRichTableBlock(),
+          columnWidths: ['10px'],
+          rowHeights: ['20px', 30],
+        },
+      ])).toEqual([
+        'Rich table block 0 columnWidths length must match the column count.',
+        'Rich table block 0 row height 1 must be a string or null.',
       ]);
     });
 

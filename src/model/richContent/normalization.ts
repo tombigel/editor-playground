@@ -225,6 +225,10 @@ function normalizeTableColumnAlignment(value: unknown) {
   return value === 'left' || value === 'center' || value === 'right' ? value : null;
 }
 
+function normalizeTableCssLength(value: unknown) {
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
 function normalizeTableRows(children: unknown): RichTableRow[] {
   if (!Array.isArray(children)) {
     return createRichTableBlock().children;
@@ -281,9 +285,19 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
     const columnAlignments = Array.isArray(rawColumnAlignments)
       ? Array.from({ length: columnCount }, (_, index) => normalizeTableColumnAlignment(rawColumnAlignments[index]))
       : undefined;
+    const rawColumnWidths = node.columnWidths;
+    const columnWidths = Array.isArray(rawColumnWidths)
+      ? Array.from({ length: columnCount }, (_, index) => normalizeTableCssLength(rawColumnWidths[index]))
+      : undefined;
+    const rawRowHeights = node.rowHeights;
+    const rowHeights = Array.isArray(rawRowHeights)
+      ? Array.from({ length: rows.length }, (_, index) => normalizeTableCssLength(rawRowHeights[index]))
+      : undefined;
     return createRichTableBlock(rows, {
       direction: normalizeDirection(node.direction),
       columnAlignments,
+      columnWidths,
+      rowHeights,
     });
   }
 
