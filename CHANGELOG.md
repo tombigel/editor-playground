@@ -23,6 +23,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - add table sizing and design controls
 - add table toolbar actions
 - show clipped text color sources
+- add site background setting
 
 ### Changed
 

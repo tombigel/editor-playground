@@ -518,6 +518,20 @@ describe('setSiteSettings', () => {
     expect(result.siteSettings?.status).toBe('published');
     expect(result.siteSettings?.title).toBe('My Site');
     expect(result.siteSettings?.lang).toBe('en-US');
+    expect(result.siteSettings?.background).toBe('#ffffff');
+  });
+
+  it('seeds default site settings when patching a legacy document', () => {
+    const doc = { ...makeDoc(), siteSettings: undefined };
+    const result = setSiteSettings(doc, { title: 'Legacy Site' });
+
+    expect(result.siteSettings).toMatchObject({
+      lang: 'en-US',
+      status: 'draft',
+      viewTransition: 'none',
+      background: '#ffffff',
+      title: 'Legacy Site',
+    });
   });
 });
 

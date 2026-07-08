@@ -6,6 +6,7 @@ export function createInitialSiteSettings(): SiteSettings {
     lang: 'en-US',
     status: 'draft',
     viewTransition: 'none',
+    background: '#ffffff',
     autoSyncSlugs: true,
     outputStructure: 'directory',
   };

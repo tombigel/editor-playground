@@ -18,7 +18,7 @@ import {
   resolvePageSystemAliasUrl,
   resolvePageUrl,
 } from '../model/pageRoutes';
-import { createPage, generateSlug, normalizeSlug } from '../model/pageDefaults';
+import { createInitialSiteSettings, createPage, generateSlug, normalizeSlug } from '../model/pageDefaults';
 
 export function addPage(
   document: DocumentModel,
@@ -487,7 +487,7 @@ export function setSiteSettings(
 ): DocumentModel {
   return {
     ...document,
-    siteSettings: { ...(document.siteSettings ?? { lang: 'en-US', status: 'draft', viewTransition: 'none' }), ...patch },
+    siteSettings: { ...createInitialSiteSettings(), ...document.siteSettings, ...patch },
   };
 }
 
