@@ -257,7 +257,7 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).not.toContain('aria-label="Block spacing"');
 	});
 
-	it("adds compact table actions in table mode", () => {
+	it("adds contextual table cell controls in table mode", () => {
 		const markup = renderToStaticMarkup(
 			<RichTextEditOverlay
 				nodeId="table-node"
@@ -280,14 +280,31 @@ describe("stage/RichTextEditOverlay", () => {
 		);
 
 		expect(markup).toContain("<table");
-		expect(markup).toContain('aria-label="Add row"');
-		expect(markup).toContain('aria-label="Remove row"');
-		expect(markup).toContain('aria-label="Add column"');
-		expect(markup).toContain('aria-label="Remove column"');
+		expect(markup).toContain(">Cell</span>");
+		expect(markup).toContain('aria-label="Active column width"');
+		expect(markup).toContain('aria-label="Active row height"');
+		expect(markup).toContain('aria-label="Insert row below"');
+		expect(markup).toContain('aria-label="Remove active row"');
+		expect(markup).toContain('aria-label="Insert column after"');
+		expect(markup).toContain('aria-label="Remove active column"');
 		expect(markup).toContain('aria-label="Toggle header row"');
-		expect(markup).toContain('aria-label="Align table columns left"');
-		expect(markup).toContain('aria-label="Align table columns center"');
-		expect(markup).toContain('aria-label="Align table columns right"');
+		expect(markup).toContain('aria-label="Use right-to-left table direction"');
+		expect(markup).toContain('aria-label="Align active column left"');
+		expect(markup).toContain('aria-label="Align active column center"');
+		expect(markup).toContain('aria-label="Align active column right"');
+		expect(markup).toContain('aria-label="Selected cell background"');
+		expect(markup).toContain('aria-label="Selected cell padding"');
+		expect(markup).toContain('aria-label="Target all borders"');
+		expect(markup).toContain('aria-label="Target outer borders"');
+		expect(markup).toContain('aria-label="Target inner borders"');
+		expect(markup).toContain('aria-label="Target horizontal borders"');
+		expect(markup).toContain('aria-label="Target vertical borders"');
+		expect(markup).toContain('aria-label="Target top border"');
+		expect(markup).toContain('aria-label="Target right border"');
+		expect(markup).toContain('aria-label="Target bottom border"');
+		expect(markup).toContain('aria-label="Target left border"');
+		expect(markup).toContain('aria-label="Selected border width"');
+		expect(markup).toContain('aria-label="Selected border color"');
 		expect(markup).not.toContain('aria-label="Use ordered list"');
 		expect(markup).not.toContain('aria-label="Line height"');
 	});

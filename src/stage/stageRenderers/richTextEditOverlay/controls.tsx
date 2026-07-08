@@ -36,6 +36,9 @@ import {
 	type ToolbarSpacingUnit,
 } from "./types";
 
+const TABLE_LENGTH_UNIT_OPTIONS = ["px", "em", "%"] as const;
+type ToolbarTableLengthUnit = (typeof TABLE_LENGTH_UNIT_OPTIONS)[number];
+
 export function ToolbarButton({
 	label,
 	active,
@@ -503,6 +506,138 @@ export function CompactSpacingField({
 	);
 }
 
+export function CompactTableLengthField({
+	label,
+	icon,
+	value,
+	width,
+	onCommit,
+}: {
+	label: string;
+	icon: React.ReactNode;
+	value: string;
+	width: number;
+	onCommit: (value: string) => void;
+}) {
+	const [draft, setDraft] = useState(readTableLengthDraftState(value));
+	const [invalid, setInvalid] = useState(false);
+	const options: ValueWithUnitOption[] = TABLE_LENGTH_UNIT_OPTIONS.map(
+		(option) => ({
+			type: "option",
+			value: option,
+			label: option,
+			inputMode: "numeric",
+		}),
+	);
+
+	useEffect(() => {
+		setDraft(readTableLengthDraftState(value));
+		setInvalid(false);
+	}, [value]);
+
+	const commitDraft = useCallback(() => {
+		const nextValue = normalizeTableLengthValue(draft.draft, draft.unit);
+		if (nextValue == null) {
+			setDraft(readTableLengthDraftState(value));
+			setInvalid(false);
+			return;
+		}
+		onCommit(nextValue);
+		setInvalid(false);
+	}, [draft, onCommit, value]);
+
+	return (
+		<PopoverTooltip
+			side="top"
+			align="center"
+			className={DARK_TOOLTIP_CLASS}
+			content={<div className="leading-3.5 font-medium">{label}</div>}
+		>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
+			<div
+				className="pointer-events-auto flex shrink-0 items-center gap-1"
+				style={{ width, pointerEvents: "auto" }}
+				onPointerDown={(event) => {
+					event.stopPropagation();
+				}}
+				onBlur={(event: ReactFocusEvent<HTMLDivElement>) => {
+					if (
+						event.currentTarget.contains(event.relatedTarget as Node | null)
+					) {
+						return;
+					}
+					commitDraft();
+				}}
+				onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
+					if (event.defaultPrevented || event.key !== "Enter") {
+						return;
+					}
+					if (!(event.target instanceof HTMLInputElement)) {
+						return;
+					}
+					event.preventDefault();
+					commitDraft();
+					event.target.blur();
+				}}
+			>
+				<span className="editor-text-muted flex h-7 shrink-0 items-center">
+					{icon}
+				</span>
+				<ValueWithUnit
+					mode="number-select"
+					value={value || `${draft.draft || 0}${draft.unit}`}
+					onChange={(nextValue) => {
+						const parsed = readTableLengthDraftState(nextValue);
+						if (parsed.valid) {
+							setDraft(parsed);
+							setInvalid(false);
+							onCommit(`${parsed.draft}${parsed.unit}`);
+							return;
+						}
+						if (
+							TABLE_LENGTH_UNIT_OPTIONS.includes(
+								nextValue as ToolbarTableLengthUnit,
+							)
+						) {
+							setDraft((current) => ({
+								...current,
+								unit: nextValue as ToolbarTableLengthUnit,
+							}));
+						}
+					}}
+					options={options}
+					inputValue={draft.draft}
+					selectedOption={draft.unit}
+					placeholder="0"
+					min={0}
+					step="any"
+					ariaLabel={label}
+					invalid={invalid}
+					segmentWidth={36}
+					className="min-w-0 flex-1"
+					controlClassName="h-7"
+					includeDisabledStyles={false}
+					onInputBlur={commitDraft}
+					onInputValueChange={(nextDraft) => {
+						setDraft((current) => ({ ...current, draft: nextDraft }));
+						if (!nextDraft.trim()) {
+							setInvalid(false);
+							return;
+						}
+						setInvalid(
+							normalizeTableLengthValue(nextDraft, draft.unit) == null,
+						);
+					}}
+					onResolveOptionValue={(nextUnit, currentValue) =>
+						normalizeTableLengthValue(currentValue, nextUnit as ToolbarTableLengthUnit)
+					}
+					expandToFill
+				/>
+			</div>
+		</PopoverTooltip>
+	);
+}
+
 export function CompactColorField({
 	label,
 	value,
@@ -572,4 +707,34 @@ function readSpacingDraftState(value: string) {
 			valid: false,
 		};
 	}
+}
+
+function readTableLengthDraftState(value: string) {
+	const match = value.trim().match(/^(\d+(?:\.\d+)?)(px|em|%)$/);
+	if (!match) {
+		return {
+			draft: "",
+			unit: "px" as ToolbarTableLengthUnit,
+			valid: false,
+		};
+	}
+	return {
+		draft: formatDisplayValue(Number(match[1])),
+		unit: match[2] as ToolbarTableLengthUnit,
+		valid: true,
+	};
+}
+
+function normalizeTableLengthValue(
+	value: string,
+	unit: ToolbarTableLengthUnit,
+): string | null {
+	if (!value.trim()) {
+		return "";
+	}
+	const numericValue = Number(value);
+	if (!Number.isFinite(numericValue) || numericValue < 0) {
+		return null;
+	}
+	return `${formatDisplayValue(numericValue)}${unit}`;
 }

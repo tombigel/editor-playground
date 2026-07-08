@@ -23,6 +23,24 @@ import { Editable, ReactEditor, Slate } from "slate-react";
 
 import { createTextDocumentContentFromClipboardHtml } from "../../api/documentApi";
 import {
+	getTableColumnCount,
+	insertTableColumnBlock,
+	insertTableRowBlock,
+	removeTableColumnBlock,
+	removeTableRowBlock,
+	setTableColumnAlignmentBlock,
+	setTableColumnWidthBlock,
+	setTableDirectionBlock,
+	setTableHeaderRowBlock,
+	setTableRowHeightBlock,
+	setTableSelectionBorderBlock,
+	setTableSelectionStyleBlock,
+	type TableBorderScope,
+	type TableCellBorderPatch,
+	type TableCellStylePatch,
+	type TableSelectionDescriptor,
+} from "../../api/documentApi/table";
+import {
 	BOLD_FONT_WEIGHT,
 	DEFAULT_FONT_WEIGHT,
 	getDocumentFontFamily,
@@ -42,7 +60,6 @@ import {
 import {
 	createTextDocumentContent,
 	createTextDocumentFromText,
-	createRichTableBlock,
 	createRichTableCell,
 	createRichTableRow,
 	getTextDocumentBlockGap,
@@ -92,6 +109,7 @@ import {
 } from "../../render/richTextEditor";
 import {
 	cloneSelection,
+	getActiveTableContext,
 	isSelectVisibleForStructureMode,
 	isTargetWithinLinkPopover,
 	isTargetWithinSelectLayer,
@@ -374,6 +392,10 @@ export function RichTextEditOverlay({
 	const currentBlockGap =
 		getTextDocumentBlockGap(content) ?? readInitialBlockSpacing(contentStyle);
 	const currentBlockSpacingValue = `${String(currentBlockGap)}px`;
+	const activeTableContext = useMemo(
+		() => (editMode === "table" ? getActiveTableContext(editor) : null),
+		[editMode, editor, selectionRevision, toolbarState],
+	);
 
 	useEffect(() => {
 		if (
@@ -718,7 +740,11 @@ export function RichTextEditOverlay({
 		[nodeId, onUpdateBlockGap],
 	);
 
-	const mutateActiveTable = useCallback((mutator: (block: RichTableBlock) => RichTableBlock) => {
+	const mutateActiveTable = useCallback((
+		mutator: (block: RichTableBlock) => RichTableBlock,
+		selectCell?: { rowIndex: number; columnIndex: number },
+	) => {
+		restoreToolbarSelection();
 		const entry = Array.from(Editor.nodes(editor, {
 			match: (node) => Element.isElement(node) && "type" in node && node.type === "table",
 			mode: "lowest",
@@ -727,87 +753,152 @@ export function RichTextEditOverlay({
 			return;
 		}
 		const [block, path] = entry;
+		const nextBlock = mutator(block);
 		Transforms.removeNodes(editor, { at: path });
-		Transforms.insertNodes(editor, mutator(block), { at: path });
+		Transforms.insertNodes(editor, nextBlock, { at: path });
+		if (selectCell) {
+			const rowIndex = Math.min(
+				Math.max(0, selectCell.rowIndex),
+				Math.max(0, nextBlock.children.length - 1),
+			);
+			const columnIndex = Math.min(
+				Math.max(0, selectCell.columnIndex),
+				Math.max(0, getTableColumnCount(nextBlock) - 1),
+			);
+			try {
+				Transforms.select(editor, Editor.start(editor, [...path, rowIndex, columnIndex]));
+			} catch {}
+		}
 		refreshAfterEdit();
-	}, [editor, refreshAfterEdit]);
-
-	const getTableColumnCount = useCallback((block: RichTableBlock) =>
-		Math.max(1, ...block.children.map((row) => row.children.length)), []);
-
-	const getTableOptions = useCallback((block: RichTableBlock) => ({
-		direction: block.direction,
-		columnAlignments: block.columnAlignments,
-		columnWidths: block.columnWidths,
-		rowHeights: block.rowHeights,
-		style: block.style,
-	}), []);
+		focusEditorSoon();
+	}, [editor, focusEditorSoon, refreshAfterEdit, restoreToolbarSelection]);
 
 	const handleTableInsertRow = useCallback(() => {
-		mutateActiveTable((block) => {
-			const columnCount = getTableColumnCount(block);
-			return createRichTableBlock([
-				...block.children,
-				createRichTableRow(Array.from({ length: columnCount }, () => createRichTableCell())),
-			], {
-				...getTableOptions(block),
-				rowHeights: [...(block.rowHeights ?? Array.from({ length: block.children.length }, () => null)), null],
-			});
-		});
-	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		const rowIndex = context.rowIndex + 1;
+		mutateActiveTable(
+			(block) => insertTableRowBlock(block, rowIndex),
+			{ rowIndex, columnIndex: context.columnIndex },
+		);
+	}, [activeTableContext, mutateActiveTable]);
 
 	const handleTableRemoveRow = useCallback(() => {
-		mutateActiveTable((block) => block.children.length <= 1
-			? block
-			: createRichTableBlock(block.children.slice(0, -1), {
-					...getTableOptions(block),
-					rowHeights: block.rowHeights?.slice(0, -1),
-				}));
-	}, [getTableOptions, mutateActiveTable]);
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => removeTableRowBlock(block, context.rowIndex),
+			{ rowIndex: Math.max(0, context.rowIndex - 1), columnIndex: context.columnIndex },
+		);
+	}, [activeTableContext, mutateActiveTable]);
 
 	const handleTableInsertColumn = useCallback(() => {
-		mutateActiveTable((block) => {
-			const columnCount = getTableColumnCount(block);
-			return createRichTableBlock(block.children.map((row) => createRichTableRow([
-				...row.children,
-				createRichTableCell(),
-			], { header: row.header })), {
-				...getTableOptions(block),
-				columnAlignments: [...(block.columnAlignments ?? Array.from({ length: columnCount }, () => null)), null],
-				columnWidths: [...(block.columnWidths ?? Array.from({ length: columnCount }, () => null)), null],
-			});
-		});
-	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		const columnIndex = context.columnIndex + 1;
+		mutateActiveTable(
+			(block) => insertTableColumnBlock(block, columnIndex),
+			{ rowIndex: context.rowIndex, columnIndex },
+		);
+	}, [activeTableContext, mutateActiveTable]);
 
 	const handleTableRemoveColumn = useCallback(() => {
-		mutateActiveTable((block) => {
-			if (getTableColumnCount(block) <= 1) {
-				return block;
-			}
-			return createRichTableBlock(block.children.map((row) => createRichTableRow(
-				row.children.slice(0, -1),
-				{ header: row.header },
-			)), {
-				...getTableOptions(block),
-				columnAlignments: block.columnAlignments?.slice(0, -1),
-				columnWidths: block.columnWidths?.slice(0, -1),
-			});
-		});
-	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => removeTableColumnBlock(block, context.columnIndex),
+			{ rowIndex: context.rowIndex, columnIndex: Math.max(0, context.columnIndex - 1) },
+		);
+	}, [activeTableContext, mutateActiveTable]);
 
 	const handleTableHeaderToggle = useCallback(() => {
-		mutateActiveTable((block) => createRichTableBlock(block.children.map((row, index) => createRichTableRow(
-			row.children,
-			{ header: index === 0 ? block.children[0]?.header !== true : false },
-		)), getTableOptions(block)));
-	}, [getTableOptions, mutateActiveTable]);
+		const context = activeTableContext;
+		mutateActiveTable(
+			(block) => setTableHeaderRowBlock(block, !(context?.hasHeader ?? block.children[0]?.header === true)),
+			context ? { rowIndex: context.rowIndex, columnIndex: context.columnIndex } : undefined,
+		);
+	}, [activeTableContext, mutateActiveTable]);
 
 	const handleTableColumnAlignment = useCallback((alignment: "left" | "center" | "right") => {
-		mutateActiveTable((block) => createRichTableBlock(block.children, {
-			...getTableOptions(block),
-			columnAlignments: Array.from({ length: getTableColumnCount(block) }, () => alignment),
-		}));
-	}, [getTableColumnCount, getTableOptions, mutateActiveTable]);
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => setTableColumnAlignmentBlock(block, context.columnIndex, alignment),
+			{ rowIndex: context.rowIndex, columnIndex: context.columnIndex },
+		);
+	}, [activeTableContext, mutateActiveTable]);
+
+	const handleTableColumnWidth = useCallback((width: string) => {
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => setTableColumnWidthBlock(block, context.columnIndex, width || null),
+			{ rowIndex: context.rowIndex, columnIndex: context.columnIndex },
+		);
+	}, [activeTableContext, mutateActiveTable]);
+
+	const handleTableRowHeight = useCallback((height: string) => {
+		const context = activeTableContext;
+		if (!context) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => setTableRowHeightBlock(block, context.rowIndex, height || null),
+			{ rowIndex: context.rowIndex, columnIndex: context.columnIndex },
+		);
+	}, [activeTableContext, mutateActiveTable]);
+
+	const handleTableDirectionToggle = useCallback(() => {
+		const context = activeTableContext;
+		mutateActiveTable(
+			(block) => setTableDirectionBlock(block, (context?.direction ?? block.direction) === "rtl" ? "ltr" : "rtl"),
+			context ? { rowIndex: context.rowIndex, columnIndex: context.columnIndex } : undefined,
+		);
+	}, [activeTableContext, mutateActiveTable]);
+
+	const getActiveCellSelection = useCallback((): TableSelectionDescriptor | null => {
+		const context = activeTableContext;
+		return context
+			? { type: "cell", rowIndex: context.rowIndex, columnIndex: context.columnIndex }
+			: null;
+	}, [activeTableContext]);
+
+	const handleTableCellStyle = useCallback((patch: TableCellStylePatch) => {
+		const selection = getActiveCellSelection();
+		if (!selection || !activeTableContext) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => setTableSelectionStyleBlock(block, selection, patch),
+			{ rowIndex: activeTableContext.rowIndex, columnIndex: activeTableContext.columnIndex },
+		);
+	}, [activeTableContext, getActiveCellSelection, mutateActiveTable]);
+
+	const handleTableSelectionBorder = useCallback((
+		scope: TableBorderScope,
+		patch: TableCellBorderPatch,
+	) => {
+		const selection = getActiveCellSelection();
+		if (!selection || !activeTableContext) {
+			return;
+		}
+		mutateActiveTable(
+			(block) => setTableSelectionBorderBlock(block, selection, scope, patch),
+			{ rowIndex: activeTableContext.rowIndex, columnIndex: activeTableContext.columnIndex },
+		);
+	}, [activeTableContext, getActiveCellSelection, mutateActiveTable]);
 
 	const applyLinkFromPopover = useCallback(() => {
 		if (linkPopover.linkType === "external" && !linkPopover.href.trim()) {
@@ -971,12 +1062,18 @@ export function RichTextEditOverlay({
 						return null;
 					}
 				}}
+				activeTableContext={activeTableContext}
 				onTableInsertRow={handleTableInsertRow}
 				onTableRemoveRow={handleTableRemoveRow}
 				onTableInsertColumn={handleTableInsertColumn}
 				onTableRemoveColumn={handleTableRemoveColumn}
 				onTableHeaderToggle={handleTableHeaderToggle}
 				onTableColumnAlignment={handleTableColumnAlignment}
+				onTableColumnWidthChange={handleTableColumnWidth}
+				onTableRowHeightChange={handleTableRowHeight}
+				onTableDirectionToggle={handleTableDirectionToggle}
+				onTableCellStyleChange={handleTableCellStyle}
+				onTableSelectionBorderChange={handleTableSelectionBorder}
 			/>
 			{linkPopover.open ? (
 				<LinkInsertPopover

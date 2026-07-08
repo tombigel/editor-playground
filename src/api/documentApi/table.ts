@@ -32,7 +32,16 @@ function commitTableBlock(
   return setTextDocumentContentDoc(document, nodeId, createTextDocumentContent([block]));
 }
 
-function getColumnCount(block: RichTableBlock): number {
+function commitChangedTableBlock(
+  document: DocumentModel,
+  nodeId: NodeId,
+  currentBlock: RichTableBlock,
+  nextBlock: RichTableBlock,
+): DocumentModel {
+  return nextBlock === currentBlock ? document : commitTableBlock(document, nodeId, nextBlock);
+}
+
+export function getTableColumnCount(block: RichTableBlock): number {
   return Math.max(1, ...block.children.map((row) => row.children.length));
 }
 
@@ -155,7 +164,7 @@ function resolveTableSelectionRect(
   selection: TableSelectionDescriptor,
 ): TableSelectionRect | null {
   const rowCount = block.children.length;
-  const columnCount = getColumnCount(block);
+  const columnCount = getTableColumnCount(block);
   if (rowCount <= 0 || columnCount <= 0) {
     return null;
   }
@@ -294,17 +303,11 @@ function normalizeExistingIndex(index: number, length: number): number | null {
   return normalized >= 0 && normalized < length ? normalized : null;
 }
 
-export function insertTableRowDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function insertTableRowBlock(
+  block: RichTableBlock,
   rowIndex: number,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
-  const columnCount = getColumnCount(block);
+): RichTableBlock {
+  const columnCount = getTableColumnCount(block);
   const nextRows = structuredClone(block.children);
   const insertIndex = normalizeInsertIndex(rowIndex, nextRows.length);
   if (insertIndex === 0 && nextRows[0]?.header === true) {
@@ -316,23 +319,17 @@ export function insertTableRowDoc(
     Array.from({ length: columnCount }, () => createRichTableCell()),
     { header: insertIndex === 0 && block.children[0]?.header === true },
   ));
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
+  return createRichTableBlock(nextRows, {
     ...getTableBlockOptions(block),
     rowHeights: nextRowHeights,
-  }));
+  });
 }
 
-export function insertTableColumnDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function insertTableColumnBlock(
+  block: RichTableBlock,
   columnIndex: number,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
-  const columnCount = getColumnCount(block);
+): RichTableBlock {
+  const columnCount = getTableColumnCount(block);
   const insertIndex = normalizeInsertIndex(columnIndex, columnCount);
   const nextRows = structuredClone(block.children).map((row) => {
     row.children.splice(insertIndex, 0, createRichTableCell());
@@ -342,26 +339,24 @@ export function insertTableColumnDoc(
   nextAlignments.splice(insertIndex, 0, null);
   const nextColumnWidths = getTableColumnWidths(block, columnCount);
   nextColumnWidths.splice(insertIndex, 0, null);
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
+  return createRichTableBlock(nextRows, {
     ...getTableBlockOptions(block),
     columnAlignments: nextAlignments,
     columnWidths: nextColumnWidths,
-  }));
+  });
 }
 
-export function removeTableRowDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function removeTableRowBlock(
+  block: RichTableBlock,
   rowIndex: number,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block || block.children.length <= 1) {
-    return document;
+): RichTableBlock {
+  if (block.children.length <= 1) {
+    return block;
   }
 
   const removeIndex = normalizeExistingIndex(rowIndex, block.children.length);
   if (removeIndex == null) {
-    return document;
+    return block;
   }
 
   const nextRows = structuredClone(block.children);
@@ -371,26 +366,24 @@ export function removeTableRowDoc(
   if (removeIndex === 0 && nextRows[0]) {
     nextRows[0].header = block.children[0]?.header === true ? true : nextRows[0].header;
   }
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
+  return createRichTableBlock(nextRows, {
     ...getTableBlockOptions(block),
     rowHeights: nextRowHeights,
-  }));
+  });
 }
 
-export function removeTableColumnDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function removeTableColumnBlock(
+  block: RichTableBlock,
   columnIndex: number,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  const columnCount = block ? getColumnCount(block) : 0;
-  if (!block || columnCount <= 1) {
-    return document;
+): RichTableBlock {
+  const columnCount = getTableColumnCount(block);
+  if (columnCount <= 1) {
+    return block;
   }
 
   const removeIndex = normalizeExistingIndex(columnIndex, columnCount);
   if (removeIndex == null) {
-    return document;
+    return block;
   }
 
   const nextRows = structuredClone(block.children).map((row) => {
@@ -401,23 +394,17 @@ export function removeTableColumnDoc(
   nextAlignments.splice(removeIndex, 1);
   const nextColumnWidths = getTableColumnWidths(block, columnCount);
   nextColumnWidths.splice(removeIndex, 1);
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
+  return createRichTableBlock(nextRows, {
     ...getTableBlockOptions(block),
     columnAlignments: nextAlignments,
     columnWidths: nextColumnWidths,
-  }));
+  });
 }
 
-export function setTableHeaderRowDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableHeaderRowBlock(
+  block: RichTableBlock,
   enabled: boolean,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
   const nextRows = structuredClone(block.children).map((row, index) => {
     if (index === 0) {
       return { ...row, ...(enabled ? { header: true } : { header: false }) };
@@ -425,24 +412,18 @@ export function setTableHeaderRowDoc(
     const { header: _header, ...rest } = row;
     return rest;
   });
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
+  return createRichTableBlock(nextRows, getTableBlockOptions(block));
 }
 
-export function setTableColumnAlignmentDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableColumnAlignmentBlock(
+  block: RichTableBlock,
   columnIndex: number,
   alignment: TableColumnAlignment,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  const columnCount = block ? getColumnCount(block) : 0;
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
+  const columnCount = getTableColumnCount(block);
   const normalizedIndex = normalizeExistingIndex(columnIndex, columnCount);
   if (normalizedIndex == null) {
-    return document;
+    return block;
   }
 
   const normalizedAlignment = alignment === 'left' || alignment === 'center' || alignment === 'right'
@@ -450,143 +431,106 @@ export function setTableColumnAlignmentDoc(
     : null;
   const nextAlignments = Array.from({ length: columnCount }, (_, index) => block.columnAlignments?.[index] ?? null);
   nextAlignments[normalizedIndex] = normalizedAlignment;
-  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+  return createRichTableBlock(structuredClone(block.children), {
     ...getTableBlockOptions(block),
     columnAlignments: nextAlignments,
-  }));
+  });
 }
 
-export function setTableDirectionDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableDirectionBlock(
+  block: RichTableBlock,
   direction: 'ltr' | 'rtl' | null,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
   const normalizedDirection = direction === 'ltr' || direction === 'rtl' ? direction : undefined;
-  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+  return createRichTableBlock(structuredClone(block.children), {
     ...getTableBlockOptions(block),
     direction: normalizedDirection,
-  }));
+  });
 }
 
-export function setTableColumnWidthDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableColumnWidthBlock(
+  block: RichTableBlock,
   columnIndex: number,
   width: string | null,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  const columnCount = block ? getColumnCount(block) : 0;
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
+  const columnCount = getTableColumnCount(block);
   const normalizedIndex = normalizeExistingIndex(columnIndex, columnCount);
   if (normalizedIndex == null) {
-    return document;
+    return block;
   }
 
   const nextColumnWidths = getTableColumnWidths(block, columnCount);
   nextColumnWidths[normalizedIndex] = normalizeTableCssLength(width);
-  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+  return createRichTableBlock(structuredClone(block.children), {
     ...getTableBlockOptions(block),
     columnWidths: nextColumnWidths,
-  }));
+  });
 }
 
-export function setTableRowHeightDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableRowHeightBlock(
+  block: RichTableBlock,
   rowIndex: number,
   height: string | null,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
   const normalizedIndex = normalizeExistingIndex(rowIndex, block.children.length);
   if (normalizedIndex == null) {
-    return document;
+    return block;
   }
 
   const nextRowHeights = getTableRowHeights(block);
   nextRowHeights[normalizedIndex] = normalizeTableCssLength(height);
-  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+  return createRichTableBlock(structuredClone(block.children), {
     ...getTableBlockOptions(block),
     rowHeights: nextRowHeights,
-  }));
+  });
 }
 
-export function setTableStyleDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableStyleBlock(
+  block: RichTableBlock,
   patch: Partial<Record<keyof RichTableStyle, string | null>>,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
-  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+): RichTableBlock {
+  return createRichTableBlock(structuredClone(block.children), {
     ...getTableBlockOptions(block),
     style: mergeTableStyle(block.style, patch),
-  }));
+  });
 }
 
-export function setTableCellStyleDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableCellStyleBlock(
+  block: RichTableBlock,
   rowIndex: number,
   columnIndex: number,
   patch: TableCellStylePatch,
-): DocumentModel {
-  return setTableSelectionStyleDoc(document, nodeId, {
+): RichTableBlock {
+  return setTableSelectionStyleBlock(block, {
     type: 'cell',
     rowIndex,
     columnIndex,
   }, patch);
 }
 
-export function setTableSelectionStyleDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableSelectionStyleBlock(
+  block: RichTableBlock,
   selection: TableSelectionDescriptor,
   patch: TableCellStylePatch,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
   const rect = resolveTableSelectionRect(block, selection);
   if (!rect) {
-    return document;
+    return block;
   }
 
   const nextRows = patchCellsInRect(block, rect, (style) => mergeTableCellStyle(style, patch));
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
+  return createRichTableBlock(nextRows, getTableBlockOptions(block));
 }
 
-export function setTableSelectionBorderDoc(
-  document: DocumentModel,
-  nodeId: NodeId,
+export function setTableSelectionBorderBlock(
+  block: RichTableBlock,
   selection: TableSelectionDescriptor,
   scope: TableBorderScope,
   patch: TableCellBorderPatch,
-): DocumentModel {
-  const block = getTableBlock(document, nodeId);
-  if (!block) {
-    return document;
-  }
-
+): RichTableBlock {
   const rect = resolveTableSelectionRect(block, selection);
   if (!rect) {
-    return document;
+    return block;
   }
 
   const nextRows = patchCellsInRect(block, rect, (style, rowIndex, columnIndex) => {
@@ -601,5 +545,130 @@ export function setTableSelectionBorderDoc(
     return mergeTableCellStyle(style, mergedPatch);
   });
 
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
+  return createRichTableBlock(nextRows, getTableBlockOptions(block));
+}
+
+export function insertTableRowDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  rowIndex: number,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, insertTableRowBlock(block, rowIndex)) : document;
+}
+
+export function insertTableColumnDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  columnIndex: number,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, insertTableColumnBlock(block, columnIndex)) : document;
+}
+
+export function removeTableRowDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  rowIndex: number,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, removeTableRowBlock(block, rowIndex)) : document;
+}
+
+export function removeTableColumnDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  columnIndex: number,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, removeTableColumnBlock(block, columnIndex)) : document;
+}
+
+export function setTableHeaderRowDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  enabled: boolean,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableHeaderRowBlock(block, enabled)) : document;
+}
+
+export function setTableColumnAlignmentDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  columnIndex: number,
+  alignment: TableColumnAlignment,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableColumnAlignmentBlock(block, columnIndex, alignment)) : document;
+}
+
+export function setTableDirectionDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  direction: 'ltr' | 'rtl' | null,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableDirectionBlock(block, direction)) : document;
+}
+
+export function setTableColumnWidthDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  columnIndex: number,
+  width: string | null,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableColumnWidthBlock(block, columnIndex, width)) : document;
+}
+
+export function setTableRowHeightDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  rowIndex: number,
+  height: string | null,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableRowHeightBlock(block, rowIndex, height)) : document;
+}
+
+export function setTableStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  patch: Partial<Record<keyof RichTableStyle, string | null>>,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableStyleBlock(block, patch)) : document;
+}
+
+export function setTableCellStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  rowIndex: number,
+  columnIndex: number,
+  patch: TableCellStylePatch,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableCellStyleBlock(block, rowIndex, columnIndex, patch)) : document;
+}
+
+export function setTableSelectionStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  selection: TableSelectionDescriptor,
+  patch: TableCellStylePatch,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableSelectionStyleBlock(block, selection, patch)) : document;
+}
+
+export function setTableSelectionBorderDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  selection: TableSelectionDescriptor,
+  scope: TableBorderScope,
+  patch: TableCellBorderPatch,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  return block ? commitChangedTableBlock(document, nodeId, block, setTableSelectionBorderBlock(block, selection, scope, patch)) : document;
 }

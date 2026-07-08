@@ -1,18 +1,30 @@
-import type { PointerEvent as ReactPointerEvent, Ref } from "react";
+import {
+	useState,
+	type PointerEvent as ReactPointerEvent,
+	type ReactNode,
+	type Ref,
+} from "react";
 import {
 	AlignCenter,
 	AlignLeft,
 	AlignRight,
 	Baseline,
 	Code2,
+	Grid3X3,
 	Highlighter,
 	Link2,
 	List,
 	ListOrdered,
 	MoveVertical,
+	PaintBucket,
+	PanelBottom,
+	PanelLeft,
+	PanelRight,
+	PanelTop,
 	PilcrowLeft,
 	PilcrowRight,
 	Settings2,
+	Square,
 	Columns3,
 	Rows3,
 	TableProperties,
@@ -31,8 +43,10 @@ import {
 } from "@/components/ui/toolbar-control-group";
 
 import type { listDocumentFontsForPicker } from "../../../api/fontApi";
-import type { RichTextBlockType } from "../../../model/types";
+import type { TableBorderScope, TableCellBorderPatch, TableCellStylePatch } from "../../../api/documentApi";
+import type { RichTableCellStyle, RichTextBlockType } from "../../../model/types";
 import { CODE_LANGUAGE_OPTIONS } from "../../../render/codeHighlight";
+import type { ActiveTableContext } from "./helpers";
 import { FontPickerPopover } from "../../../panels/controls/FontControls";
 import {
 	CompactColorField,
@@ -40,6 +54,7 @@ import {
 	CompactLineHeightField,
 	CompactSelect,
 	CompactSpacingField,
+	CompactTableLengthField,
 	ToolbarButton,
 } from "./controls";
 import {
@@ -91,12 +106,18 @@ export function RichTextToolbar({
 	currentBlockSpacingValue,
 	onBlockSpacingCommit,
 	resolveSpacingUnitValue,
+	activeTableContext,
 	onTableInsertRow,
 	onTableRemoveRow,
 	onTableInsertColumn,
 	onTableRemoveColumn,
 	onTableHeaderToggle,
 	onTableColumnAlignment,
+	onTableColumnWidthChange,
+	onTableRowHeightChange,
+	onTableDirectionToggle,
+	onTableCellStyleChange,
+	onTableSelectionBorderChange,
 }: {
 		mode?: "rich" | "block" | "list" | "table";
 	toolbarRef: Ref<HTMLDivElement>;
@@ -156,12 +177,21 @@ export function RichTextToolbar({
 		nextUnit: ToolbarSpacingUnit,
 		currentValue: string,
 	) => string | null;
+	activeTableContext?: ActiveTableContext | null;
 	onTableInsertRow?: () => void;
 	onTableRemoveRow?: () => void;
 	onTableInsertColumn?: () => void;
 	onTableRemoveColumn?: () => void;
 	onTableHeaderToggle?: () => void;
 	onTableColumnAlignment?: (value: "left" | "center" | "right") => void;
+	onTableColumnWidthChange?: (value: string) => void;
+	onTableRowHeightChange?: (value: string) => void;
+	onTableDirectionToggle?: () => void;
+	onTableCellStyleChange?: (patch: TableCellStylePatch) => void;
+	onTableSelectionBorderChange?: (
+		scope: TableBorderScope,
+		patch: TableCellBorderPatch,
+	) => void;
 }) {
 	const {
 		boldActive,
@@ -183,6 +213,13 @@ export function RichTextToolbar({
 	const showBlockControls = mode === "rich";
 	const showListControls = mode === "rich";
 	const showTableControls = mode === "table";
+	const [selectedBorderScope, setSelectedBorderScope] =
+		useState<TableBorderScope>("all");
+	const activeTableCellStyle = activeTableContext?.cellStyle;
+	const activeBorderStyle = readBorderStyleForScope(
+		activeTableCellStyle,
+		selectedBorderScope,
+	);
 
 	return (
 		<FloatingPanelShell
@@ -213,7 +250,7 @@ export function RichTextToolbar({
 					onPointerDown={onToolbarDragPointerDown}
 				/>
 				<div className="space-y-1.5">
-					<ToolbarControlRow>
+					<ToolbarControlRow className={showTableControls ? "max-w-[calc(100vw-64px)] flex-wrap sm:max-w-[920px]" : undefined}>
 						<ToolbarControlGroup>
 							<div className="w-[136px] shrink-0">
 								<FontPickerPopover
@@ -507,33 +544,119 @@ export function RichTextToolbar({
 							) : null}
 							{showTableControls ? (
 								<>
-									<ToolbarControlGroup>
-										<ToolbarButton label="Add row" active={false} onActivate={() => onTableInsertRow?.()}>
+									<ToolbarControlGroup className="editor-text-muted min-w-[56px] justify-center px-1 text-[11px] font-medium tabular-nums">
+										<span>
+											{activeTableContext
+												? `R${activeTableContext.rowIndex + 1}:C${activeTableContext.columnIndex + 1}`
+												: "Cell"}
+										</span>
+									</ToolbarControlGroup>
+									<ToolbarControlGroup withDividerBefore>
+										<CompactTableLengthField
+											label="Active column width"
+											icon={<Columns3 size={14} />}
+											value={activeTableContext?.columnWidth ?? ""}
+											width={104}
+											onCommit={(value) => onTableColumnWidthChange?.(value)}
+										/>
+										<CompactTableLengthField
+											label="Active row height"
+											icon={<Rows3 size={14} />}
+											value={activeTableContext?.rowHeight ?? ""}
+											width={104}
+											onCommit={(value) => onTableRowHeightChange?.(value)}
+										/>
+									</ToolbarControlGroup>
+									<ToolbarControlGroup withDividerBefore>
+										<ToolbarButton label="Insert row below" active={false} onActivate={() => onTableInsertRow?.()}>
 											<Rows3 size={14} />
 										</ToolbarButton>
-										<ToolbarButton label="Remove row" active={false} onActivate={() => onTableRemoveRow?.()}>
+										<ToolbarButton label="Remove active row" active={false} onActivate={() => onTableRemoveRow?.()}>
 											<Trash2 size={14} />
 										</ToolbarButton>
-										<ToolbarButton label="Add column" active={false} onActivate={() => onTableInsertColumn?.()}>
+										<ToolbarButton label="Insert column after" active={false} onActivate={() => onTableInsertColumn?.()}>
 											<Columns3 size={14} />
 										</ToolbarButton>
-										<ToolbarButton label="Remove column" active={false} onActivate={() => onTableRemoveColumn?.()}>
+										<ToolbarButton label="Remove active column" active={false} onActivate={() => onTableRemoveColumn?.()}>
 											<Trash2 size={14} />
 										</ToolbarButton>
-										<ToolbarButton label="Toggle header row" active={false} onActivate={() => onTableHeaderToggle?.()}>
+										<ToolbarButton label="Toggle header row" active={activeTableContext?.hasHeader === true} onActivate={() => onTableHeaderToggle?.()}>
 											<TableProperties size={14} />
+										</ToolbarButton>
+										<ToolbarButton
+											label={
+												activeTableContext?.direction === "rtl"
+													? "Use left-to-right table direction"
+													: "Use right-to-left table direction"
+											}
+											active={activeTableContext?.direction === "rtl"}
+											onActivate={() => onTableDirectionToggle?.()}
+										>
+											{activeTableContext?.direction === "rtl" ? (
+												<PilcrowLeft size={14} />
+											) : (
+												<PilcrowRight size={14} />
+											)}
 										</ToolbarButton>
 									</ToolbarControlGroup>
 									<ToolbarControlGroup withDividerBefore>
-										<TextAlignButton label="Align table columns left" active={false} onActivate={() => onTableColumnAlignment?.("left")}>
+										<TextAlignButton label="Align active column left" active={activeTableContext?.columnAlignment === "left"} onActivate={() => onTableColumnAlignment?.("left")}>
 											<AlignLeft size={14} />
 										</TextAlignButton>
-										<TextAlignButton label="Align table columns center" active={false} onActivate={() => onTableColumnAlignment?.("center")}>
+										<TextAlignButton label="Align active column center" active={activeTableContext?.columnAlignment === "center"} onActivate={() => onTableColumnAlignment?.("center")}>
 											<AlignCenter size={14} />
 										</TextAlignButton>
-										<TextAlignButton label="Align table columns right" active={false} onActivate={() => onTableColumnAlignment?.("right")}>
+										<TextAlignButton label="Align active column right" active={activeTableContext?.columnAlignment === "right"} onActivate={() => onTableColumnAlignment?.("right")}>
 											<AlignRight size={14} />
 										</TextAlignButton>
+									</ToolbarControlGroup>
+									<ToolbarControlGroup withDividerBefore>
+										<CompactColorField
+											label="Selected cell background"
+											value={activeTableCellStyle?.background ?? "#ffffff"}
+											icon={<PaintBucket size={14} />}
+											onChange={(value) => onTableCellStyleChange?.({ background: value })}
+										/>
+										<CompactTableLengthField
+											label="Selected cell padding"
+											icon={<MoveVertical size={14} />}
+											value={activeTableCellStyle?.padding ?? ""}
+											width={104}
+											onCommit={(value) => onTableCellStyleChange?.({ padding: value })}
+										/>
+									</ToolbarControlGroup>
+									<ToolbarControlGroup withDividerBefore>
+										{TABLE_BORDER_SCOPE_OPTIONS.map((option) => (
+											<ToolbarButton
+												key={option.scope}
+												label={option.label}
+												active={selectedBorderScope === option.scope}
+												onActivate={() => setSelectedBorderScope(option.scope)}
+											>
+												{option.icon}
+											</ToolbarButton>
+										))}
+										<CompactTableLengthField
+											label="Selected border width"
+											icon={<Square size={14} />}
+											value={activeBorderStyle.width}
+											width={96}
+											onCommit={(value) =>
+												onTableSelectionBorderChange?.(selectedBorderScope, {
+													width: value,
+												})
+											}
+										/>
+										<CompactColorField
+											label="Selected border color"
+											value={activeBorderStyle.color || "#172033"}
+											icon={<Baseline size={14} />}
+											onChange={(value) =>
+												onTableSelectionBorderChange?.(selectedBorderScope, {
+													color: value,
+												})
+											}
+										/>
 									</ToolbarControlGroup>
 								</>
 							) : null}
@@ -543,4 +666,40 @@ export function RichTextToolbar({
 			</div>
 		</FloatingPanelShell>
 	);
+}
+
+const TABLE_BORDER_SCOPE_OPTIONS: Array<{
+	scope: TableBorderScope;
+	label: string;
+	icon: ReactNode;
+}> = [
+	{ scope: "all", label: "Target all borders", icon: <Square size={14} /> },
+	{ scope: "outer", label: "Target outer borders", icon: <Square size={14} /> },
+	{ scope: "inner", label: "Target inner borders", icon: <Grid3X3 size={14} /> },
+	{ scope: "horizontal", label: "Target horizontal borders", icon: <Rows3 size={14} /> },
+	{ scope: "vertical", label: "Target vertical borders", icon: <Columns3 size={14} /> },
+	{ scope: "top", label: "Target top border", icon: <PanelTop size={14} /> },
+	{ scope: "right", label: "Target right border", icon: <PanelRight size={14} /> },
+	{ scope: "bottom", label: "Target bottom border", icon: <PanelBottom size={14} /> },
+	{ scope: "left", label: "Target left border", icon: <PanelLeft size={14} /> },
+];
+
+function readBorderStyleForScope(
+	style: RichTableCellStyle | undefined,
+	scope: TableBorderScope,
+) {
+	const edge =
+		scope === "right" || scope === "vertical" || scope === "inner"
+			? "Right"
+			: scope === "bottom" || scope === "horizontal"
+				? "Bottom"
+				: scope === "left"
+					? "Left"
+					: "Top";
+	return {
+		width:
+			style?.[`border${edge}Width` as keyof RichTableCellStyle] ?? "",
+		color:
+			style?.[`border${edge}Color` as keyof RichTableCellStyle] ?? "",
+	};
 }
