@@ -109,6 +109,7 @@ export type EditorAction =
   | { type: 'removeTableColumn'; nodeId: NodeId; columnIndex: number }
   | { type: 'setTableHeaderRow'; nodeId: NodeId; enabled: boolean }
   | { type: 'setTableColumnAlignment'; nodeId: NodeId; columnIndex: number; alignment: 'left' | 'center' | 'right' | null }
+  | { type: 'setTableDirection'; nodeId: NodeId; direction: 'ltr' | 'rtl' | null }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }
   | { type: 'move'; id: string; x: string; y: string; options?: DragCommitOptions }

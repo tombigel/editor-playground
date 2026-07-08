@@ -707,12 +707,12 @@ describe('render/nodePresentation', () => {
             },
           ]),
         ]),
-      ], { columnAlignments: ['left', 'right'] }),
+      ], { direction: 'rtl', columnAlignments: ['left', 'right'] }),
     ]);
 
     const markup = renderToStaticMarkup(renderLeafContent(table));
 
-    expect(markup).toContain('<table');
+    expect(markup).toContain('<table dir="rtl"');
     expect(markup).toContain('<thead>');
     expect(markup).toContain('<th scope="col" style="text-align:left"><span style="font-weight:bold">Name</span></th>');
     expect(markup).toContain('<tbody>');

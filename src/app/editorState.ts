@@ -63,6 +63,7 @@ import {
   removeTableColumnDoc,
   removeTableRowDoc,
   setTableColumnAlignmentDoc,
+  setTableDirectionDoc,
   setTableHeaderRowDoc,
 } from '../api/documentApi';
 import {
@@ -221,6 +222,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTableHeaderRowDoc(state.document, action.nodeId, action.enabled) };
     case 'setTableColumnAlignment':
       return { ...state, document: setTableColumnAlignmentDoc(state.document, action.nodeId, action.columnIndex, action.alignment) };
+    case 'setTableDirection':
+      return { ...state, document: setTableDirectionDoc(state.document, action.nodeId, action.direction) };
     case 'mergeTextSelectionToRich': {
       const nodeIds = action.nodeIds ?? selectedIds;
       if (nodeIds.length < 2) {

@@ -34,7 +34,7 @@ List item nesting is represented by `depth?: number` on the item, not by recursi
 
 Stage list editing and rich-text list editing share keyboard semantics: `Enter` creates a same-depth item, `Shift+Enter` inserts newline text in the same item, `Backspace` at item offset `0` merges into the previous item with a newline separator, and `Tab` / `Shift+Tab` adjust item depth only at item offset `0`.
 
-Standalone table text uses the same wrapper with exactly one `table` block in `content.blocks`. Rows contain `table-cell` children, cells contain rich inline nodes only, and `columnAlignments` is normalized to the column count when any explicit alignment is present.
+Standalone table text uses the same wrapper with exactly one `table` block in `content.blocks`. Rows contain `table-cell` children, cells contain rich inline nodes only, `direction` controls table structure direction, and `columnAlignments` is normalized to the column count when any explicit alignment is present.
 
 Table structure helpers are pure document mutations:
 
@@ -45,7 +45,7 @@ Table structure helpers are pure document mutations:
 - `setTableHeaderRowDoc(document, nodeId, enabled)`
 - `setTableColumnAlignmentDoc(document, nodeId, columnIndex, alignment)`
 
-They no-op for missing or non-table nodes, preserve at least one row and one column, and normalize the table after mutation.
+They no-op for missing or non-table nodes, preserve at least one row and one column, preserve table direction, and normalize the table after mutation.
 
 ## Rich Text
 

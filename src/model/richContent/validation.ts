@@ -160,6 +160,10 @@ export function validateRichContentStructure(content: unknown): string[] {
         errors.push(`Rich table block ${blockIndex} must contain at least one column.`);
       }
 
+      if (block.direction !== undefined && block.direction !== 'ltr' && block.direction !== 'rtl') {
+        errors.push(`Rich table block ${blockIndex} direction must be ltr or rtl.`);
+      }
+
       if (block.columnAlignments !== undefined) {
         if (!Array.isArray(block.columnAlignments)) {
           errors.push(`Rich table block ${blockIndex} columnAlignments must be an array.`);

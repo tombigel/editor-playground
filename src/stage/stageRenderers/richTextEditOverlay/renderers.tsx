@@ -117,9 +117,11 @@ export function renderEditElement(
 	}
 
 	if ("type" in el && el.type === "table") {
+		const table = el as RichBlock & { type: "table" };
 		return (
 			<table
 				{...attributes}
+				dir={table.direction}
 				style={{
 					width: "100%",
 					borderCollapse: "collapse",

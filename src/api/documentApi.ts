@@ -90,6 +90,7 @@ export {
   removeTableColumnDoc,
   removeTableRowDoc,
   setTableColumnAlignmentDoc,
+  setTableDirectionDoc,
   setTableHeaderRowDoc,
 } from './documentApi/table';
 export {

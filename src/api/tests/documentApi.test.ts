@@ -46,6 +46,7 @@ import {
   setCodeBlockThemeDoc,
   setCodeBlockWrapDoc,
   setTableColumnAlignmentDoc,
+  setTableDirectionDoc,
   setTableHeaderRowDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
@@ -1307,7 +1308,14 @@ describe('api/documentApi', () => {
     expect(alignedBlock.columnAlignments).toEqual([null, 'center', null]);
     expect(setTableColumnAlignmentDoc(aligned, tableNode.id, 99, 'right')).toBe(aligned);
 
-    const noHeader = setTableHeaderRowDoc(aligned, tableNode.id, false);
+    const rtl = setTableDirectionDoc(aligned, tableNode.id, 'rtl');
+    expect(readTable(rtl).direction).toBe('rtl');
+    expect(setTableDirectionDoc(rtl, blockNode.id, 'ltr')).toBe(rtl);
+
+    const defaultDirection = setTableDirectionDoc(rtl, tableNode.id, null);
+    expect(readTable(defaultDirection).direction).toBeUndefined();
+
+    const noHeader = setTableHeaderRowDoc(defaultDirection, tableNode.id, false);
     expect(readTable(noHeader).children[0]?.header).toBe(false);
 
     const removedColumn = removeTableColumnDoc(noHeader, tableNode.id, 1);

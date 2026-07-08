@@ -34,6 +34,13 @@ function getColumnCount(block: RichTableBlock): number {
   return Math.max(1, ...block.children.map((row) => row.children.length));
 }
 
+function getTableBlockOptions(block: RichTableBlock) {
+  return {
+    direction: block.direction,
+    columnAlignments: block.columnAlignments,
+  };
+}
+
 function normalizeInsertIndex(index: number, length: number): number {
   if (!Number.isFinite(index)) {
     return length;
@@ -69,9 +76,7 @@ export function insertTableRowDoc(
     Array.from({ length: columnCount }, () => createRichTableCell()),
     { header: insertIndex === 0 && block.children[0]?.header === true },
   ));
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
-    columnAlignments: block.columnAlignments,
-  }));
+  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
 }
 
 export function insertTableColumnDoc(
@@ -93,6 +98,7 @@ export function insertTableColumnDoc(
   const nextAlignments = [...(block.columnAlignments ?? Array.from({ length: columnCount }, () => null))];
   nextAlignments.splice(insertIndex, 0, null);
   return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
+    ...getTableBlockOptions(block),
     columnAlignments: nextAlignments,
   }));
 }
@@ -117,9 +123,7 @@ export function removeTableRowDoc(
   if (removeIndex === 0 && nextRows[0]) {
     nextRows[0].header = block.children[0]?.header === true ? true : nextRows[0].header;
   }
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
-    columnAlignments: block.columnAlignments,
-  }));
+  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
 }
 
 export function removeTableColumnDoc(
@@ -145,6 +149,7 @@ export function removeTableColumnDoc(
   const nextAlignments = [...(block.columnAlignments ?? Array.from({ length: columnCount }, () => null))];
   nextAlignments.splice(removeIndex, 1);
   return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
+    ...getTableBlockOptions(block),
     columnAlignments: nextAlignments,
   }));
 }
@@ -166,9 +171,7 @@ export function setTableHeaderRowDoc(
     const { header: _header, ...rest } = row;
     return rest;
   });
-  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, {
-    columnAlignments: block.columnAlignments,
-  }));
+  return commitTableBlock(document, nodeId, createRichTableBlock(nextRows, getTableBlockOptions(block)));
 }
 
 export function setTableColumnAlignmentDoc(
@@ -194,6 +197,24 @@ export function setTableColumnAlignmentDoc(
   const nextAlignments = Array.from({ length: columnCount }, (_, index) => block.columnAlignments?.[index] ?? null);
   nextAlignments[normalizedIndex] = normalizedAlignment;
   return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+    ...getTableBlockOptions(block),
     columnAlignments: nextAlignments,
+  }));
+}
+
+export function setTableDirectionDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  direction: 'ltr' | 'rtl' | null,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  if (!block) {
+    return document;
+  }
+
+  const normalizedDirection = direction === 'ltr' || direction === 'rtl' ? direction : undefined;
+  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+    ...getTableBlockOptions(block),
+    direction: normalizedDirection,
   }));
 }

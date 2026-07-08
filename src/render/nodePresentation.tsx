@@ -198,6 +198,7 @@ function renderRichTableBlock(
       key={path}
       className={className}
       data-node-id={dataNodeId}
+      dir={block.direction}
       style={style}
     >
       {headerRow ? (

@@ -56,6 +56,7 @@ export type InspectorActionHandlers = {
   onRemoveTableColumn?: (nodeId: string, columnIndex: number) => void;
   onSetTableHeaderRow?: (nodeId: string, enabled: boolean) => void;
   onSetTableColumnAlignment?: (nodeId: string, columnIndex: number, alignment: 'left' | 'center' | 'right' | null) => void;
+  onSetTableDirection?: (nodeId: string, direction: 'ltr' | 'rtl' | null) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onSplitRichTextNode?: (nodeId: string) => void;
   onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;

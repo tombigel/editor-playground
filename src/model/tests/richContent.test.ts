@@ -470,6 +470,7 @@ describe('model/richContent', () => {
         blocks: [
           {
             type: 'table',
+            direction: 'rtl',
             columnAlignments: ['left', 'bad', 'right', 'center'],
             children: [
               {
@@ -497,6 +498,7 @@ describe('model/richContent', () => {
       expect(tableBlock?.children[1]?.header).toBe(false);
       expect(tableBlock?.children[1]?.children).toHaveLength(2);
       expect(tableBlock?.children[1]?.children[1]?.children).toEqual([{ text: '' }]);
+      expect(tableBlock?.direction).toBe('rtl');
       expect(tableBlock?.columnAlignments).toEqual(['left', null]);
     });
   });
@@ -505,6 +507,18 @@ describe('model/richContent', () => {
     it('reports free inline root content', () => {
       expect(validateRichContentStructure([makeLeaf('orphan')])).toEqual([
         'Rich content root item 0 must be a supported block.',
+      ]);
+    });
+
+    it('reports invalid table direction values', () => {
+      expect(validateRichContentStructure([
+        createRichTableBlock(undefined, { direction: 'rtl' }),
+        {
+          ...createRichTableBlock(),
+          direction: 'sideways',
+        },
+      ])).toEqual([
+        'Rich table block 1 direction must be ltr or rtl.',
       ]);
     });
 

@@ -198,7 +198,7 @@ export function createRichTableRow(
 
 export function createRichTableBlock(
   rows: RichTableRow[] = [],
-  options: { columnAlignments?: readonly unknown[] } = {},
+  options: { direction?: unknown; columnAlignments?: readonly unknown[] } = {},
 ): RichTableBlock {
   const sourceRows = rows.length > 0
     ? rows
@@ -214,6 +214,7 @@ export function createRichTableBlock(
   const columnAlignments = normalizeTableColumnAlignments(options.columnAlignments, columnCount);
   return {
     type: 'table',
+    ...(options.direction === 'ltr' || options.direction === 'rtl' ? { direction: options.direction } : {}),
     ...(columnAlignments ? { columnAlignments } : {}),
     children: normalizedRows,
   };

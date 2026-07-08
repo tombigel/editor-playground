@@ -281,7 +281,10 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
     const columnAlignments = Array.isArray(rawColumnAlignments)
       ? Array.from({ length: columnCount }, (_, index) => normalizeTableColumnAlignment(rawColumnAlignments[index]))
       : undefined;
-    return createRichTableBlock(rows, { columnAlignments });
+    return createRichTableBlock(rows, {
+      direction: normalizeDirection(node.direction),
+      columnAlignments,
+    });
   }
 
   return null;

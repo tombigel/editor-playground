@@ -159,7 +159,7 @@ describe('api/textConversion table conversions', () => {
         createRichTableCell([createRichTextLeaf('A')]),
         createRichTableCell([createRichTextLeaf('B')]),
       ]),
-    ], { columnAlignments: ['left', 'right'] });
+    ], { direction: 'rtl', columnAlignments: ['left', 'right'] });
     node.content = createTextDocumentContent([sourceTable]);
 
     const next = convertTextNodeDoc(document, textId, 'table');
