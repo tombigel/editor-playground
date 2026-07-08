@@ -645,7 +645,7 @@ describe('model/migration', () => {
       const result = migrateDocumentModel(raw);
       expect(result.animationSettings).toEqual({ reducedMotion: true });
       expect(result.pages).toEqual([{ id: 'page-1' }]);
-      expect(result.siteSettings).toEqual({ title: 'My site' });
+      expect(result.siteSettings).toMatchObject({ title: 'My site', background: '#ffffff' });
       expect(result.sharedRegionIds).toEqual(['region-1', 'region-2']);
     });
 

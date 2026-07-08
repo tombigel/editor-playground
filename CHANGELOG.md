@@ -18,6 +18,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - refine media control panels
 - group media inserts in picker
 - add semantic wrappers and grouping
+- add standalone table blocks
 
 ### Changed
 

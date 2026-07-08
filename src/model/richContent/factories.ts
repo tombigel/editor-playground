@@ -9,9 +9,14 @@ import type {
   RichInlineNode,
   RichListBlock,
   RichListItem,
+  RichTableBlock,
+  RichTableCell,
+  RichTableRow,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
+  TableBlockContent,
+  TableColumnAlignment,
   TextBlockContent,
   TextDocumentBlocks,
   TextDocumentContent,
@@ -159,6 +164,61 @@ export function createRichListBlock(
   };
 }
 
+function normalizeTableAlignment(value: unknown): TableColumnAlignment {
+  return value === 'left' || value === 'center' || value === 'right' ? value : null;
+}
+
+function normalizeTableColumnAlignments(
+  alignments: readonly unknown[] | undefined,
+  columnCount: number,
+): TableColumnAlignment[] | undefined {
+  const normalized = Array.from({ length: columnCount }, (_, index) =>
+    normalizeTableAlignment(alignments?.[index]),
+  );
+  return normalized.some((alignment) => alignment !== null) ? normalized : undefined;
+}
+
+export function createRichTableCell(children: RichInlineNode[] = [createRichTextLeaf('')]): RichTableCell {
+  return {
+    type: 'table-cell',
+    children: children.length > 0 ? children : [createRichTextLeaf('')],
+  };
+}
+
+export function createRichTableRow(
+  cells: RichTableCell[],
+  options: Pick<RichTableRow, 'header'> = {},
+): RichTableRow {
+  return {
+    type: 'table-row',
+    ...(typeof options.header === 'boolean' ? { header: options.header } : {}),
+    children: cells.length > 0 ? cells : [createRichTableCell()],
+  };
+}
+
+export function createRichTableBlock(
+  rows: RichTableRow[] = [],
+  options: { columnAlignments?: readonly unknown[] } = {},
+): RichTableBlock {
+  const sourceRows = rows.length > 0
+    ? rows
+    : [
+        createRichTableRow([createRichTableCell(), createRichTableCell()], { header: true }),
+        createRichTableRow([createRichTableCell(), createRichTableCell()]),
+      ];
+  const columnCount = Math.max(1, ...sourceRows.map((row) => row.children.length));
+	  const normalizedRows = sourceRows.map((row, rowIndex) => createRichTableRow(
+	    Array.from({ length: columnCount }, (_, cellIndex) => row.children[cellIndex] ?? createRichTableCell()),
+	    { header: row.header === true || (rows.length === 0 && rowIndex === 0) },
+	  ));
+  const columnAlignments = normalizeTableColumnAlignments(options.columnAlignments, columnCount);
+  return {
+    type: 'table',
+    ...(columnAlignments ? { columnAlignments } : {}),
+    children: normalizedRows,
+  };
+}
+
 export function createParagraphBlock(children: RichInlineNode[]): RichTextBlock {
   return createRichTextBlock('paragraph', children);
 }
@@ -194,6 +254,13 @@ export function createListBlockContent(
   options: Pick<RichListBlock, 'direction' | 'style' | 'standalone'> & { markerStyle?: string; start?: number } = {},
 ): ListBlockContent {
   return createRichListBlock(type, items, options);
+}
+
+export function createTableBlockContent(
+  rows?: RichTableRow[],
+  options: { columnAlignments?: readonly unknown[] } = {},
+): TableBlockContent {
+  return createRichTableBlock(rows, options);
 }
 
 export function createTextDocumentFromText(

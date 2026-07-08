@@ -91,7 +91,7 @@ Node ids are monotonic per session and are synchronized against the loaded docum
 | `fontLibrary` | Document-scoped font manifest |
 | `pages` | Array of page definitions (each with `id`, `displayName`, `slug`, `sectionIds`, `slugAliases`, `parentPageId`) |
 | `sharedRegionIds` | Root-level wrapper ids shared across all pages |
-| `siteSettings` | Site-level settings including `outputStructure` ('directory' or 'flat') |
+| `siteSettings` | Site-level settings including `background` and `outputStructure` ('directory' or 'flat') |
 
 ### Font library fields
 
@@ -200,6 +200,7 @@ The control uses a compact dropdown trigger. Opening it shows page-targeting mod
 
 - Pages are rendered as static HTML files during export
 - `outputStructure` in `siteSettings` determines file layout: `'directory'` (index.html per directory) or `'flat'` (one .html per page)
+- `background` in `siteSettings` determines the exported site/page background; the default is opaque white (`#ffffff`)
 - `renderSiteExportBundles` returns bundles with paths and content for all pages
 - Each page gets its own full HTML document with shared top-level wrappers plus its own current-page wrappers
 
@@ -675,6 +676,7 @@ Additional rules:
 | Leaf kind | Content section | Style section(s) | Special semantics |
 |---|---|---|---|
 | `text` | body copy + HTML tag + optional link | `Text style`, `Design` | Editable HTML tag, optional destination |
+| `table` text subtype | table rows, columns, header row, column alignment | `Text style`, `Design` | Standalone Slate-backed text table; exports semantic `<table>` markup |
 | `link` | label + destination | `Text style`, `Design` | Add-rail shortcut for link-enabled block text |
 | `image` | `src`, `alt` + optional link | `Design` | Unified border/radius/shadow surface + object fit/position |
 | `video` | `src`, poster, title, captions, transcript, playback flags, preload | `Design` | Paused stage preview; native controlled `<video>` in preview/export; never a link |
@@ -697,6 +699,7 @@ Rules:
 - `Enter` and `Shift+Enter` both insert newline text inside the current block. The model does not add a `<br>` element; rendering preserves the soft break through `white-space: pre-wrap`.
 - Outside click or `Cmd/Ctrl+Enter` commits the Slate state through `setTextDocumentContentDoc()`. `Escape` discards local Slate edits without mutating the document.
 - Standalone lists can be edited directly on stage with the same first-click select, second-click edit lifecycle.
+- Standalone tables are first-class text nodes with `subtype: 'table'`. A table stores exactly one `table` block in `TextDocumentContent.blocks`; rows contain cells, and cells contain rich inline nodes only.
 - Stage list editing keeps the node as `subtype: 'list'` and persists exactly one `ul` or `ol` block in `TextDocumentContent.blocks`.
 - Standalone and rich-text list blocks share keyboard behavior: `Enter` creates a same-depth `li`, `Shift+Enter` inserts newline text in the current `li`, `Backspace` at item offset `0` merges into the previous item with a newline separator, and `Tab` / `Shift+Tab` change item `depth` only at item offset `0`.
 - List item `depth` is item-level visual indentation, not recursive nested list schema. The direct children below `ul` / `ol` remain `li` items, and inline styling that spans item boundaries is split per item.
@@ -762,7 +765,8 @@ Container, section, header, and footer wrappers support a gradient background la
 
 A wrapper can clip its background to descendant text (`backgroundClipText`). The control lives inside the active Gradient controls and is cleared when the gradient is removed.
 
-- The wrapper carries the gradient and clips its own (empty) text so the full rect never paints; descendant text elements read authored background CSS variables and clip that background to their own glyphs. `-webkit-text-fill-color: transparent` overrides painting only, so authored `color` in the model is preserved; the rule uses `:where()` for zero specificity.
+- The wrapper carries the gradient and clips its own (empty) text so the full rect never paints; direct text/link/button leaf components and leaf components inside direct groups read authored background CSS variables and clip that background to their own glyphs. Nested descendant containers do not inherit the transparent text-fill rule from an ancestor clip-text wrapper. `-webkit-text-fill-color: transparent` is applied only to those scoped leaf targets because it inherits; the rule keeps specificity low.
+- Affected text/link/button Design > Color controls show a clipped-by source action that selects the wrapper applying the clip-text color.
 - On the exported site the wrapper content div is the text container, so the clipped background works directly. On the editor stage the leaf children render inside `.content-wrapper`, so the clipped gradient is painted there (`getContentWrapperTextClipBackgroundStyle`) and the decorative surface/spacer layers reset their background so they never paint an unclipped rect.
 
 ### Video leaf behavior
@@ -1623,6 +1627,7 @@ Naming and title behavior:
 - Stage copy/paste/duplicate is API-first: `serializeNodesForClipboardDoc()` writes selected top-level stage nodes and descendants to `application/x-editor-playground-node+json`, app copy handlers keep that payload in custom MIME data, hidden HTML fallback data, or the in-memory editor copy stack without exposing the serialized payload as `text/plain`, paste handlers only intercept clipboard events from stage/editor context so panel UI keeps browser-native copy/paste, `pasteNodesFromClipboardDoc()` remaps ids and resolves the selected container or nearest parent container as the paste target, structural wrappers paste as page sections, and `duplicateNodesDoc()` uses the same payload path for shortcut/menu duplication with a small authored-coordinate offset and for `Alt` / `Option` duplicate-drag commits with explicit target-parent placement. Whole-page duplication uses the separate page API so page routes, page settings, section ownership, and shared-region semantics stay explicit.
 - External clipboard fallback is also pure API behavior: `createTextDocumentContentFromClipboardHtml()` converts clipboard HTML into the Slate-backed text document model with supported inline marks, links, headings, blockquotes, lists, colors, highlights, font size/weight, and exact font families only when the family is already installed in the document font library. `createNodeFromExternalClipboardDoc()` uses that converter to create a new rich text node on stage paste, while website URLs still become external link text nodes and image URLs still become image media nodes. App paste precedence is in-memory editor copy stack, custom editor clipboard MIME, then external text/html fallback.
 - Standalone lists are also API-first: `setListContentDoc()` normalizes `ul`, `ol`, and `dl` payloads headlessly, validation walks per-item links, and renderers consume the normalized list model without relying on inspector-only formatting state.
+- Standalone tables are also API-first: pure document helpers insert/remove rows and columns, toggle the header row, and set per-column alignment before editor UI dispatches those operations.
 - Shared rendering treats link and button presentation as block-only behavior; code and rich nodes do not inherit block link/button chrome even if malformed legacy fields are present.
 - Code blocks own their theme surface in the pure API layer: unsupported languages normalize to `plaintext`, the `<pre>` wrapper carries the `language-*` class for Prism theming, and switching auto/light/dark reapplies theme-owned background and text colors unless the user has explicitly overridden them. `auto` follows the viewer's system color scheme through `prefers-color-scheme` in the editor, preview, and exported site CSS.
 - Shared code-block rendering keeps authored leaf width on an outer wrapper while the visible code chrome stays on the inner `<pre><code>` surface. The code surface uses `white-space: pre-wrap` plus break-word wrapping, and standalone code nodes use only `box-shadow` for authored shadows instead of stacking a duplicate `filter: drop-shadow(...)`.
@@ -1776,10 +1781,10 @@ Adding media opens a media-type picker instead of exposing separate left-rail in
 
 ### Inspector subtype switcher
 
-- The Content block in the text inspector shows a **Text / Rich / Code / List** segmented control above the content fields.
+- The Content block in the text inspector shows a **Text / Rich / Code / List / Table** segmented control above the content fields.
 - In `Text` subtype, the same block also holds the editable HTML tag row beside the other content metadata.
 - Switching subtype calls `switchTextSubtypeDoc()` and only passes the target subtype plus an optional conversion mode; the pure API still owns the conversion behavior.
-- The control is visible for all standalone text nodes with `subtype` in `['block', 'rich', 'code', 'list']`.
+- The control is visible for all standalone text nodes with `subtype` in `['block', 'rich', 'code', 'list', 'table']`.
 - When converting a multi-block rich node to a non-rich subtype, the inspector opens a confirmation dialog that only selects the API mode:
   - `Flatten` calls `switchTextSubtypeDoc(..., { mode: 'flatten' })`
   - `Split into nodes` calls `switchTextSubtypeDoc(..., { mode: 'split' })`

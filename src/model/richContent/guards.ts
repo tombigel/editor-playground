@@ -3,9 +3,11 @@ import type {
   ListBlockContent,
   RichBlock,
   RichListBlock,
+  RichTableBlock,
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
+  TableBlockContent,
   TextBlockContent,
   TextDocumentBlock,
   TextDocumentContent,
@@ -32,7 +34,8 @@ export function isRichTextBlock(node: unknown): node is RichBlock {
   return isObjectRecord(node) && typeof node.type === 'string' && (
     isRichTextBlockType(node.type) ||
     node.type === 'code-block' ||
-    isRichListBlockType(node.type)
+    isRichListBlockType(node.type) ||
+    node.type === 'table'
   ) && Array.isArray(node.children);
 }
 
@@ -48,8 +51,16 @@ export function isListBlockContent(node: unknown): node is ListBlockContent {
   return isObjectRecord(node) && isRichListBlockType(node.type) && Array.isArray(node.children);
 }
 
+export function isRichTableBlock(node: unknown): node is RichTableBlock {
+  return isObjectRecord(node) && node.type === 'table' && Array.isArray(node.children);
+}
+
+export function isTableBlockContent(node: unknown): node is TableBlockContent {
+  return isRichTableBlock(node);
+}
+
 export function isTextDocumentBlock(node: unknown): node is TextDocumentBlock {
-  return isTextBlockContent(node) || isCodeBlockContent(node) || isListBlockContent(node);
+  return isTextBlockContent(node) || isCodeBlockContent(node) || isListBlockContent(node) || isTableBlockContent(node);
 }
 
 export function isTextDocumentContent(value: unknown): value is TextDocumentContent {

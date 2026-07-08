@@ -246,7 +246,7 @@ function textNodeToRichContent(node: TextNode): RichContent {
   }
 
   if (node.subtype === 'block') {
-    if (canonicalBlock && canonicalBlock.type !== 'code-block' && canonicalBlock.type !== 'ul' && canonicalBlock.type !== 'ol') {
+    if (canonicalBlock && isRichInlineTextBlock(canonicalBlock)) {
       return [attachStandaloneSnapshot(canonicalBlock, node)];
     }
     const text = getTextContent(node.content.blocks);
@@ -298,6 +298,10 @@ function htmlTagToRichBlockType(
   }
 
   return 'paragraph';
+}
+
+function isRichInlineTextBlock(block: RichBlock): block is RichTextBlock {
+  return block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol' && block.type !== 'table';
 }
 
 function buildRichBlockStyleFromTextNode(
@@ -399,13 +403,17 @@ function richBlockToTextSubtype(_block: RichBlock): TextSubtype {
     return 'list';
   }
 
+  if (_block.type === 'table') {
+    return 'table';
+  }
+
   return 'block';
 }
 
 function richBlockToHtmlTag(
   block: RichBlock,
 ): TextNode['htmlTag'] {
-  if (block.type === 'code-block' || block.type === 'ul' || block.type === 'ol') {
+  if (block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' || block.type === 'table') {
     return 'p';
   }
 
@@ -454,7 +462,7 @@ function mergeRichBlockStyle(
 }
 
 function materializeStandaloneBlockForMerge(block: RichBlock, node: TextNode): RichBlock {
-  if (node.subtype === 'block' && block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol') {
+  if (node.subtype === 'block' && isRichInlineTextBlock(block)) {
     return {
       ...structuredClone(block),
       type: htmlTagToRichBlockType(node.htmlTag),
@@ -483,19 +491,28 @@ function materializeStandaloneBlockForMerge(block: RichBlock, node: TextNode): R
     };
   }
 
+  if (node.subtype === 'table' && block.type === 'table') {
+    return structuredClone(block);
+  }
+
   return structuredClone(block);
 }
 
 function attachStandaloneSnapshot(block: RichBlock, node: TextNode): RichBlock {
-  return {
-    ...materializeStandaloneBlockForMerge(block, node),
-    standalone: captureStandaloneTextNodeSnapshot(node),
-  };
+  const materialized = materializeStandaloneBlockForMerge(block, node);
+  return materialized.type === 'table'
+    ? materialized
+    : {
+        ...materialized,
+        standalone: captureStandaloneTextNodeSnapshot(node),
+      };
 }
 
 function stripStandaloneSnapshot<T extends RichBlock>(block: T): T {
   const clone = structuredClone(block);
-  delete clone.standalone;
+  if (clone.type !== 'table') {
+    delete clone.standalone;
+  }
   return clone;
 }
 
@@ -503,6 +520,10 @@ function deriveStandaloneStyleFromRichBlock(
   source: TextNode,
   block: RichBlock,
 ): TextNode['style'] | undefined {
+  if (block.type === 'table') {
+    return source.style ? structuredClone(source.style) : undefined;
+  }
+
   const style = block.style;
   const blockStyle: TextNode['style'] = {
     ...(block.direction ? { direction: block.direction } : {}),
@@ -513,7 +534,7 @@ function deriveStandaloneStyleFromRichBlock(
     ...(style?.fontStyle ? { fontStyle: style.fontStyle } : {}),
     ...(style?.textDecorationLine ? { textDecorationLine: style.textDecorationLine } : {}),
     ...(style?.textAlign ? { textAlign: style.textAlign } : {}),
-    ...(block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol' && typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
+    ...(isRichInlineTextBlock(block) && typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
     ...(block.type === 'code-block' && style?.background ? { background: style.background } : {}),
   };
   const sourceStyle = source.style ? structuredClone(source.style) : undefined;
@@ -535,7 +556,7 @@ function buildStandaloneNodeFromRichBlock(
     children: NodeId[];
   },
 ): TextNode {
-  const snapshot = block.standalone;
+  const snapshot = block.type === 'table' ? undefined : block.standalone;
   const subtype = snapshot?.subtype ?? richBlockToTextSubtype(block);
   const base = createTextNode(subtype, baseNode.parentId ?? '');
   const codeMetadata = snapshot?.code ?? (block.type === 'code-block'
@@ -651,6 +672,10 @@ function countExplicitBlockLines(block: RichBlock): number {
       1,
       block.children.reduce((count, item) => count + countExplicitTextLines(flattenRichInlineChildren(item.children)), 0),
     );
+  }
+
+  if (block.type === 'table') {
+    return Math.max(1, block.children.length);
   }
 
   return countExplicitTextLines(getTextContent([block]));

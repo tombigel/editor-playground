@@ -24,11 +24,16 @@ import {
 
 describe("panels/inspector/content section rows", () => {
 	it("uses FormField for simple button and code design rows", () => {
+		const document = createInitialDocument();
 		const buttonNode = createButtonTextNode("root");
 		const codeNode = createTextNode("code", "root");
 
 		const buttonMarkup = renderToStaticMarkup(
-			<ButtonDesignSection node={buttonNode} onTextChange={() => {}} />,
+			<ButtonDesignSection
+				document={document}
+				node={buttonNode}
+				onTextChange={() => {}}
+			/>,
 		);
 		const codeMarkup = renderToStaticMarkup(
 			<CodeDesignSection node={codeNode} onTextChange={() => {}} />,

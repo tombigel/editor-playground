@@ -246,6 +246,19 @@ function clearInlineStyleOverridesForField(
       };
     }
 
+    if (block.type === 'table') {
+      return {
+        ...block,
+        children: block.children.map((row) => ({
+          ...row,
+          children: row.children.map((cell) => ({
+            ...cell,
+            children: clearInlineNodesStyleOverride(cell.children, field),
+          })),
+        })),
+      };
+    }
+
     return {
       ...block,
       children: clearInlineNodesStyleOverride(block.children, field),
@@ -1143,8 +1156,8 @@ export function setRichBlockTypeDoc(
     return document;
   }
 
-  content[blockIndex] = block.type === 'code-block' || block.type === 'ul' || block.type === 'ol'
-    ? createRichTextBlock(blockType, [createRichTextLeaf(getTextContent([block]))], { direction: block.direction })
+  content[blockIndex] = block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' || block.type === 'table'
+    ? createRichTextBlock(blockType, [createRichTextLeaf(getTextContent([block]))], { direction: 'direction' in block ? block.direction : undefined })
     : { ...block, type: blockType };
   node.content = replaceTextDocumentBlocks(node.content, content);
   return next;
@@ -1226,7 +1239,7 @@ export function setRichBlockLineHeightDoc(
 
   const content = normalizeRichContent(getTextDocumentBlocks(node.content));
   const block = content[blockIndex];
-  if (!block || block.type === 'code-block' || block.type === 'ul' || block.type === 'ol') {
+  if (!block || block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' || block.type === 'table') {
     return document;
   }
 

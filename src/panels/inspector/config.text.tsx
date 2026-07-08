@@ -3,6 +3,7 @@ import {
   CodeXml,
   ListOrdered,
   PencilLine,
+  Table2,
   TextInitial,
   type LucideIcon,
 } from 'lucide-react';
@@ -16,11 +17,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { OptionsSelector, type OptionsSelectorOption } from '@/components/ui/options-selector';
 import type { InspectorActionHandlers, InspectorBlockDefinition, InspectorNode, InspectorSectionDefinition, TextInspectorNode } from './types';
-import { ListContentSection } from './contentSections/textSections';
+import { ListContentSection, TableContentSection } from './contentSections/textSections';
 
 const textDesignSection: InspectorSectionDefinition = {
   id: 'text-design',
-  render: ({ node, actions, focusedMode }) => {
+  render: ({ document, node, actions, focusedMode }) => {
     if (!isAnyTextNode(node)) return null;
     if (node.subtype === 'code') {
       return (
@@ -34,8 +35,10 @@ const textDesignSection: InspectorSectionDefinition = {
     }
     return (
       <TextDesignSection
+        document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSelectNode={actions.onSelectNode}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
       />
@@ -80,6 +83,7 @@ export const textAppearanceSection: InspectorSectionDefinition = {
         document={document}
         node={node}
         onTextChange={actions.onTextChange}
+        onSelectNode={actions.onSelectNode}
         onOpenManageFonts={actions.onOpenManageFonts ?? (() => undefined)}
         focusedMode={focusedMode}
         onEnterFocusedMode={actions.onEnterFocusedMode}
@@ -91,6 +95,7 @@ const TEXT_SUBTYPES: { value: TextSubtype; label: string }[] = [
   { value: 'rich', label: 'Rich Text' },
   { value: 'block', label: 'Text Block' },
   { value: 'list', label: 'List Block' },
+  { value: 'table', label: 'Table Block' },
   { value: 'code', label: 'Code Block' },
 ];
 
@@ -103,6 +108,9 @@ export function getTextSubtypeIcon(subtype: TextSubtype): LucideIcon {
   }
   if (subtype === 'list') {
     return ListOrdered;
+  }
+  if (subtype === 'table') {
+    return Table2;
   }
   return TextInitial;
 }
@@ -237,6 +245,17 @@ const textContentSection: InspectorSectionDefinition = {
         <ListContentSection
           node={node}
           onSetTextDocumentContent={(content) => actions.onSetTextDocumentContent?.(node.id, content)}
+          focusedMode={focusedMode}
+          onEnterFocusedMode={actions.onEnterFocusedMode}
+          headerContent={switcher}
+        />
+      );
+    }
+    if (node.subtype === 'table') {
+      return (
+        <TableContentSection
+          node={node}
+          actions={actions}
           focusedMode={focusedMode}
           onEnterFocusedMode={actions.onEnterFocusedMode}
           headerContent={switcher}

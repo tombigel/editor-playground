@@ -42,6 +42,30 @@ import {
   getTrackSpacerClassName,
 } from './siteShared';
 
+const CLIP_TEXT_LEAF_SELECTOR = [
+  '.sp-clip-text > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > interact-element > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > interact-element > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > interact-element > .sp-sticky-track > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-role-group.sp-wrapper > .sp-wrapper-content > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > interact-element > .sp-role-group.sp-wrapper > .sp-wrapper-content > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > interact-element > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > interact-element > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > interact-element > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > interact-element > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > .sp-role-group.sp-wrapper > .sp-wrapper-content > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > interact-element > .sp-role-group.sp-wrapper > .sp-wrapper-content > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > interact-element > .sp-sticky-track > .sp-role-group.sp-wrapper > .sp-wrapper-content > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > interact-element > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > interact-element > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+  '.sp-clip-text > .sp-sticky-track > interact-element > .sp-role-group.sp-wrapper > .sp-wrapper-content > .sp-sticky-track > interact-element > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)',
+].join(',\n');
+
+const CLIP_TEXT_DESCENDANT_TEXT_SELECTOR = ':where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code)';
+const CLIP_TEXT_TARGET_SELECTOR = `${CLIP_TEXT_LEAF_SELECTOR},\n${CLIP_TEXT_LEAF_SELECTOR} ${CLIP_TEXT_DESCENDANT_TEXT_SELECTOR}`;
+
 export function buildSiteViewTransitionCss(document: DocumentModel): string | null {
   const viewTransition = document.siteSettings?.viewTransition;
   if (viewTransition === 'crossfade' || viewTransition === 'slide') {
@@ -82,6 +106,8 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
       videoDescription: `.sp-video-description`,
       svg: `svg.${SITE_SVG_CLASS}`,
       button: `button.${SITE_LEAF_CLASS}.sp-role-button`,
+      table: `table.${SITE_LEAF_CLASS}.sp-role-text`,
+      tableCell: `table.${SITE_LEAF_CLASS}.sp-role-text :where(th, td)`,
     }),
   ];
   const plan = buildRenderRootPlan(document, previewSticky);
@@ -91,6 +117,7 @@ export function buildSiteCssRules(document: DocumentModel, previewSticky = true)
 }
 
 function getBaseSiteCssRules(document: DocumentModel): SharedCssRule[] {
+  const siteBackground = document.siteSettings?.background ?? '#ffffff';
   return [
     {
       selector: 'html, body',
@@ -103,8 +130,15 @@ function getBaseSiteCssRules(document: DocumentModel): SharedCssRule[] {
       selector: 'body',
       style: {
         fontFamily: buildDocumentDefaultFontStack(document),
-        background: '#ffffff',
+        background: siteBackground,
         color: '#0f172a',
+      },
+    },
+    {
+      selector: `.${SITE_ROOT_CLASS}`,
+      style: {
+        background: siteBackground,
+        minHeight: '100vh',
       },
     },
     {
@@ -219,19 +253,19 @@ function getBaseSiteCssRules(document: DocumentModel): SharedCssRule[] {
       },
     },
     // background-clip: text — wrapper clips its own (empty) text to hide the
-    // rect; descendants read the authored background variables and clip to
-    // their glyphs without inheriting incidental editor or code surfaces.
-    // -webkit-text-fill-color overrides painting only, preserving authored color.
+    // rect; direct leaf components and leaf components inside direct groups
+    // read the authored background variables and clip to their glyphs without
+    // leaking into nested descendant containers.
+    // -webkit-text-fill-color is scoped to those leaf targets because it inherits.
     {
       selector: '.sp-clip-text',
       style: {
         backgroundClip: 'text',
         WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
       },
     },
     {
-      selector: '.sp-clip-text :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code)',
+      selector: CLIP_TEXT_TARGET_SELECTOR,
       style: {
         backgroundColor: 'var(--sp-clip-text-background-color, transparent)',
         backgroundImage: 'var(--sp-clip-text-background-image, none)',

@@ -222,18 +222,29 @@
 
 /*
  * background-clip: text. The wrapper carries the gradient and clips its own
- * (empty) text so the full rect never paints; descendant text elements inherit
- * the gradient and clip it to their own glyphs. -webkit-text-fill-color only
- * overrides painting, so authored `color` in the model is preserved. :where()
- * keeps specificity at zero.
+ * (empty) text so the full rect never paints. Direct leaf components, plus
+ * leaf components inside direct groups, inherit the gradient and clip it to
+ * their own glyphs without leaking into nested descendant containers.
+ * -webkit-text-fill-color is scoped to those leaf targets because it inherits.
+ * :where() keeps specificity low.
  */
 .sp-clip-text {
   background-clip: text;
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
-.sp-clip-text :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code) {
+.sp-clip-text > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table),
+.sp-clip-text > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table) :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code, table, th, td),
+.sp-clip-text > .sticky-track > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table),
+.sp-clip-text > .sticky-track > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table) :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code, table, th, td),
+.sp-clip-text > .stage-wrapper.subtype-group > .content-wrapper > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table),
+.sp-clip-text > .stage-wrapper.subtype-group > .content-wrapper > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table) :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code, table, th, td),
+.sp-clip-text > .stage-wrapper.subtype-group > .content-wrapper > .sticky-track > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table),
+.sp-clip-text > .stage-wrapper.subtype-group > .content-wrapper > .sticky-track > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table) :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code, table, th, td),
+.sp-clip-text > .sticky-track > .stage-wrapper.subtype-group > .content-wrapper > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table),
+.sp-clip-text > .sticky-track > .stage-wrapper.subtype-group > .content-wrapper > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table) :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code, table, th, td),
+.sp-clip-text > .sticky-track > .stage-wrapper.subtype-group > .content-wrapper > .sticky-track > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table),
+.sp-clip-text > .sticky-track > .stage-wrapper.subtype-group > .content-wrapper > .sticky-track > :where(.stage-leaf.subtype-block, .stage-leaf.subtype-rich, .stage-leaf.subtype-code, .stage-leaf.subtype-list, .stage-leaf.subtype-table) :where(h1, h2, h3, h4, h5, h6, p, blockquote, a, li, span, strong, em, button, pre, code, table, th, td) {
   background-color: var(--sp-clip-text-background-color, transparent);
   background-image: var(--sp-clip-text-background-image, none);
   background-repeat: var(--sp-clip-text-background-repeat, repeat);
@@ -715,6 +726,21 @@
   background: transparent;
   border: 0;
   box-shadow: none;
+}
+
+.stage-leaf.subtype-table table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.stage-leaf.subtype-table :where(th, td) {
+  padding: 0.35em 0.5em;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  vertical-align: top;
 }
 
 .stage-leaf.role-image {

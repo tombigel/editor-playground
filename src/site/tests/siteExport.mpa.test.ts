@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createInitialDocument } from '../../model/initialDocument';
 import { createPage } from '../../model/pageDefaults';
 import { buildRenderRootPlan } from '../../render/renderPlan';
-import { buildHostingConfigs, buildRouteManifest, renderPageHtmlDocument, renderSiteExportBundles, resolvePageUrl } from '../siteExport';
+import { buildHostingConfigs, buildRouteManifest, renderPageHtmlDocument, renderSiteCss, renderSiteExportBundles, resolvePageUrl } from '../siteExport';
 
 function appendPage(document: ReturnType<typeof createInitialDocument>, displayName: string, slug: string) {
   const page = createPage({ displayName, slug });
@@ -135,16 +135,18 @@ describe('site/siteExport MPA', () => {
     let doc = createInitialDocument();
     doc = {
       ...doc,
-      siteSettings: { ...doc.siteSettings!, lang: 'fr', status: 'draft', viewTransition: 'none' },
+      siteSettings: { ...doc.siteSettings!, lang: 'fr', status: 'draft', viewTransition: 'none', background: '#fef3c7' },
     };
     const aboutResult = appendPage(doc, 'About', 'about');
     doc = aboutResult.document;
     const aboutPage = aboutResult.page;
 
     const html = renderPageHtmlDocument(doc, aboutPage.id);
+    const css = renderSiteCss(doc);
 
     expect(html).toContain('<html lang="fr">');
     expect(html).toContain('class="sp-site"');
+    expect(css).toContain('background: #fef3c7;');
     expect(html).toContain('<!doctype html>');
   });
 

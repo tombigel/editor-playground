@@ -9,7 +9,9 @@ export function walkLinks(content: RichContent, visitor: (link: RichTextLink) =>
 
     const nodes = block.type === 'ul' || block.type === 'ol'
       ? block.children.flatMap((item) => item.children)
-      : block.children;
+      : block.type === 'table'
+        ? block.children.flatMap((row) => row.children.flatMap((cell) => cell.children))
+        : block.children;
 
     for (const node of nodes) {
       if (isRichTextLink(node)) {
@@ -52,6 +54,43 @@ export function mapLinks(
         blockChanged = true;
         changed = true;
         return { ...item, children: mappedChildren };
+      });
+
+      return blockChanged ? { ...block, children } : block;
+    }
+
+    if (block.type === 'table') {
+      let blockChanged = false;
+      const children = block.children.map((row) => {
+        let rowChanged = false;
+        const rowChildren = row.children.map((cell) => {
+          let cellChanged = false;
+          const cellChildren = cell.children.map((node) => {
+            if (!isRichTextLink(node)) {
+              return node;
+            }
+            const mapped = mapper(node);
+            if (mapped !== node) {
+              cellChanged = true;
+            }
+            return mapped;
+          });
+
+          if (!cellChanged) {
+            return cell;
+          }
+
+          rowChanged = true;
+          changed = true;
+          return { ...cell, children: cellChildren };
+        });
+
+        if (!rowChanged) {
+          return row;
+        }
+
+        blockChanged = true;
+        return { ...row, children: rowChildren };
       });
 
       return blockChanged ? { ...block, children } : block;

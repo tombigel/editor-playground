@@ -62,6 +62,7 @@ export type InspectorPanelProps = {
   onContainerChildBoundaryChange: (value: ContainerChildBoundary) => void;
   onRectChange: (field: 'x' | 'y' | 'width' | 'height', value: string) => void;
   onSetNodeVisibility: (id: string, value: boolean) => void;
+  onSelectNode?: (id: string) => void;
   onSetTopLevelWrapperVisibility: (
     pageId: PageId,
     nodeId: string,
@@ -94,6 +95,12 @@ export type InspectorPanelProps = {
   onApplyTextNodeMarkdown?: (nodeId: string, markdown: string) => void;
   onSetTextDocumentContent?: (nodeId: string, content: TextDocumentContent) => void;
   onSetTextDocumentBlockGap?: (nodeId: string, value: number) => void;
+  onInsertTableRow?: (nodeId: string, rowIndex: number) => void;
+  onInsertTableColumn?: (nodeId: string, columnIndex: number) => void;
+  onRemoveTableRow?: (nodeId: string, rowIndex: number) => void;
+  onRemoveTableColumn?: (nodeId: string, columnIndex: number) => void;
+  onSetTableHeaderRow?: (nodeId: string, enabled: boolean) => void;
+  onSetTableColumnAlignment?: (nodeId: string, columnIndex: number, alignment: 'left' | 'center' | 'right' | null) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onSplitRichTextNode?: (nodeId: string) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
@@ -137,6 +144,7 @@ export function InspectorPanel({
   onContainerChildBoundaryChange,
   onRectChange,
   onSetNodeVisibility,
+  onSelectNode,
   onSetTopLevelWrapperVisibility,
   onPromote,
   onDemote,
@@ -164,6 +172,12 @@ export function InspectorPanel({
   onApplyTextNodeMarkdown,
   onSetTextDocumentContent,
   onSetTextDocumentBlockGap,
+  onInsertTableRow,
+  onInsertTableColumn,
+  onRemoveTableRow,
+  onRemoveTableColumn,
+  onSetTableHeaderRow,
+  onSetTableColumnAlignment,
   onMergeTextSelectionToRich,
   onSplitRichTextNode,
   onEnterFocusedMode,
@@ -187,6 +201,7 @@ export function InspectorPanel({
       onContainerChildBoundaryChange,
       onRectChange,
       onSetNodeVisibility,
+      onSelectNode,
       onSetTopLevelWrapperVisibility: (nodeId, visibility, pageIds) => {
         if (resolvedActivePageId) {
           onSetTopLevelWrapperVisibility(resolvedActivePageId, nodeId, visibility, pageIds);
@@ -217,6 +232,12 @@ export function InspectorPanel({
       onApplyTextNodeMarkdown,
       onSetTextDocumentContent,
       onSetTextDocumentBlockGap,
+      onInsertTableRow,
+      onInsertTableColumn,
+      onRemoveTableRow,
+      onRemoveTableColumn,
+      onSetTableHeaderRow,
+      onSetTableColumnAlignment,
       onMergeTextSelectionToRich,
       onSplitRichTextNode,
       onEnterFocusedMode,
@@ -225,7 +246,7 @@ export function InspectorPanel({
     }),
     [
       onTextChange, onWrapperStyleChange, onContainerSemanticTypeChange, onContainerAriaLabelChange, onConvertGroupToContainer, onUngroupNode, onContainerChildBoundaryChange, onRectChange, onPromote, onDemote,
-      onSetNodeVisibility, onSetTopLevelWrapperVisibility, resolvedActivePageId,
+      onSetNodeVisibility, onSelectNode, onSetTopLevelWrapperVisibility, resolvedActivePageId,
       onStickyEnabled, onStickyTarget, onStickyEdges, onStickyOffset,
       onStickyOffsetTop, onStickyOffsetBottom, onStickyDurationMode,
       onStickyDuration, onStickyDurationTop, onStickyDurationBottom,
@@ -236,6 +257,8 @@ export function InspectorPanel({
       onSetSvgMarkup, onConvertImageToSvg,
       onApplyTextNodeMarkdown,
       onSetTextDocumentBlockGap,
+      onInsertTableRow, onInsertTableColumn, onRemoveTableRow, onRemoveTableColumn,
+      onSetTableHeaderRow, onSetTableColumnAlignment,
       onMergeTextSelectionToRich, onSplitRichTextNode, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
     ],
   );

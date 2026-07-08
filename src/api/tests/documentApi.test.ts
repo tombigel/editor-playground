@@ -8,6 +8,7 @@ import {
   createTextDocumentFromCode,
   getSingleCodeBlockContent,
   getSingleListBlockContent,
+  getSingleTableBlockContent,
   getSingleTextBlockContent,
   getTextContent,
   listContentToRichListBlock,
@@ -24,6 +25,8 @@ import {
   distributeNodesDoc,
   insertContainerDoc,
   insertLeafDoc,
+  insertTableColumnDoc,
+  insertTableRowDoc,
   insertSectionTemplateDoc,
   moveNodeInTreeDoc,
   moveNodeDoc,
@@ -37,9 +40,13 @@ import {
   setContainerChildBoundaryDoc,
   setCodeBlockLanguageDoc,
   resetCodeBlockStyleDoc,
+  removeTableColumnDoc,
+  removeTableRowDoc,
   setCodeBlockTabSizeDoc,
   setCodeBlockThemeDoc,
   setCodeBlockWrapDoc,
+  setTableColumnAlignmentDoc,
+  setTableHeaderRowDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
   setNodeRect,
@@ -122,6 +129,7 @@ describe('api/documentApi', () => {
         { role: 'text', expectedContentType: 'text', expectedSubtype: 'block' },
         { role: 'heading', expectedContentType: 'text', expectedSubtype: 'block' },
         { role: 'list', expectedContentType: 'text', expectedSubtype: 'list' },
+        { role: 'table', expectedContentType: 'text', expectedSubtype: 'table' },
         { role: 'richtext', expectedContentType: 'text', expectedSubtype: 'rich' },
         { role: 'code', expectedContentType: 'text', expectedSubtype: 'code' },
         { role: 'image', expectedContentType: 'media', expectedSubtype: 'image' },
@@ -159,6 +167,12 @@ describe('api/documentApi', () => {
         if (role === 'code' && inserted.contentType === 'text') {
           expect(inserted.code?.language).toBe('plaintext');
           expect(inserted.code?.highlightedHtml).toBeTruthy();
+        }
+        if (role === 'table' && inserted.contentType === 'text') {
+          const table = getSingleTableBlockContent(inserted.content);
+          expect(table?.children).toHaveLength(2);
+          expect(table?.children[0]?.header).toBe(true);
+          expect(table?.children[0]?.children).toHaveLength(2);
         }
         if (role === 'video' && inserted.contentType === 'media') {
           expect(inserted.video).toMatchObject({
@@ -1247,6 +1261,67 @@ describe('api/documentApi', () => {
     ]));
 
     expect(next).toBe(document);
+  });
+
+  it('mutates standalone table structure through pure document API helpers', () => {
+    const document = structuredClone(createInitialDocument());
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    const tableNode = createTextNode('table', section.id);
+    const blockNode = createTextNode('block', section.id);
+    document.nodes[tableNode.id] = tableNode;
+    document.nodes[blockNode.id] = blockNode;
+    document.nodes[section.id].children.push(tableNode.id, blockNode.id);
+    const readTable = (source: typeof document) => {
+      const node = source.nodes[tableNode.id];
+      if (!node || node.contentType !== 'text') {
+        throw new Error('Expected table text node');
+      }
+      const table = getSingleTableBlockContent(node.content);
+      if (!table) {
+        throw new Error('Expected table block content');
+      }
+      return table;
+    };
+
+    expect(insertTableRowDoc(document, blockNode.id, 0)).toBe(document);
+
+    const withRow = insertTableRowDoc(document, tableNode.id, 0);
+    const rowBlock = readTable(withRow);
+    expect(rowBlock.children).toHaveLength(3);
+    expect(rowBlock.children[0]?.header).toBe(true);
+    expect(rowBlock.children[1]?.header).toBe(false);
+
+    const withColumn = insertTableColumnDoc(withRow, tableNode.id, 1);
+    const columnBlock = readTable(withColumn);
+    expect(columnBlock.children[0]?.children).toHaveLength(3);
+    expect(columnBlock.columnAlignments).toBeUndefined();
+
+    const aligned = setTableColumnAlignmentDoc(withColumn, tableNode.id, 1, 'center');
+    const alignedBlock = readTable(aligned);
+    expect(alignedBlock.columnAlignments).toEqual([null, 'center', null]);
+    expect(setTableColumnAlignmentDoc(aligned, tableNode.id, 99, 'right')).toBe(aligned);
+
+    const noHeader = setTableHeaderRowDoc(aligned, tableNode.id, false);
+    expect(readTable(noHeader).children[0]?.header).toBe(false);
+
+    const removedColumn = removeTableColumnDoc(noHeader, tableNode.id, 1);
+    const removedColumnBlock = readTable(removedColumn);
+    expect(removedColumnBlock.children[0]?.children).toHaveLength(2);
+    expect(removedColumnBlock.columnAlignments).toBeUndefined();
+
+    const removedRow = removeTableRowDoc(removedColumn, tableNode.id, 2);
+    expect(readTable(removedRow).children).toHaveLength(2);
+
+    const oneColumn = removeTableColumnDoc(removeTableColumnDoc(removedRow, tableNode.id, 1), tableNode.id, 0);
+    expect(removeTableColumnDoc(oneColumn, tableNode.id, 0)).toBe(oneColumn);
+    const oneRow = removeTableRowDoc(removeTableRowDoc(oneColumn, tableNode.id, 1), tableNode.id, 0);
+    expect(removeTableRowDoc(oneRow, tableNode.id, 0)).toBe(oneRow);
   });
 
   it('preserves rich list inline content when changing list kind and marker style', () => {

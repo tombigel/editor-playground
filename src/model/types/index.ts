@@ -9,7 +9,7 @@ export type NodeId = string;
 // Content-type discriminators (new model)
 // ---------------------------------------------------------------------------
 export type ContainerSubtype = 'section' | 'header' | 'footer' | 'container' | 'group' | 'nav' | 'aside' | 'article';
-export type TextSubtype = 'block' | 'rich' | 'code' | 'list';
+export type TextSubtype = 'block' | 'rich' | 'code' | 'list' | 'table';
 export type MediaSubtype = 'image' | 'video' | 'svg' | 'embed';
 export type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 
@@ -196,7 +196,7 @@ export type RichBlockStyle = {
 };
 
 export type StandaloneTextNodeSnapshot = {
-  subtype: 'block' | 'code' | 'list';
+  subtype: 'block' | 'code' | 'list' | 'table';
   name: string;
   visible: boolean;
   locked: boolean;
@@ -262,12 +262,32 @@ export interface RichOrderedListBlock extends SlateElement {
   children: RichListItem[];
 }
 
+export type TableColumnAlignment = 'left' | 'center' | 'right' | null;
+
+export interface RichTableCell extends SlateElement {
+  type: 'table-cell';
+  children: RichInlineNode[];
+}
+
+export interface RichTableRow extends SlateElement {
+  type: 'table-row';
+  header?: boolean;
+  children: RichTableCell[];
+}
+
+export interface RichTableBlock extends SlateElement {
+  type: 'table';
+  columnAlignments?: TableColumnAlignment[];
+  children: RichTableRow[];
+}
+
 export type RichListBlock = RichUnorderedListBlock | RichOrderedListBlock;
-export type RichBlock = RichTextBlock | RichCodeBlock | RichListBlock;
+export type RichBlock = RichTextBlock | RichCodeBlock | RichListBlock | RichTableBlock;
 export type TextBlockContent = RichTextBlock;
 export type CodeBlockContent = RichCodeBlock;
 export type ListBlockContent = RichListBlock;
-export type TextDocumentBlock = TextBlockContent | CodeBlockContent | ListBlockContent;
+export type TableBlockContent = RichTableBlock;
+export type TextDocumentBlock = TextBlockContent | CodeBlockContent | ListBlockContent | TableBlockContent;
 export type TextDocumentBlocks = TextDocumentBlock[];
 export type TextDocumentContent = {
   blocks: TextDocumentBlocks;

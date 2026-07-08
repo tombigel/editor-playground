@@ -94,6 +94,7 @@ const AI_NODE_SEARCH_TYPES = [
   'rich',
   'code',
   'list',
+  'table',
   'image',
   'video',
   'svg',

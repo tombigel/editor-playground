@@ -3,9 +3,11 @@ import {
   AlignLeft,
   AlignRight,
   Link2,
+  LockKeyhole,
   PilcrowLeft,
   PilcrowRight,
   Settings2,
+  TypeOutline,
   TextWrap,
   TriangleAlert,
 } from 'lucide-react';
@@ -28,6 +30,7 @@ import {
   resolveNearestSupportedFontWeight,
 } from '../../../api/fontApi';
 import type { DocumentModel } from '../../../api/editorApi';
+import { isContainerNode } from '../../../api/documentViewApi';
 import {
   FontPickerPopover,
   FontSizeField,
@@ -184,6 +187,12 @@ export function readInlineTypographyMixedState(node: TypographyInspectorNode): I
     } else if (block.type === 'ul' || block.type === 'ol') {
       for (const item of block.children) {
         visitInlineNodes(item.children);
+      }
+    } else if (block.type === 'table') {
+      for (const row of block.children) {
+        for (const cell of row.children) {
+          visitInlineNodes(cell.children);
+        }
       }
     } else {
       visitInlineNodes(block.children);
@@ -415,28 +424,36 @@ export function TypographyTextStyleFields({
 }
 
 export function TypographyDesignFields({
+  document,
   node,
   onTextChange,
+  onSelectNode,
   colorFallback,
   shadow,
   shadowFallback,
 }: {
+  document: DocumentModel;
   node: TypographyInspectorNode;
   onTextChange: (field: EditorTextField, value: string) => void;
+  onSelectNode?: (id: string) => void;
   colorFallback: string;
   shadow: ReturnType<typeof readShadowFieldValues>;
   shadowFallback: ReturnType<typeof createShadowFallback>;
 }) {
   const inlineMixed = readInlineTypographyMixedState(node);
+  const clipSource = resolveClipTextColorSource(document, node);
   return (
     <>
       <FormField label="Color" layout="inline" controlClassName="gap-2">
+        <ClipTextColorSourceButton source={clipSource} onSelectNode={onSelectNode} />
         <HoverColorField
           value={node.style?.color}
           onChange={(value) => onTextChange('color', value)}
           ariaLabel="Text color"
           fallback={colorFallback}
           mixed={inlineMixed.color}
+          indicatorIcon={clipSource ? <LockKeyhole className="h-4 w-4" aria-hidden="true" /> : undefined}
+          disabled={Boolean(clipSource)}
         />
       </FormField>
       <div className="space-y-1.5">
@@ -456,6 +473,52 @@ export function TypographyDesignFields({
   );
 }
 
+export function resolveClipTextColorSource(document: DocumentModel, node: TypographyInspectorNode) {
+  const parent = node.parentId ? document.nodes[node.parentId] : null;
+  if (!parent || !isContainerNode(parent)) {
+    return null;
+  }
+  if (parent.style?.backgroundClipText === true) {
+    return parent;
+  }
+  const grandparent = parent.parentId ? document.nodes[parent.parentId] : null;
+  if (parent.subtype === 'group' && grandparent && isContainerNode(grandparent) && grandparent.style?.backgroundClipText === true) {
+    return grandparent;
+  }
+  return null;
+}
+
+export function ClipTextColorSourceButton({
+  source,
+  onSelectNode,
+}: {
+  source: ReturnType<typeof resolveClipTextColorSource>;
+  onSelectNode?: (id: string) => void;
+}) {
+  if (!source) {
+    return null;
+  }
+
+  const label = 'Colored by Parent';
+  const title = `${label}: ${source.name}`;
+
+  return (
+    <Button
+      type="button"
+      variant="menu"
+      size="sm"
+      className="h-7 min-w-0 max-w-[150px] px-2 text-[11px]"
+      aria-label={`${title}. Select source container`}
+      title={title}
+      onClick={() => onSelectNode?.(source.id)}
+      disabled={!onSelectNode}
+    >
+      <TypeOutline className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span className="truncate">{label}</span>
+    </Button>
+  );
+}
+
 export type NavigationInspectorNode = ButtonInspectorNode | LinkInspectorNode | ImageInspectorNode;
 
 export function LinkEnabledRow({
@@ -467,7 +530,7 @@ export function LinkEnabledRow({
 }) {
   return (
     <SwitchBlock
-      icon={<Link2 className={`h-3.5 w-3.5 shrink-0 ${checked ? 'editor-text-accent' : 'editor-text-muted'}`} />}
+      icon={<Link2 className="h-3.5 w-3.5 shrink-0" />}
       title="Link"
       description="Turn this content into a navigation target."
       checked={checked}

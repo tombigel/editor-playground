@@ -185,6 +185,8 @@ export function getSiteLeafBaseRules(selectors: {
   videoDescription: string;
   svg: string;
   button: string;
+  table: string;
+  tableCell: string;
 }): SharedCssRule[] {
   return [
     {
@@ -351,6 +353,25 @@ export function getSiteLeafBaseRules(selectors: {
         font: 'inherit',
         textAlign: 'inherit',
         cursor: 'pointer',
+      },
+    },
+    {
+      selector: selectors.table,
+      style: {
+        width: '100%',
+        maxWidth: '100%',
+        borderCollapse: 'collapse',
+        borderSpacing: 0,
+        font: 'inherit',
+        color: 'inherit',
+      },
+    },
+    {
+      selector: selectors.tableCell,
+      style: {
+        padding: '0.35em 0.5em',
+        border: '1px solid color-mix(in srgb, currentColor 24%, transparent)',
+        verticalAlign: 'top',
       },
     },
   ];

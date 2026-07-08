@@ -17,6 +17,8 @@ describe('render/leafPresentation', () => {
     const rules = getSiteLeafBaseRules({
       text: '.text',
       blockquoteText: '.blockquote-text',
+      table: '.table',
+      tableCell: '.table :where(th, td)',
       linkAnchor: '.link-anchor',
       imageLink: '.image-link',
       image: '.image',
@@ -49,6 +51,8 @@ describe('render/leafPresentation', () => {
     const rules = getSiteLeafBaseRules({
       text: '.text',
       blockquoteText: '.blockquote-text',
+      table: '.table',
+      tableCell: '.table :where(th, td)',
       linkAnchor: '.link-anchor',
       imageLink: '.image-link',
       image: '.image',

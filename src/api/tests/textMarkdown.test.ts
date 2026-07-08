@@ -1,12 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { createContainerNode, createTextNode, createInitialDocument } from '../../model/defaults';
 import { normalizeListContent } from '../../model/listContent';
-import { getSingleListBlockContent, getTextContent, richListBlockToListContent } from '../../model/richContent';
+import {
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
+  getSingleListBlockContent,
+  getSingleTableBlockContent,
+  getTextContent,
+  richListBlockToListContent,
+} from '../../model/richContent';
 import { isTextNode } from '../../model/types';
 import { applyMarkdownToTextNodeDoc, serializeTextNodeMarkdownDoc } from '../documentApi';
 import { parseMarkdownForTextSubtype, parseMarkdownToRichContent, serializeRichContentToMarkdown } from '../textMarkdown';
 
-function createDocumentWithTextNode(subtype: 'block' | 'rich' | 'code' | 'list') {
+function createDocumentWithTextNode(subtype: 'block' | 'rich' | 'code' | 'list' | 'table') {
   const document = createInitialDocument();
   const root = document.nodes[document.rootId];
   if (root.contentType !== 'site') {
@@ -90,5 +98,73 @@ describe('api/textMarkdown', () => {
     const content = normalizeListContent(richListBlockToListContent(getSingleListBlockContent(node.content)!));
     expect(content.type).toBe('ul');
     expect(content.items.map((item) => ('text' in item ? item.text : ''))).toEqual(['Title', 'Paragraph', 'Quote']);
+  });
+
+  it('serializes table nodes to canonical pipe markdown with escapes and alignments', () => {
+    const { document, textId } = createDocumentWithTextNode('table');
+    const node = document.nodes[textId];
+    if (!isTextNode(node) || node.subtype !== 'table') {
+      throw new Error('Expected table node');
+    }
+    node.content = {
+      blocks: [
+        createRichTableBlock([
+          createRichTableRow([
+            createRichTableCell([{ text: 'Name' }]),
+            createRichTableCell([{ text: 'Role | Notes' }]),
+          ], { header: true }),
+          createRichTableRow([
+            createRichTableCell([{ text: 'Ada\nLovelace' }]),
+            createRichTableCell([
+              { text: 'Math ', bold: true },
+              { text: 'lead', italic: true },
+            ]),
+          ]),
+        ], { columnAlignments: ['left', 'right'] }),
+      ],
+    };
+
+    expect(serializeTextNodeMarkdownDoc(document, textId)).toBe([
+      '| Name | Role \\| Notes |',
+      '| :--- | ---: |',
+      '| Ada<br>Lovelace | **Math ***lead* |',
+    ].join('\n'));
+  });
+
+  it('parses pipe tables with alignments, escaped pipes, inline marks, and ragged rows', () => {
+    const parsed = parseMarkdownForTextSubtype([
+      '| Name | Role \\| Notes | Extra |',
+      '| :--- | :---: | ---: |',
+      '| **Ada** | *Engineer* |',
+    ].join('\n'), 'table');
+    const table = getSingleTableBlockContent(parsed.content);
+    expect(table?.columnAlignments).toEqual(['left', 'center', 'right']);
+    expect(table?.children[0]?.header).toBe(true);
+    expect(table?.children[0]?.children).toHaveLength(3);
+    expect(getTextContent([{ type: 'paragraph', children: table?.children[0]?.children[1]?.children ?? [] }])).toBe('Role | Notes');
+    expect(table?.children[1]?.children[0]?.children).toEqual([{ text: 'Ada', bold: true }]);
+    expect(table?.children[1]?.children[1]?.children).toEqual([{ text: 'Engineer', italic: true }]);
+    expect(table?.children[1]?.children[2]?.children).toEqual([{ text: '' }]);
+  });
+
+  it('round-trips table cell newlines through markdown br syntax', () => {
+    const parsed = parseMarkdownForTextSubtype([
+      '| A | B |',
+      '| --- | --- |',
+      '| One<br>Two | Three |',
+    ].join('\n'), 'table');
+    const table = getSingleTableBlockContent(parsed.content);
+    expect(table?.children[1]?.children[0]?.children).toEqual([{ text: 'One\nTwo' }]);
+    expect(serializeRichContentToMarkdown(parsed.content.blocks)).toContain('One<br>Two');
+  });
+
+  it('degrades arbitrary markdown pasted into table nodes to normalized rows', () => {
+    const parsed = parseMarkdownForTextSubtype('# Title\n\nParagraph', 'table');
+    const table = getSingleTableBlockContent(parsed.content);
+    expect(table?.children[0]?.header).toBe(true);
+    expect(table?.children.map((row) => getTextContent([{ type: 'paragraph', children: row.children[0]?.children ?? [] }]))).toEqual([
+      '# Title',
+      'Paragraph',
+    ]);
   });
 });

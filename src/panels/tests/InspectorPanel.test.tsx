@@ -726,6 +726,90 @@ describe('panels/InspectorPanel', () => {
     expect(markup).toContain('aria-label="Text color"');
   });
 
+  it('indicates when text color is clipped by a direct parent wrapper', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+    const textNode = Object.values(document.nodes).find(
+      (node) => node.contentType === 'text' && node.subtype === 'block' && node.parentId === section?.id,
+    );
+
+    if (!section || section.contentType !== 'container' || !textNode || textNode.contentType !== 'text') {
+      throw new Error('Expected section wrapper and direct text node');
+    }
+
+    section.style = {
+      ...section.style,
+      backgroundClipText: true,
+    };
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: textNode, onSelectNode: () => {} })} />,
+    );
+
+    expect(markup).toContain('Colored by Parent');
+    expect(markup).toContain(`aria-label="Colored by Parent: ${section.name}. Select source container"`);
+    expect(markup).toContain('data-disabled="true"');
+  });
+
+  it('indicates when text color is clipped through a direct group wrapper', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.style = {
+      ...section.style,
+      backgroundClipText: true,
+    };
+    const group = createContainerNode('group', section.id);
+    const textNode = createTextNode('block', group.id);
+    group.children.push(textNode.id);
+    section.children.push(group.id);
+    document.nodes[group.id] = group;
+    document.nodes[textNode.id] = textNode;
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: textNode, onSelectNode: () => {} })} />,
+    );
+
+    expect(markup).toContain('Colored by Parent');
+    expect(markup).toContain(`title="Colored by Parent: ${section.name}"`);
+  });
+
+  it('does not indicate clip text color for text inside a nested non-group container', () => {
+    const document = createInitialDocument();
+    const section = Object.values(document.nodes).find(
+      (node) => node.contentType === 'container' && node.subtype === 'section',
+    );
+
+    if (!section || section.contentType !== 'container') {
+      throw new Error('Expected section wrapper');
+    }
+
+    section.style = {
+      ...section.style,
+      backgroundClipText: true,
+    };
+    const container = createContainerNode('container', section.id);
+    const textNode = createTextNode('block', container.id);
+    container.children.push(textNode.id);
+    section.children.push(container.id);
+    document.nodes[container.id] = container;
+    document.nodes[textNode.id] = textNode;
+
+    const markup = renderToStaticMarkup(
+      <InspectorPanel {...makeBaseInspectorProps({ document, node: textNode, onSelectNode: () => {} })} />,
+    );
+
+    expect(markup).not.toContain('Colored by Parent');
+  });
+
   it('shows link destination controls only when text or image linking is enabled', () => {
     const document = createInitialDocument();
     const textNode = Object.values(document.nodes).find(

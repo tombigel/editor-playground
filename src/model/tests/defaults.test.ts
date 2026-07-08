@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSingleCodeBlockContent, getSingleListBlockContent, richListBlockToListContent } from '../richContent';
+import { getSingleCodeBlockContent, getSingleListBlockContent, getSingleTableBlockContent, richListBlockToListContent } from '../richContent';
 import type { TextNode } from '../types';
 import {
   createBlankInitialDocument,
@@ -28,6 +28,7 @@ describe('model/defaults', () => {
 
     expect(validateDocument(document)).toEqual([]);
     expect(document.pages).toHaveLength(1);
+    expect(document.siteSettings?.background).toBe('#ffffff');
     expect(document.pages?.[0]?.sectionIds).toEqual(sections.map((node) => node.id));
     expect(document.sharedRegionIds).toHaveLength(2);
     expect(children.map((node) => (node?.contentType === 'container' ? node.subtype : node?.contentType))).toEqual([
@@ -85,6 +86,21 @@ describe('model/defaults', () => {
       items: [{ text: 'List item', direction: 'ltr' }],
     });
     expect(list.style?.direction).toBe('ltr');
+  });
+
+  it('creates table text nodes with canonical table defaults', () => {
+    const table = createTextNode('table', 'section_1');
+
+    if (table.contentType !== 'text' || table.subtype !== 'table') {
+      throw new Error('Expected table text node');
+    }
+
+    const block = getSingleTableBlockContent(table.content);
+    expect(block?.type).toBe('table');
+    expect(block?.children).toHaveLength(2);
+    expect(block?.children[0]?.header).toBe(true);
+    expect(block?.children[0]?.children).toHaveLength(2);
+    expect(block?.children[1]?.children).toHaveLength(2);
   });
 
   it('creates code text nodes with auto themed plaintext defaults', () => {

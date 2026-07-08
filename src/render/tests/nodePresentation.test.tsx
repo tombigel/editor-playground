@@ -1,7 +1,16 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { createInitialDocument, createLinkTextNode, createMediaNode, createTextNode } from '../../model/defaults';
-import { createTextDocumentContent, createTextDocumentFromCode, createTextDocumentFromText, getTextContent, listContentToRichListBlock } from '../../model/richContent';
+import {
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
+  createTextDocumentContent,
+  createTextDocumentFromCode,
+  createTextDocumentFromText,
+  getTextContent,
+  listContentToRichListBlock,
+} from '../../model/richContent';
 import { CODE_THEME_SURFACE } from '../../model/textNodeDefaults';
 import { parseFontSizeValue } from '../../model/units';
 import {
@@ -677,6 +686,47 @@ describe('render/nodePresentation', () => {
     expect(markup).toContain('list-style-position:outside');
     expect(markup).toContain('padding-inline-start:1.25em');
     expect(markup).toContain('<li dir="ltr">Beta</li>');
+  });
+
+  it('renders standalone and rich tables with semantic cells, links, marks, and alignment', () => {
+    const table = createTextNode('table', 'root');
+    table.content = createTextDocumentContent([
+      createRichTableBlock([
+        createRichTableRow([
+          createRichTableCell([{ text: 'Name', bold: true }]),
+          createRichTableCell([{ text: 'Profile' }]),
+        ], { header: true }),
+        createRichTableRow([
+          createRichTableCell([{ text: 'Ada' }]),
+          createRichTableCell([
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com/ada',
+              children: [{ text: 'Details', italic: true }],
+            },
+          ]),
+        ]),
+      ], { columnAlignments: ['left', 'right'] }),
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(table));
+
+    expect(markup).toContain('<table');
+    expect(markup).toContain('<thead>');
+    expect(markup).toContain('<th scope="col" style="text-align:left"><span style="font-weight:bold">Name</span></th>');
+    expect(markup).toContain('<tbody>');
+    expect(markup).toContain('<td style="text-align:right"><a href="https://example.com/ada"');
+    expect(markup).toContain('font-style:italic');
+
+    const rich = createTextNode('rich', 'root');
+    rich.content = createTextDocumentContent([
+      createRichTableBlock([
+        createRichTableRow([createRichTableCell([{ text: 'Only' }])], { header: true }),
+        createRichTableRow([createRichTableCell([{ text: 'Cell' }])]),
+      ]),
+    ]);
+    expect(renderToStaticMarkup(renderLeafContent(rich))).toContain('<th scope="col">Only</th>');
   });
 
   it('renders rich inline links with explicit link styling', () => {

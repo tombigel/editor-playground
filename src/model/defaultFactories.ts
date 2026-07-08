@@ -14,6 +14,7 @@ import {
   createCodeBlockContent,
   createListBlockContent,
   createRichListItemFromText,
+  createTableBlockContent,
   createTextBlockContent,
   createTextDocumentContent,
 } from './richContent';
@@ -242,6 +243,31 @@ export function createTextNode(subtype: TextSubtype, parentId: NodeId): TextNode
           direction: 'ltr',
           markerStyle: 'disc',
         }),
+      ]),
+      style: {
+        color: DEFAULT_TEXT_COLOR,
+        fontFamily: 'Inter',
+        ...TEXT_NODE_DEFAULTS.paragraph.style,
+        textDecorationLine: 'none',
+        direction: 'ltr',
+        textAlign: 'left',
+      },
+    };
+  }
+
+  if (subtype === 'table') {
+    return {
+      id,
+      contentType: 'text',
+      subtype: 'table',
+      parentId,
+      children: [],
+      name: 'Table',
+      visible: true,
+      locked: false,
+      rect: createDefaultRect('32px', '32px', '420px', 'auto'),
+      content: createTextDocumentContent([
+        createTableBlockContent(),
       ]),
       style: {
         color: DEFAULT_TEXT_COLOR,

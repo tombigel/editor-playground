@@ -569,6 +569,10 @@ describe('site/siteExport', () => {
     expect(css).toContain('--sp-clip-text-background-color: #101828;');
     expect(css).toContain('--sp-clip-text-background-image: linear-gradient(45deg, red, blue);');
     expect(css).toContain('background-image: var(--sp-clip-text-background-image, none);');
+    expect(css).toContain('.sp-clip-text > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)');
+    expect(css).toContain('.sp-clip-text > .sp-role-group.sp-wrapper > .sp-wrapper-content > :where(.sp-role-text.sp-leaf, .sp-role-link.sp-leaf, .sp-role-button.sp-leaf)');
+    expect(css).not.toContain('.sp-clip-text :where(');
+    expect(css).toMatch(/\.sp-clip-text \{\n {2}background-clip: text;\n {2}-webkit-background-clip: text;\n\}/);
     expect(css).not.toContain('background: inherit;');
     expect(css).not.toContain('button, div, pre');
   });

@@ -1,7 +1,7 @@
 {
   "name": "editor-playground",
   "private": true,
-  "version": "0.13.24",
+  "version": "0.13.25",
   "type": "module",
   "packageManager": "pnpm@10.34.3",
   "engines": {
@@ -47,7 +47,7 @@
     "dompurify": "^3.4.11",
     "fflate": "^0.8.2",
     "hdr-color-input": "^0.4.0",
-    "lucide-react": "^1.7.0",
+    "lucide-react": "^1.23.0",
     "prismjs": "^1.30.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

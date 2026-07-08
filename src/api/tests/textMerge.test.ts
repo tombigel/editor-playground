@@ -405,10 +405,10 @@ describe('api/textMerge', () => {
     expect(survivor.style?.fontSize?.raw).toBe('18px');
 
     const [headingBlock, bodyBlock] = survivor.content.blocks as RichContent;
-    if (headingBlock.type === 'code-block' || headingBlock.type === 'ul' || headingBlock.type === 'ol') {
+    if (headingBlock.type === 'code-block' || headingBlock.type === 'ul' || headingBlock.type === 'ol' || headingBlock.type === 'table') {
       throw new Error('Expected heading text block');
     }
-    if (bodyBlock.type === 'code-block' || bodyBlock.type === 'ul' || bodyBlock.type === 'ol') {
+    if (bodyBlock.type === 'code-block' || bodyBlock.type === 'ul' || bodyBlock.type === 'ol' || bodyBlock.type === 'table') {
       throw new Error('Expected body text block');
     }
 

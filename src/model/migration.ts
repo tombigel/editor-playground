@@ -36,6 +36,7 @@ import {
   normalizeTextDocumentContent,
 } from './richContent';
 import { normalizeListContent } from './listContent';
+import { createInitialSiteSettings } from './pageDefaults';
 
 // ---------------------------------------------------------------------------
 // Internal raw-input shapes — mirrors the old persisted format
@@ -410,7 +411,10 @@ export function migrateDocumentModel(raw: unknown): DocumentModel {
   }
 
   if (isObject(rawDoc.siteSettings)) {
-    result.siteSettings = rawDoc.siteSettings as DocumentModel['siteSettings'];
+    result.siteSettings = {
+      ...createInitialSiteSettings(),
+      ...(rawDoc.siteSettings as Record<string, unknown>),
+    } as DocumentModel['siteSettings'];
   }
 
   if (Array.isArray(rawDoc.sharedRegionIds)) {

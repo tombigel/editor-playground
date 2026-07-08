@@ -5,6 +5,8 @@ import type {
 	DocumentModel,
 	RichBlock,
 	RichListItem,
+	RichTableCell,
+	TableColumnAlignment,
 	RichTextLeaf,
 	RichTextLink,
 } from "../../../model/types";
@@ -16,6 +18,10 @@ import {
 } from "../../../render/nodePresentation";
 
 type RetainedSelectionLeaf = RichTextLeaf & { retainedSelection?: boolean };
+type EditableTableCell = RichTableCell & {
+	header?: boolean;
+	alignment?: TableColumnAlignment;
+};
 
 export function renderEditLeaf({ attributes, children, leaf }: RenderLeafProps) {
 	const editLeaf = leaf as RetainedSelectionLeaf;
@@ -87,7 +93,46 @@ export function renderEditElement(
 		);
 	}
 
-	const block = el as RichBlock;
+	if ("type" in el && el.type === "table-cell") {
+		const cell = el as EditableTableCell;
+		const CellTag = cell.header ? "th" : "td";
+		return (
+			<CellTag
+				{...attributes}
+				scope={cell.header ? "col" : undefined}
+				style={{
+					pointerEvents: "auto",
+					userSelect: "text",
+					WebkitUserSelect: "text",
+					...(cell.alignment ? { textAlign: cell.alignment } : {}),
+				}}
+			>
+				{children}
+			</CellTag>
+		);
+	}
+
+	if ("type" in el && el.type === "table-row") {
+		return <tr {...attributes}>{children}</tr>;
+	}
+
+	if ("type" in el && el.type === "table") {
+		return (
+			<table
+				{...attributes}
+				style={{
+					width: "100%",
+					borderCollapse: "collapse",
+					font: "inherit",
+					color: "inherit",
+				}}
+			>
+				<tbody>{children}</tbody>
+			</table>
+		);
+	}
+
+	const block = el as Exclude<RichBlock, { type: "table" }>;
 	const Tag =
 		block.type === "ul" || block.type === "ol"
 			? block.type

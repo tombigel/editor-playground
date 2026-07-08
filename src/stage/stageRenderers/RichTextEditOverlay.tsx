@@ -11,6 +11,8 @@ import {
 import { createPortal } from "react-dom";
 import {
 	Editor,
+	Element,
+	Path,
 	Range,
 	Text,
 	Transforms,
@@ -40,6 +42,8 @@ import {
 import {
 	createTextDocumentContent,
 	createTextDocumentFromText,
+	createRichTableCell,
+	createRichTableRow,
 	getTextDocumentBlockGap,
 	isTextBlockContent,
 } from "../../model/richContent";
@@ -111,7 +115,7 @@ import {
 } from "./richTextEditOverlay/types";
 import { useRichToolbarPosition } from "./richTextEditOverlay/useRichToolbarPosition";
 
-type RichTextEditMode = "rich" | "block" | "list";
+type RichTextEditMode = "rich" | "block" | "list" | "table";
 
 export function RichTextEditOverlay({
 	nodeId,
@@ -406,6 +410,83 @@ export function RichTextEditOverlay({
 		});
 	}, [editor, pages, sectionOptions]);
 
+		const getSelectedTableCellEntry = useCallback((editorInstance: Editor) => {
+			if (!editorInstance.selection) {
+				return null;
+			}
+			return Editor.above(editorInstance, {
+				match: (node) =>
+					Element.isElement(node) &&
+					(node as { type?: string }).type === "table-cell",
+			});
+		}, []);
+
+		const preventTableStructureBackspace = useCallback((editorInstance: Editor): boolean => {
+			if (!editorInstance.selection || !Range.isCollapsed(editorInstance.selection)) {
+				return false;
+			}
+			const cellEntry = getSelectedTableCellEntry(editorInstance);
+			return Boolean(cellEntry && Editor.isStart(editorInstance, editorInstance.selection.anchor, cellEntry[1]));
+		}, [getSelectedTableCellEntry]);
+
+		const moveTableSelection = useCallback((editorInstance: Editor, backwards: boolean): boolean => {
+			const cellEntry = getSelectedTableCellEntry(editorInstance);
+			if (!cellEntry) {
+				return false;
+		}
+		const tableEntry = Editor.above(editorInstance, {
+			at: cellEntry[1],
+			match: (node) =>
+				Element.isElement(node) &&
+				(node as { type?: string }).type === "table",
+		});
+		if (!tableEntry) {
+			return false;
+		}
+
+		const cells = Array.from(Editor.nodes(editorInstance, {
+			at: tableEntry[1],
+			match: (node) =>
+				Element.isElement(node) &&
+				(node as { type?: string }).type === "table-cell",
+		}));
+		const currentIndex = cells.findIndex(([, path]) => Path.equals(path, cellEntry[1]));
+		if (currentIndex === -1) {
+			return false;
+		}
+
+		const nextCell = cells[currentIndex + (backwards ? -1 : 1)];
+		if (nextCell) {
+			Transforms.select(editorInstance, Editor.start(editorInstance, nextCell[1]));
+			return true;
+		}
+		if (backwards) {
+			return true;
+		}
+
+		const rowEntries = Array.from(Editor.nodes(editorInstance, {
+			at: tableEntry[1],
+			match: (node) =>
+				Element.isElement(node) &&
+				(node as { type?: string }).type === "table-row",
+		}));
+		const lastRowPath = rowEntries[rowEntries.length - 1]?.[1];
+		if (!lastRowPath) {
+			return false;
+		}
+		const columnCount = Math.max(1, Math.round(cells.length / Math.max(1, rowEntries.length)));
+		const nextRowPath = Path.next(lastRowPath);
+		Transforms.insertNodes(
+			editorInstance,
+			createRichTableRow(
+				Array.from({ length: columnCount }, () => createRichTableCell()),
+			) as unknown as Descendant,
+			{ at: nextRowPath },
+			);
+			Transforms.select(editorInstance, Editor.start(editorInstance, [...nextRowPath, 0]));
+			return true;
+		}, [getSelectedTableCellEntry]);
+
 	const handleKeyDown = useCallback(
 		(event: ReactKeyboardEvent<HTMLDivElement>) => {
 			if (event.key === "Escape") {
@@ -439,6 +520,14 @@ export function RichTextEditOverlay({
 				refreshKeyboardEdit();
 				return;
 			}
+			if (
+				editMode === "table" &&
+				event.key === "Backspace" &&
+				preventTableStructureBackspace(editor)
+			) {
+				event.preventDefault();
+				return;
+			}
 			if (event.key === "Backspace" && mergeListItemBackward(editor)) {
 				event.preventDefault();
 				refreshKeyboardEdit();
@@ -446,6 +535,10 @@ export function RichTextEditOverlay({
 			}
 			if (event.key === "Tab") {
 				event.preventDefault();
+				if (editMode === "table" && moveTableSelection(editor, event.shiftKey)) {
+					refreshKeyboardEdit();
+					return;
+				}
 				if (!changeSelectedListItemDepth(editor, event.shiftKey ? -1 : 1) && !event.shiftKey) {
 					Editor.insertText(editor, "\t");
 				}
@@ -471,8 +564,8 @@ export function RichTextEditOverlay({
 				openLinkPopover();
 			}
 		},
-		[commitCurrentContent, editMode, editor, openLinkPopover, syncToolbarState],
-	);
+			[commitCurrentContent, editMode, editor, moveTableSelection, openLinkPopover, preventTableStructureBackspace, syncToolbarState],
+		);
 
 	const handlePaste = useCallback(
 		(event: ReactClipboardEvent<HTMLDivElement>) => {
@@ -482,6 +575,12 @@ export function RichTextEditOverlay({
 				return;
 			}
 			event.preventDefault();
+			if (editMode === "table") {
+				Editor.insertText(editor, text || html.replace(/<[^>]+>/g, ""));
+				syncToolbarState();
+				setSelectionRevision((revision) => revision + 1);
+				return;
+			}
 			const content = html && documentModel
 				? createTextDocumentContentFromClipboardHtml(documentModel, { html, text })
 				: createTextDocumentFromText(text);
@@ -907,6 +1006,16 @@ function textDocumentBlockToInlineChildren(
 		return block.children.flatMap((line, lineIndex) => [
 			...(lineIndex === 0 ? [] : [{ text: "\n" } satisfies RichTextLeaf]),
 			...line.children.map(cloneTextLeaf),
+		]);
+	}
+
+	if (block.type === "table") {
+		return block.children.flatMap((row, rowIndex) => [
+			...(rowIndex === 0 ? [] : [{ text: "\n" } satisfies RichTextLeaf]),
+			...row.children.flatMap((cell, cellIndex) => [
+				...(cellIndex === 0 ? [] : [{ text: "\t" } satisfies RichTextLeaf]),
+				...cell.children.map(cloneInlineNode),
+			]),
 		]);
 	}
 

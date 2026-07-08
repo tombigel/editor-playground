@@ -34,6 +34,19 @@ List item nesting is represented by `depth?: number` on the item, not by recursi
 
 Stage list editing and rich-text list editing share keyboard semantics: `Enter` creates a same-depth item, `Shift+Enter` inserts newline text in the same item, `Backspace` at item offset `0` merges into the previous item with a newline separator, and `Tab` / `Shift+Tab` adjust item depth only at item offset `0`.
 
+Standalone table text uses the same wrapper with exactly one `table` block in `content.blocks`. Rows contain `table-cell` children, cells contain rich inline nodes only, and `columnAlignments` is normalized to the column count when any explicit alignment is present.
+
+Table structure helpers are pure document mutations:
+
+- `insertTableRowDoc(document, nodeId, rowIndex)`
+- `insertTableColumnDoc(document, nodeId, columnIndex)`
+- `removeTableRowDoc(document, nodeId, rowIndex)`
+- `removeTableColumnDoc(document, nodeId, columnIndex)`
+- `setTableHeaderRowDoc(document, nodeId, enabled)`
+- `setTableColumnAlignmentDoc(document, nodeId, columnIndex, alignment)`
+
+They no-op for missing or non-table nodes, preserve at least one row and one column, and normalize the table after mutation.
+
 ## Rich Text
 
 Rich text persists through the canonical text-document wrapper and should remain convertible through pure APIs. Editor UI is a consumer of that model, not the owner of it.
@@ -52,6 +65,8 @@ Examples:
 
 - `convertTextNodeDoc(document, nodeId, subtype, options)`
 - `switchTextSubtypeDoc(document, nodeId, subtype, options)`
+
+Converting to `table` splits text into rows by line, then cells by tabs or unescaped pipes. List-to-table creates one row per list item while preserving compatible inline children. Table-to-text/list/code/rich flattens rows with newlines and cells with tab-separated text.
 
 ## Code Blocks
 

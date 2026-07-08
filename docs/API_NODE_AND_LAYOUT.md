@@ -13,7 +13,7 @@ Primary source: `src/api/documentApi.ts`
 - `insertSectionTemplateDoc(document, templateId, options?)`
 
 `insertLeafDoc` is the API-first insertion surface for editor leaf roles:
-`text`, `heading`, `list`, `richtext`, `code`, `image`, `link`, and `button`.
+`text`, `heading`, `list`, `table`, `richtext`, `code`, `image`, `link`, and `button`.
 
 `InsertContainerOptions` accepts `pageId` so pure section insertion can also attach the new section to a page without going through editor state.
 

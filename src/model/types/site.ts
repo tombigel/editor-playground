@@ -21,6 +21,7 @@ export type SiteSettings = {
   lang: string;
   status: 'draft' | 'published';
   viewTransition: 'none' | 'crossfade' | 'slide';
+  background: string;
   title?: string;
   autoSyncSlugs?: boolean;
   outputStructure?: 'directory' | 'flat';

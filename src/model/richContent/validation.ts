@@ -4,6 +4,7 @@ import {
   isListBlockContent,
   isRichTextBlockType,
   isRichTextLeaf,
+  isTableBlockContent,
   isTextBlockContent,
   isTextDocumentContent,
 } from './guards';
@@ -141,6 +142,78 @@ export function validateRichContentStructure(content: unknown): string[] {
       return;
     }
 
+    if (block.type === 'table') {
+      if (!Array.isArray(block.children)) {
+        errors.push(`Rich table block ${blockIndex} must define table-row children.`);
+        return;
+      }
+
+      if (block.children.length === 0) {
+        errors.push(`Rich table block ${blockIndex} must contain at least one row.`);
+        return;
+      }
+
+      const columnCount = isObjectRecord(block.children[0]) && Array.isArray(block.children[0].children)
+        ? block.children[0].children.length
+        : 0;
+      if (columnCount < 1) {
+        errors.push(`Rich table block ${blockIndex} must contain at least one column.`);
+      }
+
+      if (block.columnAlignments !== undefined) {
+        if (!Array.isArray(block.columnAlignments)) {
+          errors.push(`Rich table block ${blockIndex} columnAlignments must be an array.`);
+        } else {
+          if (block.columnAlignments.length !== columnCount) {
+            errors.push(`Rich table block ${blockIndex} columnAlignments length must match the column count.`);
+          }
+          block.columnAlignments.forEach((alignment, alignmentIndex) => {
+            if (alignment !== null && alignment !== 'left' && alignment !== 'center' && alignment !== 'right') {
+              errors.push(`Rich table block ${blockIndex} column alignment ${alignmentIndex} must be left, center, right, or null.`);
+            }
+          });
+        }
+      }
+
+      block.children.forEach((row, rowIndex) => {
+        if (!isObjectRecord(row) || row.type !== 'table-row' || !Array.isArray(row.children)) {
+          errors.push(`Rich table block ${blockIndex} child ${rowIndex} must be a table-row element.`);
+          return;
+        }
+        if (row.header !== undefined && typeof row.header !== 'boolean') {
+          errors.push(`Rich table row ${blockIndex}.${rowIndex} header must be a boolean.`);
+        }
+        if (row.children.length !== columnCount) {
+          errors.push(`Rich table row ${blockIndex}.${rowIndex} must have ${columnCount} cells.`);
+        }
+        row.children.forEach((cell, cellIndex) => {
+          if (!isObjectRecord(cell) || cell.type !== 'table-cell' || !Array.isArray(cell.children)) {
+            errors.push(`Rich table cell ${blockIndex}.${rowIndex}.${cellIndex} must be a table-cell element.`);
+            return;
+          }
+          cell.children.forEach((cellChild, cellChildIndex) => {
+            if (isObjectRecord(cellChild) && cellChild.type === 'link') {
+              if (!Array.isArray(cellChild.children)) {
+                errors.push(`Rich table cell link ${blockIndex}.${rowIndex}.${cellIndex}.${cellChildIndex} must define leaf children.`);
+                return;
+              }
+              cellChild.children.forEach((linkChild, linkChildIndex) => {
+                if (!isRichTextLeaf(linkChild)) {
+                  errors.push(`Rich table cell link ${blockIndex}.${rowIndex}.${cellIndex}.${cellChildIndex}.${linkChildIndex} must be a text leaf.`);
+                }
+              });
+              return;
+            }
+
+            if (!isRichTextLeaf(cellChild)) {
+              errors.push(`Rich table cell ${blockIndex}.${rowIndex}.${cellIndex} child ${cellChildIndex} must be a text leaf or link.`);
+            }
+          });
+        });
+      });
+      return;
+    }
+
     errors.push(`Rich content root item ${blockIndex} must be a supported block.`);
   });
 
@@ -160,7 +233,7 @@ export function validateTextDocumentContentStructure(content: unknown): string[]
 }
 
 export function validateTextSubtypeContentStructure(
-  subtype: 'block' | 'rich' | 'code' | 'list',
+  subtype: 'block' | 'rich' | 'code' | 'list' | 'table',
   content: TextDocumentContent,
 ): string[] {
   const errors = validateTextDocumentContentStructure(content);
@@ -187,6 +260,13 @@ export function validateTextSubtypeContentStructure(
   if (subtype === 'list') {
     if (blockCount !== 1 || !isListBlockContent(content.blocks[0])) {
       errors.push('List subtype content must contain exactly one list block.');
+    }
+    return errors;
+  }
+
+  if (subtype === 'table') {
+    if (blockCount !== 1 || !isTableBlockContent(content.blocks[0])) {
+      errors.push('Table subtype content must contain exactly one table block.');
     }
     return errors;
   }

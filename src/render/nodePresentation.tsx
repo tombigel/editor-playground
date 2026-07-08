@@ -5,6 +5,7 @@ import { CODE_THEME_SURFACE, TEXT_NODE_DEFAULTS } from '../model/textNodeDefault
 import {
   getSingleCodeBlockContent,
   getSingleListBlockContent,
+  getSingleTableBlockContent,
   getSingleTextBlockContent,
   getTextContent,
   isRichTextLink,
@@ -21,6 +22,8 @@ import type {
   RichContent,
   RichListBlock,
   RichListItem,
+  RichTableBlock,
+  RichTableCell,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
@@ -131,9 +134,9 @@ function buildRenderPath(parentPath: string, index: number): string {
 function mapWithRenderPaths<T>(
   items: readonly T[],
   parentPath: string,
-  render: (item: T, path: string) => ReactNode,
+  render: (item: T, path: string, index: number) => ReactNode,
 ): ReactNode[] {
-  return items.map((item, index) => render(item, buildRenderPath(parentPath, index)));
+  return items.map((item, index) => render(item, buildRenderPath(parentPath, index), index));
 }
 
 export function getRichTextBlockTag(type: RichTextBlockType): 'p' | 'div' | 'blockquote' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' {
@@ -144,7 +147,7 @@ export function getRichTextBlockTag(type: RichTextBlockType): 'p' | 'div' | 'blo
 }
 
 function renderRichInlineContent(
-  content: RichTextBlock['children'],
+  content: RichTextBlock['children'] | RichTableCell['children'],
   document?: DocumentModel,
   parentPath = 'inline',
 ): ReactNode {
@@ -168,6 +171,68 @@ function renderRichInlineContent(
       ? <span key={path} style={style}>{leaf.text}</span>
       : <Fragment key={path}>{leaf.text}</Fragment>;
   });
+}
+
+function getTableCellAlignment(block: RichTableBlock, cellIndex: number): CSSProperties | undefined {
+  const alignment = block.columnAlignments?.[cellIndex];
+  return alignment ? { textAlign: alignment } : undefined;
+}
+
+function renderRichTableBlock(
+  block: RichTableBlock,
+  path: string,
+  document?: DocumentModel,
+  options: {
+    style?: CSSProperties;
+    className?: string;
+    dataNodeId?: string;
+    tabIndex?: number;
+  } = {},
+): ReactNode {
+  const { style, className, dataNodeId, tabIndex } = options;
+  const headerRow = block.children[0]?.header === true ? block.children[0] : undefined;
+  const bodyRows = headerRow ? block.children.slice(1) : block.children;
+
+  return (
+    <table
+      key={path}
+      className={className}
+      data-node-id={dataNodeId}
+      style={style}
+    >
+      {headerRow ? (
+        <thead>
+          <tr>
+            {mapWithRenderPaths(headerRow.children, `${path}.head.cell`, (cell, cellPath, cellIndex) => (
+              <th
+                key={cellPath}
+                scope="col"
+                tabIndex={tabIndex}
+                style={getTableCellAlignment(block, cellIndex)}
+              >
+                {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+      ) : null}
+      <tbody>
+        {mapWithRenderPaths(bodyRows, `${path}.body.row`, (row, rowPath) => (
+          <tr key={rowPath}>
+            {mapWithRenderPaths(row.children, `${rowPath}.cell`, (cell, cellPath, cellIndex) => (
+              <td
+                key={cellPath}
+                tabIndex={tabIndex}
+                style={getTableCellAlignment(block, cellIndex)}
+              >
+                {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
 
 function renderRichListItemContent(item: RichListItem, document?: DocumentModel, path = 'item'): ReactNode {
@@ -292,6 +357,12 @@ export function getRichBlockRenderStyle(block: RichBlock): CSSProperties {
     };
   }
 
+  if (block.type === 'table') {
+    return {
+      margin: 0,
+    };
+  }
+
   return {
     margin: 0,
     ...(typeof block.lineHeight === 'number' ? { lineHeight: block.lineHeight } : {}),
@@ -307,6 +378,10 @@ export function renderRichContent(content: RichContent, document?: DocumentModel
 
     if (block.type === 'ul' || block.type === 'ol') {
       return renderRichListBlock(block, path, document);
+    }
+
+    if (block.type === 'table') {
+      return renderRichTableBlock(block, path, document);
     }
 
     const Tag = getRichTextBlockTag(block.type);
@@ -598,6 +673,24 @@ export function renderLeafContent(
       >
         {renderRichContent(node.content.blocks, document)}
       </div>
+    );
+  }
+
+  if (isTextNode(node) && node.subtype === 'table') {
+    const tableBlock = getSingleTableBlockContent(node.content);
+    return renderRichTableBlock(
+      tableBlock ?? {
+        type: 'table',
+        children: [],
+      },
+      'table',
+      document,
+      {
+        className: leafClassName,
+        dataNodeId,
+        style: contentStyle,
+        tabIndex,
+      },
     );
   }
 

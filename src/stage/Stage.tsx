@@ -597,8 +597,8 @@ export function Stage({
 	);
 }
 
-function isEditableTextSubtype(subtype: string): subtype is "rich" | "block" | "list" | "code" {
-	return subtype === "rich" || subtype === "block" || subtype === "list" || subtype === "code";
+function isEditableTextSubtype(subtype: string): subtype is "rich" | "block" | "list" | "table" | "code" {
+	return subtype === "rich" || subtype === "block" || subtype === "list" || subtype === "table" || subtype === "code";
 }
 
 function collectMarqueeSelectionIds(

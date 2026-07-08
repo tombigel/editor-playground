@@ -57,7 +57,6 @@ Priority and status use emoji color markers so the table stays plain markdown:
 
 | Raw intake id | Status | Short name | Priority | Type | Owner lane | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- | --- |
-| `RI-11` | `🟢 In progress` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Video + inline SVG + gradients shipped 2026-07-05; embed/divider/icon/audio backlog |
 | `RI-12A` | `🟣 Partially present` | [More semantic components](#more-semantic-components) | `🔴 Next` | Feature | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream B |
 | `RI-12B` | `🟢 In progress` | [Semantic wrappers and grouping](#semantic-wrappers-and-grouping) | `🔴 Next` | UX | Shared | Workstream A core shipped: semantic containers, grouping API/shortcut, inspector/add panel |
 | `RI-32` | `🟢 In progress` | [Unified node type discriminator model](#unified-node-type-discriminator-model) | `🔴 Next` | Refactor | Shared | Task 1 done; migration wired into import paths, idempotency fixed. Tasks 2-3 pending. Dep: `RI-11`, `RI-28` |
@@ -65,6 +64,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-01` | `✅ Done` | [Animation undo coverage](#animation-undo-coverage) | `🔴 Next` | Bug | Shared | Audited; 5 reducer actions with undo support |
 | `RI-02` | `✅ Done` | [On-stage animation indicator](#on-stage-animation-indicator) | `🔴 Next` | UX | LLM | Rocket badge on selection + layers; accent dot on non-selected; dashed border on scroll |
 | `RI-03` | `✅ Done` | [Animation presets UI for development phase](#animation-authoring-ui-for-development-phase) | `🔴 Next` | UX | LLM | Full inspector: trigger, preset picker, param controls, hover/sticky/a11y options |
+| `RI-11` | `✅ Done` | [More components: SVG, video, gradients](#more-components-svg-video-gradients) | `🔴 Next` | Feature | Shared | Core wave shipped 2026-07-05; remaining candidates split to `RI-51` |
 | `RI-13` | `✅ Done` | [AI layer for conversational editor control](#ai-layer-for-conversational-editor-control) | `🔴 Next` | Feature | Shared | Umbrella for `RI-46`, `RI-47`, `RI-48` — all shipped, v1 scope cut documented |
 | `RI-43` | `✅ Done` | [Guided showcase tour for editor portfolio](#guided-showcase-tour-for-editor-portfolio) | `🔴 Next` | UX | Shared | Unplanned; needed to make the editor understandable as portfolio evidence |
 | `RI-46` | `✅ Done` | [AI command/interface layer over the public API](#ai-commandinterface-layer-over-the-public-api) | `🔴 Next` | Platform | Shared | `src/api/ai/`: 12-command union, 8 query tools, all-or-nothing batch apply. Dep: `RI-13` |
@@ -75,12 +75,11 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-06` | `🟣 Partially present` | [Animation + sticky UI, behaviors, a11y](#animation--sticky-ux-behaviors-and-a11y) | `🟠 High` | UX | Shared | Dep: `RI-05` |
 | `RI-09` | `🟣 Partially present` | [Responsive and adaptive authoring model](#responsive-and-adaptive-authoring-model) | `🟠 High` | Feature | Shared | - |
 | `RI-10` | `🟤 Needs audit` | [Editor stage responsive behavior](#editor-stage-responsive-behavior) | `🟠 High` | Feature | Shared | Dep: `RI-09` |
-| `RI-25` | `🟢 In progress` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | - |
+| `RI-25` | `🟤 Needs audit` | [Performance optimization program](#performance-optimization-program) | `🟠 High` | Platform | Shared | Recurring perf track; needs a concrete current audit before active work |
 | `RI-27` | `🟣 Partially present` | [Variable fonts as an authoring workflow](#variable-fonts-as-an-authoring-workflow) | `🟠 High` | UX | Shared | - |
 | `RI-29` | `⚪ Not started` | [Sticky indicators: motion-aware, interactive, and sideline-capable](#sticky-indicators-motion-aware-interactive-and-sideline-capable) | `🟠 High` | UX | Shared | Dep: `RI-06` |
 | `RI-34` | `🟢 In progress` | [Text phase 2.0: on-stage editing](#text-phase-20-on-stage-editing) | `🟠 High` | Feature | Shared | P2-A through P2-D done; rich E2E isolated; four rich authoring cases quarantined; P2-C follow-ups, P2-E, and P2-F remain |
 | `RI-38` | `🟢 In progress` | [Interaction pattern unification](#interaction-pattern-unification) | `🟠 High` | Refactor | Shared | Escape + click-outside hooks done. Positioning + drag deferred (too different). |
-| `RI-40` | `⚪ Not started` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Plan ready: SEMANTICS_AND_TABLE_TASKLIST.md Workstream C. Dep: `RI-11`, `RI-12B` |
 | `RI-44` | `⚪ Not started` | [Parent expansion height unit policy](#parent-expansion-height-unit-policy) | `🟠 High` | Research | Shared | Decide non-px parent expansion behavior; auto preservation is already committed |
 | `RI-49` | `⚪ Not started` | [Editor URL deep links outside the tour](#editor-url-deep-links-outside-the-tour) | `🟠 High` | Feature | LLM | Boot hydration decided 2026-07-04. Dep: `RI-50` |
 | `RI-07` | `✅ Done` | [Multiple pages / MPA approach](#multiple-pages--mpa-approach) | `🟠 High` | Feature | Shared | Wave 1-2 complete. Copy/paste deferred to `RI-33` |
@@ -88,6 +87,7 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-35` | `✅ Done` | [Base UI primitive token migration](#base-ui-primitive-token-migration) | `🟠 High` | Refactor | LLM | All 6 components migrated; `--editor-dialog-overlay-background` token added |
 | `RI-36` | `✅ Done` | [Dark tooltip deduplication](#dark-tooltip-deduplication) | `🟠 High` | Refactor | LLM | `DARK_TOOLTIP_CLASS` extracted to `src/lib/utils`, 15 occurrences replaced |
 | `RI-39` | `✅ Done` | [Hidden ghost mode for hidden nodes](#hidden-ghost-mode-for-hidden-nodes) | `🟠 High` | UX | Shared | Hidden nodes render as ghosts on stage; selection, inspector, and export semantics updated |
+| `RI-40` | `✅ Done` | [Table component support: markdown and designable variants](#table-component-support-markdown-and-designable-variants) | `🟠 High` | Feature | Shared | Simple Slate table text subtype done; designable/container table remains a separate follow-up |
 | `RI-41` | `✅ Done` | [Document view API and architecture boundary enforcement](#document-view-api-and-architecture-boundary-enforcement) | `🟠 High` | Refactor | LLM | `documentViewApi.ts` + `check-architecture.mjs` CI check |
 | `RI-42` | `✅ Done` | [Drag and drop boundary maintenance](#drag-and-drop-boundary-maintenance) | `🟠 High` | UX | Shared | Anchor/box child boundaries, deterministic drag commit, and modifier cleanup delivered |
 | `RI-50` | `✅ Done` | [Centralized panel request adapter](#centralized-panel-request-adapter) | `🟠 High` | Refactor | LLM | Shared adapter over `applyEditorPanelRequest`; `ai` toggle drift fixed |
@@ -96,7 +96,8 @@ Priority and status use emoji color markers so the table stays plain markdown:
 | `RI-18` | `⚪ Not started` | [Project management](#project-management) | `🔵 Low` | Platform | Human | - |
 | `RI-19` | `⚪ Not started` | [Assets management](#assets-management) | `🔵 Low` | Platform | Human | - |
 | `RI-20` | `⚪ Not started` | [CMS](#cms) | `🔵 Low` | Platform | Human | - |
-| `RI-31` | `🟣 Partially present` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | localStorage size warning and quota status slice done; IndexedDB migration remains |
+| `RI-31` | `⚪ Not started` | [Migrate persistence to IndexedDB](#migrate-persistence-to-indexeddb) | `🔵 Low` | Platform | Shared | localStorage quota warning shipped; IndexedDB migration remains |
+| `RI-51` | `⚪ Not started` | [Additional component candidates](#additional-component-candidates) | `🔵 Low` | Feature | Shared | Split from `RI-11`: embed/iframe, divider, icon, audio |
 | `RI-28` | `✅ Done` | [Rich text component with inline styling](#rich-text-component-with-inline-styling-preferably-md-backed) | `🔵 Low` | Feature | Shared | Slate-based rich editor, phases 1.x through 1.8 complete. Phase 2.0 on-stage editing → `RI-34` |
 | `RI-30` | `✅ Done` | [Project versioning system](#project-versioning-system) | `🔵 Low` | Platform | Shared | Four semver versions in `src/lib/version.ts`; pre-commit patch bump; `schemaVersion` on export |
 | `RI-37` | `✅ Done` | [Wave F CSS cleanup](#wave-f-css-cleanup) | `🔵 Low` | Refactor | LLM | Dead `.editor-inline-field-trigger-static` deleted from editor-chrome.css |
@@ -172,6 +173,7 @@ The goal of this section is capture fidelity, not cleanup. The bullets below int
 - `RI-48` conversational editor UI with assistant-ui — add the editor-facing chat/thread/composer surface, tool-call rendering, approval/apply affordances, provider/model picker entry points, and design-system alignment
 - `RI-49` editor URL deep links should work outside the tour — direct `#/edit?panel=...` / settings/help/page params should hydrate panels once at app boot, not only through tour step navigation; decided in the showcase tour review follow-up
 - `RI-50` centralize panel request handling — the tour controller re-implements the panel request switch against React setters and has drifted from the pure `applyEditorPanelRequest` helper (an `ai` toggle falls through to manage fonts); route all consumers through one shared adapter over the pure helper
+- `RI-51` additional component candidates split from the completed video/SVG/gradient wave — embed/iframe, divider/hr, icon, and audio need separate prioritization and product decisions
 
 ## Structured Roadmap
 
@@ -245,7 +247,7 @@ None yet.
 
 - `Type`: `UX`
 - `Owner lane`: `Human`
-- `Status`: `Not started`
+- `Status`: `Done`
 - `Source`: `RI-05`
 - `Dependencies`: `RI-03`, `RI-04`
 - `Why it matters`: Once the subsystem is proven functionally, it needs a designed authoring experience with clear product thinking, understandable UX, and intentional editing flows.
@@ -394,10 +396,10 @@ None yet.
 
 - `Type`: `Feature`
 - `Owner lane`: `Shared`
-- `Status`: `In progress`
+- `Status`: `Done`
 - `Source`: `RI-11`
 - `Why it matters`: Richer components widen the playground from a sticky/layout lab into a broader authoring environment.
-- `Current state`: The core leaf set is text, image, link, and button, but the `MediaNode` model already declares `image | video | svg | embed` subtypes with `video` playback fields (`autoplay`/`loop`/`muted`) and an `svg.renderMode` (`img`/`inline`) field, and default factories exist for all of them. What is missing for video and SVG is the editor surface only: insertion roles, stage/site renderer branches, and inspector configs. Backgrounds are plain CSS strings, so gradient support is an inspector/authoring problem, not a model migration.
+- `Current state`: **Complete** — the core component wave shipped video, inline SVG, and gradient backgrounds on 2026-07-05. Video has insertion, inspector controls, paused stage preview, native preview/export, intrinsic aspect adoption, and shared image/video fit controls. Inline SVG has sanitized markup, image-to-inline conversion, a11y fields, viewBox management, monochrome fill, stroke/filter controls, and shared fit controls. Gradient backgrounds support container/section authoring with parser-backed linear/radial/conic gradients, stops, repeat/background-size, and background-clip:text. Remaining candidate components moved to `RI-51`.
 - `Ranked backlog (2026-07-05)`: Candidates scored on model complexity vs export/site value:
   1. **Video** — model scaffolded; work is renderers + inspector + insertion only; high export value. Build first.
   2. **Inline SVG** — model scaffolded (`img` and `inline` render modes); high export value; the one real cost is input-time sanitization for inline markup. Build second.
@@ -409,10 +411,7 @@ None yet.
   8. **Audio** — needs a new media subtype, low authoring demand; unscheduled backlog.
   9. **Embed/iframe** — subtype exists in the model, but inline third-party embeds raise sandboxing/CSP/security questions that video/SVG do not. **Decision: out of the first implementation wave**; stays on the backlog until a sandboxing stance is defined.
   10. **Dialogs** — needs an interaction runtime on exported static sites; spec-first under `RI-12A` before any implementation.
-- `Current progress`: **Video shipped 2026-07-05** — video leaf with insertion rail entry, content panel (src, poster, label, autoplay/muted/controls/loop switches, preload), design panel (fit/position, border, shadow), paused stage preview, native `<video>` preview/export, silent intrinsic-aspect adoption, and shared image/video object-fit/position controls.
-- `Current progress`: **Video + inline SVG shipped 2026-07-05.** Inline SVG: DOMPurify-sanitized paste-markup and convert-from-image sources, a11y (decorative/label/labelledby/title/desc), viewBox management (original + author override + fit-to-bbox), monochrome fill/opacity, global stroke, filter shadow, and shared fit/position. Markup is re-sanitized at document ingestion to close the raw-JSON import bypass.
-- `Current progress`: **Video, inline SVG, and gradient backgrounds shipped 2026-07-05.** Gradient: container + section backgrounds with a base color behind a CSS-text gradient, a two-way parser (`src/model/gradient.ts`) accepting `var()`/`color-mix()` colors, linear/radial/conic types with per-type params, color stops (color+alpha, px/% position) with reorder, repeat + background-size, and a background-clip:text mode (descendants inherit + clip via a zero-specificity `-webkit-text-fill-color` rule). Single gradient today, multi-ready.
-- `Next move`: RI-11 core wave complete. Remaining backlog candidates (embed/iframe with sandboxing, divider, icon, audio) stay unscheduled pending prioritization.
+- `Next move`: Done — track additional component candidates in `RI-51`.
 
 ##### Table component support: markdown and designable variants
 
@@ -422,12 +421,12 @@ None yet.
 - `Source`: `RI-40`
 - `Dependencies`: `RI-11`, `RI-12B`
 - `Why it matters`: Tables are a common authoring need, but one implementation will not cover both lightweight content tables and deeply designed layouts. The roadmap should treat quick authoring tables and fully designable table structures as related but distinct component directions.
-- `Current state`: There is no dedicated table component yet, and the current component/wrapper model does not define how table rows, columns, headers, or cells should behave in export, selection, or layout authoring.
+- `Current state`: Simple Slate-backed table text is implemented as `TextSubtype: 'table'` with normalized row/cell content, pure document API row/column/header/alignment operations, deterministic conversion, semantic render/export, markdown pipe import/export, on-stage editing, and inspector controls. A fully designable/container table remains intentionally separate.
 - `Slate findings`: Slate has official table references, but tables are not a first-party typed primitive. The docs and examples frame tables as a custom nested model enabled by Slate's recursive document tree. The official example defines userland `table`, `table-row`, and `table-cell` elements, renders them to semantic table markup, and adds only minimal editing guards. Richer behaviors such as keyboard navigation, headers, row/column insertion, paste/import/export normalization, and formulas would be owned by this project.
 - `Simple-table direction`: Treat the simple table as part of the text system, but store it as a structured Slate block rather than as plain markdown text. Markdown pipe syntax can be an authoring/import/export format, while the canonical content should remain a typed nested table block that exports to semantic HTML table markup.
 - `Designable-table boundary`: Keep the designable table separate from the simple text-table path. If cells can host document nodes such as images, buttons, wrappers, sticky targets, or animation targets, the table belongs in the document/container model rather than inside Slate-only text content.
 - `Decision (2026-07-05)`: The simple table and the designable table are **separate component families** — no shared base model. The simple table is a typed Slate block (`TextSubtype: 'table'`) following the standalone-list architecture; markdown pipe syntax is import/export only.
-- `Next move`: Execute Workstream C of [SEMANTICS_AND_TABLE_TASKLIST.md](./SEMANTICS_AND_TABLE_TASKLIST.md) (tasks C1-C6: content model, documentApi ops, rendering/export, markdown round-trip, editing UX, closeout).
+- `Next move`: Track designable/container table support as a separate follow-up if cells need to host arbitrary document nodes, media, wrappers, sticky targets, animation targets, merged cells, formulas, or layout semantics.
 
 ##### More semantic components
 
@@ -466,11 +465,11 @@ None yet.
 
 - `Type`: `Platform`
 - `Owner lane`: `Shared`
-- `Status`: `In progress`
+- `Status`: `Needs audit`
 - `Source`: `RI-25`
 - `Why it matters`: Performance becomes a hard constraint as animation, responsiveness, assets, collaboration, and multi-page work expand the editor.
-- `Current state`: The spec already contains some performance-minded decisions, but performance should be treated as a recurring maintenance track rather than a one-time pass.
-- `Next move`: Re-run focused perf audits every once in a while, especially after large project advancements, covering stage rendering, history pressure, export cost, and animation/runtime overhead.
+- `Current state`: The spec already contains some performance-minded decisions, but no concrete current performance pass is active. Treat this as a recurring maintenance track rather than a one-time implementation item.
+- `Next move`: Run a focused perf audit before marking active work in progress, covering stage rendering, history pressure, export cost, and animation/runtime overhead.
 
 ##### AI command/interface layer over the public API
 
@@ -600,6 +599,17 @@ None yet.
 - `Why it matters`: Export format breadth determines where the playground can be used and how reusable the model becomes.
 - `Current state`: JSON import/export and static rendered-site export already exist; React app, Electron, PDF, image, and presentation exports do not.
 - `Next move`: Rank target exports by strategic value and by how much shared render logic they can reuse.
+
+##### Additional component candidates
+
+- `Type`: `Feature`
+- `Owner lane`: `Shared`
+- `Status`: `Not started`
+- `Source`: `RI-51`
+- `Relationship`: Split from the completed `RI-11` core component wave.
+- `Why it matters`: The editor still needs a clear backlog for common authored components that were deliberately left out of the video/SVG/gradient wave.
+- `Current state`: Video, inline SVG, and gradient backgrounds are complete under `RI-11`. Embed/iframe, divider/hr, icon, and audio are not first-class authored components yet. Embed/iframe already has some model shape, but needs a sandboxing/CSP/security stance before implementation; icon needs an asset/export strategy; audio needs demand validation; divider/hr is likely the smallest candidate.
+- `Next move`: Prioritize the candidates and split any chosen component into an API-first implementation task before building UI.
 
 ##### Rich text component with inline styling, preferably MD-backed
 

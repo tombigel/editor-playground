@@ -98,11 +98,17 @@ export type EditorAction =
   | { type: 'selectMany'; ids: string[]; mode: 'replace' | 'toggle' }
   | { type: 'insertWrapper'; role: ContainerSubtype }
   | { type: 'insertSectionTemplate'; templateId: SectionTemplateId }
-  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'video' | 'svg' | 'link' | 'button' }
+  | { type: 'insertLeaf'; role: 'text' | 'heading' | 'list' | 'table' | 'richtext' | 'code' | 'image' | 'video' | 'svg' | 'link' | 'button' }
   | { type: 'adoptVideoIntrinsicRatio'; id: NodeId; ratio: number }
   | { type: 'setSvgMarkup'; id: NodeId; payload: SvgMarkupPayload }
   | { type: 'convertImageToSvg'; id: NodeId; payload: SvgMarkupPayload }
   | { type: 'switchTextSubtype'; nodeId: string; subtype: TextSubtype; conversionMode?: TextConversionMode }
+  | { type: 'insertTableRow'; nodeId: NodeId; rowIndex: number }
+  | { type: 'insertTableColumn'; nodeId: NodeId; columnIndex: number }
+  | { type: 'removeTableRow'; nodeId: NodeId; rowIndex: number }
+  | { type: 'removeTableColumn'; nodeId: NodeId; columnIndex: number }
+  | { type: 'setTableHeaderRow'; nodeId: NodeId; enabled: boolean }
+  | { type: 'setTableColumnAlignment'; nodeId: NodeId; columnIndex: number; alignment: 'left' | 'center' | 'right' | null }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }
   | { type: 'move'; id: string; x: string; y: string; options?: DragCommitOptions }

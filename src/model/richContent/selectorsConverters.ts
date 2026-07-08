@@ -10,6 +10,7 @@ import type {
   RichTextBlockType,
   RichTextLeaf,
   RichTextLink,
+  TableBlockContent,
   TextBlockContent,
   TextDocumentBlock,
   TextDocumentBlocks,
@@ -23,7 +24,7 @@ import {
   createRichTextLeaf,
   createTextDocumentContent,
 } from './factories';
-import { isCodeBlockContent, isListBlockContent, isRichTextLink, isTextBlockContent, isTextDocumentContent } from './guards';
+import { isCodeBlockContent, isListBlockContent, isRichTextLink, isTableBlockContent, isTextBlockContent, isTextDocumentContent } from './guards';
 import type { NormalizeTextContentOptions } from './shared';
 
 function blockText(block: RichBlock): string {
@@ -40,6 +41,12 @@ function blockText(block: RichBlock): string {
           .flatMap((node) => (isRichTextLink(node) ? node.children.map((leaf) => leaf.text) : [node.text]))
           .join(''),
       )
+      .join('\n');
+  }
+
+  if (block.type === 'table') {
+    return block.children
+      .map((row) => row.children.map((cell) => flattenRichInlineChildren(cell.children)).join('\t'))
       .join('\n');
   }
 
@@ -133,6 +140,11 @@ export function getSingleCodeBlockContent(content: RichContent | TextDocumentCon
 export function getSingleListBlockContent(content: RichContent | TextDocumentContent): ListBlockContent | undefined {
   const block = getFirstTextDocumentBlock(content);
   return block && isListBlockContent(block) ? block : undefined;
+}
+
+export function getSingleTableBlockContent(content: RichContent | TextDocumentContent): TableBlockContent | undefined {
+  const block = getFirstTextDocumentBlock(content);
+  return block && isTableBlockContent(block) ? block : undefined;
 }
 
 export function replaceTextDocumentBlocks(content: TextDocumentContent, blocks: TextDocumentBlocks): TextDocumentContent {

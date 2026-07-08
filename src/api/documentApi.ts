@@ -85,6 +85,14 @@ export {
 export { cloneDocument } from './documentApi/shared';
 export { expandParentHeightDoc } from './documentApi/parentExpansion';
 export {
+  insertTableColumnDoc,
+  insertTableRowDoc,
+  removeTableColumnDoc,
+  removeTableRowDoc,
+  setTableColumnAlignmentDoc,
+  setTableHeaderRowDoc,
+} from './documentApi/table';
+export {
   applyMarkdownToTextNodeDoc,
   normalizeTextNodeDoc,
   resetCodeBlockStyleDoc,

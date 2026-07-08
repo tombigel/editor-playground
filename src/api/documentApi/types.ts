@@ -10,7 +10,7 @@ export type TopLevelWrapperPlacement = 'currentPage' | 'global';
 export type TopLevelWrapperVisibilityMode = TopLevelWrapperVisibilityModeModel;
 export type TopLevelWrapperVisibilityState = TopLevelWrapperVisibilityStateModel;
 export type TopLevelWrapperVisibility = TopLevelWrapperVisibilityModeModel;
-export type LeafInsertionRole = 'text' | 'heading' | 'list' | 'richtext' | 'code' | 'image' | 'video' | 'svg' | 'link' | 'button';
+export type LeafInsertionRole = 'text' | 'heading' | 'list' | 'table' | 'richtext' | 'code' | 'image' | 'video' | 'svg' | 'link' | 'button';
 export type SectionTemplateInsertionOptions = {
   selectedId?: NodeId | null;
   pageId?: PageId | null;

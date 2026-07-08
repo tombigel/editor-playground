@@ -590,6 +590,7 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						onSetNodeVisibility={(id, value) =>
 							dispatch({ type: "setNodeVisibility", id, value })
 						}
+						onSelectNode={(id) => dispatch({ type: "select", id })}
 						onSetTopLevelWrapperVisibility={(
 							pageId,
 							nodeId,
@@ -621,6 +622,24 @@ export function AppShellEditorMain({ ctx }: AppShellEditorMainProps) {
 						}
 						onSetTextDocumentBlockGap={(nodeId, value) =>
 							dispatch({ type: "setTextDocumentBlockGap", id: nodeId, value })
+						}
+						onInsertTableRow={(nodeId, rowIndex) =>
+							dispatch({ type: "insertTableRow", nodeId, rowIndex })
+						}
+						onInsertTableColumn={(nodeId, columnIndex) =>
+							dispatch({ type: "insertTableColumn", nodeId, columnIndex })
+						}
+						onRemoveTableRow={(nodeId, rowIndex) =>
+							dispatch({ type: "removeTableRow", nodeId, rowIndex })
+						}
+						onRemoveTableColumn={(nodeId, columnIndex) =>
+							dispatch({ type: "removeTableColumn", nodeId, columnIndex })
+						}
+						onSetTableHeaderRow={(nodeId, enabled) =>
+							dispatch({ type: "setTableHeaderRow", nodeId, enabled })
+						}
+						onSetTableColumnAlignment={(nodeId, columnIndex, alignment) =>
+							dispatch({ type: "setTableColumnAlignment", nodeId, columnIndex, alignment })
 						}
 						onMergeTextSelectionToRich={(nodeIds) =>
 							dispatch({ type: "mergeTextSelectionToRich", nodeIds })

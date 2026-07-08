@@ -307,7 +307,7 @@ export function getSelectedBlockType(editor: BaseEditor): RichTextBlockType | nu
   }
 
   const block = blocks[0];
-  return block.type === 'code-block' || block.type === 'ul' || block.type === 'ol' ? null : block.type;
+  return isNonListTextBlock(block) ? block.type : null;
 }
 
 export function getSelectedListKind(editor: BaseEditor): 'ul' | 'ol' | null {
@@ -438,7 +438,7 @@ export function setSelectedBlocksLineHeight(editor: BaseEditor, lineHeight: numb
     for (let index = range.start; index <= range.end; index += 1) {
       const node = editor.children[index];
       const nodeType = Element.isElement(node) ? (node as { type?: string }).type : undefined;
-      if (nodeType === 'code-block' || nodeType === 'ul' || nodeType === 'ol' || nodeType == null) {
+      if (nodeType === 'code-block' || nodeType === 'ul' || nodeType === 'ol' || nodeType === 'table' || nodeType == null) {
         continue;
       }
       Transforms.setNodes(editor, { lineHeight } as Partial<RichTextBlock>, { at: [index] });
@@ -461,7 +461,7 @@ export function getSelectedDirection(editor: BaseEditor): 'ltr' | 'rtl' {
     return 'ltr';
   }
 
-  return (blocks[0] as RichBlock).direction ?? 'ltr';
+  return getRichBlockDirection(blocks[0]);
 }
 
 export function setSelectedBlocksTextAlign(
@@ -477,7 +477,7 @@ export function setSelectedBlocksTextAlign(
     for (let index = range.start; index <= range.end; index += 1) {
       const node = editor.children[index];
       const nodeType = Element.isElement(node) ? (node as { type?: string }).type : undefined;
-      if (nodeType === 'code-block' || nodeType === 'ul' || nodeType === 'ol' || nodeType == null) {
+      if (nodeType === 'code-block' || nodeType === 'ul' || nodeType === 'ol' || nodeType === 'table' || nodeType == null) {
         continue;
       }
       const currentStyle = (node as RichTextBlock).style ?? {};
@@ -501,7 +501,8 @@ export function setSelectedBlocksDirection(
 
   Editor.withoutNormalizing(editor, () => {
     for (let index = range.start; index <= range.end; index += 1) {
-      if (!Element.isElement(editor.children[index])) {
+      const node = editor.children[index];
+      if (!Element.isElement(node) || (node as { type?: string }).type === 'table') {
         continue;
       }
       Transforms.setNodes(
@@ -611,14 +612,15 @@ function blockToTextBlock(block: RichBlock, blockType: RichTextBlockType): RichT
   }
 
   return createRichTextBlock(blockType, [createRichTextLeaf(blockToPlainText(block))], {
-    direction: block.direction,
+    direction: getRichBlockDirection(block),
   });
 }
 
 function blockToCodeBlock(block: RichBlock, language: string): RichCodeBlock {
   const text = blockToPlainText(block);
+  const direction = block.type === 'table' ? undefined : block.direction;
   const codeBlock = createRichCodeBlock(text, {
-    direction: block.direction,
+    ...(direction ? { direction } : {}),
     language,
     highlightedHtml: highlightCode(text, language),
   });
@@ -636,6 +638,10 @@ function blockToListItems(block: RichBlock): RichListItem[] {
 
   if (block.type === 'code-block') {
     return block.children.map((line) => createRichListItemFromChildren(cloneInlineNodes(line.children)));
+  }
+
+  if (block.type === 'table') {
+    return blockToPlainTextLines(block).map((line) => createRichListItemFromChildren([createRichTextLeaf(line)]));
   }
 
   return inlineNodesToListItems(block.children);
@@ -723,6 +729,12 @@ function blockToPlainTextLines(block: RichBlock): string[] {
     return block.children.map((line) => line.children.map((leaf) => leaf.text).join(''));
   }
 
+  if (block.type === 'table') {
+    return block.children.map((row) =>
+      row.children.map((cell) => flattenInlineNodes(cell.children)).join('\t'),
+    );
+  }
+
   return flattenInlineNodes(block.children).split('\n');
 }
 
@@ -739,6 +751,16 @@ function textDocumentBlockToInlineChildren(block: TextDocumentBlock): RichInline
     return block.children.flatMap((line, lineIndex) => [
       ...(lineIndex === 0 ? [] : [createRichTextLeaf('\n')]),
       ...line.children.map((leaf) => ({ ...leaf })),
+    ]);
+  }
+
+  if (block.type === 'table') {
+    return block.children.flatMap((row, rowIndex) => [
+      ...(rowIndex === 0 ? [] : [createRichTextLeaf('\n')]),
+      ...row.children.flatMap((cell, cellIndex) => [
+        ...(cellIndex === 0 ? [] : [createRichTextLeaf('\t')]),
+        ...cloneInlineNodes(cell.children),
+      ]),
     ]);
   }
 
@@ -827,5 +849,9 @@ function setListItemDepthAtPath(editor: BaseEditor, path: number[], depth: numbe
 }
 
 function isNonListTextBlock(block: RichBlock): block is RichTextBlock {
-  return block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol';
+  return block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol' && block.type !== 'table';
+}
+
+function getRichBlockDirection(block: RichBlock): 'ltr' | 'rtl' {
+  return block.type === 'table' ? 'ltr' : block.direction ?? 'ltr';
 }

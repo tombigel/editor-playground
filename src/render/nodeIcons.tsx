@@ -18,6 +18,7 @@ import {
   RectangleEllipsis,
   Rows3,
   SquareStack,
+  Table2,
   TextAlignStart,
   TextInitial,
 } from 'lucide-react';
@@ -50,6 +51,9 @@ export function getNodeIcon(node: StageOrSiteNode | Exclude<DocumentNode, { cont
     if (node.subtype === 'list') {
       const listBlock = getSingleListBlockContent(node.content);
       return listBlock?.type === 'ol' ? ListOrdered : List;
+    }
+    if (node.subtype === 'table') {
+      return Table2;
     }
     if (node.link !== undefined) {
       return Link2;

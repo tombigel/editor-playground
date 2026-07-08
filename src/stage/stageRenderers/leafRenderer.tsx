@@ -3,6 +3,7 @@ import type {
   ContainerNode,
   DocumentModel,
   NodeId,
+  RichTableBlock,
   TextDocumentContent,
   TextNode,
   ViewportMeasurement,
@@ -12,9 +13,11 @@ import { getLeafInlineStyle, styleRecordToReactStyle } from '../../render/leafPr
 import {
   createRichListBlock,
   createRichListItem,
+  createRichTableBlock,
   createTextDocumentContent,
   getSingleCodeBlockContent,
   getSingleListBlockContent,
+  getSingleTableBlockContent,
   prepareStandaloneBlockEditContent,
 } from '../../model/richContent';
 import {
@@ -306,12 +309,14 @@ function LeafTextEditBody({
         />
       );
     }
-    const mode = child.subtype === 'block' ? 'block' : child.subtype === 'list' ? 'list' : 'rich';
+    const mode = child.subtype === 'block' ? 'block' : child.subtype === 'list' ? 'list' : child.subtype === 'table' ? 'table' : 'rich';
     const editableContent =
       mode === 'block'
         ? prepareStandaloneBlockEditContent(child)
         : mode === 'list'
           ? prepareStandaloneListEditContent(child)
+          : mode === 'table'
+            ? prepareStandaloneTableEditContent(child)
         : { content: child.content, promotedNodeLink: false };
     return (
       <Suspense fallback={null}>
@@ -348,8 +353,8 @@ function LeafTextEditBody({
   );
 }
 
-function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' | 'list' | 'code' {
-  return subtype === 'rich' || subtype === 'block' || subtype === 'list' || subtype === 'code';
+function isEditableTextSubtype(subtype: string): subtype is 'rich' | 'block' | 'list' | 'table' | 'code' {
+  return subtype === 'rich' || subtype === 'block' || subtype === 'list' || subtype === 'table' || subtype === 'code';
 }
 
 function prepareStandaloneListEditContent(node: TextNode) {
@@ -370,6 +375,37 @@ function prepareStandaloneListEditContent(node: TextNode) {
         : createRichListBlock('ul', [createRichListItem('')]),
     ]),
     promotedNodeLink: false,
+  };
+}
+
+function prepareStandaloneTableEditContent(node: TextNode) {
+  if (node.subtype !== 'table') {
+    return {
+      content: createTextDocumentContent([addTableEditCellMetadata(createRichTableBlock())]),
+      promotedNodeLink: false,
+    };
+  }
+
+  const tableBlock = getSingleTableBlockContent(node.content);
+  return {
+    content: createTextDocumentContent([
+      addTableEditCellMetadata(tableBlock ? structuredClone(tableBlock) : createRichTableBlock()),
+    ]),
+    promotedNodeLink: false,
+  };
+}
+
+function addTableEditCellMetadata(block: RichTableBlock): RichTableBlock {
+  return {
+    ...block,
+    children: block.children.map((row) => ({
+      ...row,
+      children: row.children.map((cell, columnIndex) => ({
+        ...cell,
+        header: row.header === true,
+        alignment: block.columnAlignments?.[columnIndex] ?? null,
+      })),
+    })),
   };
 }
 

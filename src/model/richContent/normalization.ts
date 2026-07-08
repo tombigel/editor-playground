@@ -4,6 +4,8 @@ import type {
   RichContent,
   RichInlineNode,
   RichListItem,
+  RichTableCell,
+  RichTableRow,
   RichTextLeaf,
   RichTextLink,
   StandaloneTextNodeSnapshot,
@@ -15,6 +17,9 @@ import {
   createRichCodeLine,
   createRichListBlock,
   createRichListItem,
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
   createRichTextBlock,
   createRichTextLeaf,
 } from './factories';
@@ -93,7 +98,7 @@ function normalizeStandaloneTextNodeSnapshot(value: unknown): StandaloneTextNode
   }
 
   const subtype = value.subtype;
-  if (subtype !== 'block' && subtype !== 'code' && subtype !== 'list') {
+  if (subtype !== 'block' && subtype !== 'code' && subtype !== 'list' && subtype !== 'table') {
     return undefined;
   }
 
@@ -195,6 +200,42 @@ function normalizeListItems(children: unknown): RichListItem[] {
   return normalized.length > 0 ? normalized : [createRichListItem('')];
 }
 
+function normalizeTableCell(node: unknown): RichTableCell | null {
+  if (!isObjectRecord(node) || node.type !== 'table-cell') {
+    return null;
+  }
+  return createRichTableCell(normalizeInlineChildren(node.children));
+}
+
+function normalizeTableRow(node: unknown, rowIndex: number): RichTableRow | null {
+  if (!isObjectRecord(node) || node.type !== 'table-row') {
+    return null;
+  }
+  const children = Array.isArray(node.children)
+    ? node.children
+        .map((child) => normalizeTableCell(child))
+        .filter((child): child is RichTableCell => child !== null)
+    : [];
+  return createRichTableRow(children.length > 0 ? children : [createRichTableCell()], {
+    header: node.header === true || (rowIndex === 0 && node.header !== false),
+  });
+}
+
+function normalizeTableColumnAlignment(value: unknown) {
+  return value === 'left' || value === 'center' || value === 'right' ? value : null;
+}
+
+function normalizeTableRows(children: unknown): RichTableRow[] {
+  if (!Array.isArray(children)) {
+    return createRichTableBlock().children;
+  }
+
+  const rows = children
+    .map((child, index) => normalizeTableRow(child, index))
+    .filter((child): child is RichTableRow => child !== null);
+  return rows.length > 0 ? rows : createRichTableBlock().children;
+}
+
 function normalizeRichBlock(node: unknown): RichBlock | null {
   if (!isObjectRecord(node) || typeof node.type !== 'string') {
     return null;
@@ -231,6 +272,16 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
       ...(node.type === 'ol' && typeof node.start === 'number' ? { start: node.start } : {}),
       ...(typeof node.markerStyle === 'string' ? { markerStyle: node.markerStyle } : {}),
     });
+  }
+
+  if (node.type === 'table') {
+    const rows = normalizeTableRows(node.children);
+    const columnCount = Math.max(1, ...rows.map((row) => row.children.length));
+    const rawColumnAlignments = node.columnAlignments;
+    const columnAlignments = Array.isArray(rawColumnAlignments)
+      ? Array.from({ length: columnCount }, (_, index) => normalizeTableColumnAlignment(rawColumnAlignments[index]))
+      : undefined;
+    return createRichTableBlock(rows, { columnAlignments });
   }
 
   return null;

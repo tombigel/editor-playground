@@ -87,6 +87,19 @@ Source: `src/api/documentApi.ts`
 Unordered marker styles: `'disc'` | `'circle'` | `'square'`
 Ordered marker styles: `'decimal'` | `'lower-alpha'` | `'upper-alpha'` | `'lower-roman'` | `'upper-roman'`
 
+### Table mutations
+
+| Function | Parameters | Description |
+| --- | --- | --- |
+| `insertTableRowDoc` | `(document, nodeId, rowIndex: number)` | Insert a row in a standalone table text node |
+| `insertTableColumnDoc` | `(document, nodeId, columnIndex: number)` | Insert a column in a standalone table text node |
+| `removeTableRowDoc` | `(document, nodeId, rowIndex: number)` | Remove a row while preserving at least one row |
+| `removeTableColumnDoc` | `(document, nodeId, columnIndex: number)` | Remove a column while preserving at least one column |
+| `setTableHeaderRowDoc` | `(document, nodeId, enabled: boolean)` | Toggle first-row header semantics |
+| `setTableColumnAlignmentDoc` | `(document, nodeId, columnIndex: number, alignment: TableColumnAlignment)` | Set per-column alignment |
+
+`TableColumnAlignment`: `'left'` | `'center'` | `'right'` | `null`
+
 ### Split and merge
 
 Source: `src/api/textMerge.ts`
@@ -117,7 +130,7 @@ Source: `src/api/textConversion.ts`
 convertTextNodeDoc(document: DocumentModel, nodeId: NodeId, targetSubtype: TextSubtype, options?: TextConversionOptions): DocumentModel
 ```
 
-Converts a text node to a different subtype, preserving content where possible.
+Converts a text node to a different subtype, preserving content where possible. The supported text subtypes are `'block'`, `'rich'`, `'code'`, `'list'`, and `'table'`.
 
 ```typescript
 switchTextSubtypeDoc(document: DocumentModel, nodeId: NodeId, targetSubtype: TextSubtype, options?: TextConversionOptions): DocumentModel
@@ -859,7 +872,7 @@ type ParentExpansionRequest = {
 ```typescript
 type TextNode = BaseNode & {
   contentType: 'text';
-  subtype: TextSubtype;  // 'block' | 'rich' | 'code' | 'list'
+  subtype: TextSubtype;  // 'block' | 'rich' | 'code' | 'list' | 'table'
   content: TextDocumentContent;
   lang?: string;
   htmlTag?: HeadingTag | 'p' | 'blockquote' | 'div';  // @deprecated transitional
@@ -1198,7 +1211,7 @@ Run `/version-bump` for guidance on which level to use for each subsystem.
 
 ### API 2.0.0 breaking insertion cleanup
 
-`insertLeafDoc(document, role, parentId)` is now the single API-first leaf insertion surface for all editor leaf roles. Deprecated insertion aliases were removed instead of retained as compatibility shims.
+`insertLeafDoc(document, role, parentId)` is now the single API-first leaf insertion surface for all editor leaf roles, including `table`. Deprecated insertion aliases were removed instead of retained as compatibility shims.
 
 ---
 
@@ -1209,7 +1222,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Document and Editor API
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
-- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
+- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `insertTableRowDoc`, `insertTableColumnDoc`, `removeTableRowDoc`, `removeTableColumnDoc`, `setTableHeaderRowDoc`, `setTableColumnAlignmentDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
 - `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgStrokeCap`, `SvgStrokeJoin`, `SvgStrokePaintOrder`, `SvgStrokeStyle`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`
@@ -1245,6 +1258,7 @@ This index keeps the split API reference synchronized with the public export sur
 - `LinkKind`, `ListDirection`, `ListContentType`, `StickyEdges`, `StickyTarget`, `ViewportMeasurement`
 - `RichTextLeaf`, `RichTextLink`, `RichInlineNode`, `RichBlockStyle`, `StandaloneTextNodeSnapshot`
 - `RichCodeLine`, `RichCodeBlock`, `RichListItem`, `RichUnorderedListBlock`, `RichOrderedListBlock`, `RichListBlock`
+- `TableColumnAlignment`, `RichTableCell`, `RichTableRow`, `RichTableBlock`, `TableBlockContent`
 - `TextDocumentBlocks`, `TemplateBuild`, `TemplateNode`, `TextStyleOptions`, `BoxPadding`
 - `ContainerSubtype`, `ContainerLayout`, `ContainerChildBoundary`, `RectConfig`, `TextNodeConfig`, `LinkNodeConfig`, `ImageNodeConfig`
 

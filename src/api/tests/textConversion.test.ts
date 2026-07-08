@@ -5,17 +5,22 @@ import {
   createRichCodeLine,
   createRichListBlock,
   createRichListItemFromText,
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
   createRichTextBlock,
   createRichTextLeaf,
   createTextDocumentContent,
   getSingleListBlockContent,
+  getSingleTableBlockContent,
+  getSingleTextBlockContent,
   getTextContent,
   richListBlockToListContent,
 } from '../../model/richContent';
 import { isTextNode } from '../../model/types';
 import { convertTextNodeDoc, flattenTextContent, switchTextSubtypeDoc } from '../textConversion';
 
-function createDocumentWithTextNode(subtype: 'block' | 'rich' | 'code' | 'list') {
+function createDocumentWithTextNode(subtype: 'block' | 'rich' | 'code' | 'list' | 'table') {
   const document = createInitialDocument();
   const root = document.nodes[document.rootId];
   if (root.contentType !== 'site') {
@@ -54,6 +59,172 @@ describe('api/textConversion no-op paths', () => {
     const { document } = createDocumentWithTextNode('block');
     const next = switchTextSubtypeDoc(document, 'missing', 'list');
     expect(next).toBe(document);
+  });
+});
+
+describe('api/textConversion table conversions', () => {
+  it('converts block and code text into normalized tables using tabs before pipes', () => {
+    const { document, textId } = createDocumentWithTextNode('block');
+    const node = document.nodes[textId];
+    if (!isTextNode(node) || node.subtype !== 'block') {
+      throw new Error('Expected block node');
+    }
+    node.content = createTextDocumentContent([
+      createRichTextBlock('paragraph', [createRichTextLeaf('Name\tRole\nAda\tEngineer')]),
+    ]);
+
+    const next = convertTextNodeDoc(document, textId, 'table');
+    const converted = next.nodes[textId];
+    if (!isTextNode(converted) || converted.subtype !== 'table') {
+      throw new Error('Expected table node');
+    }
+    const table = getSingleTableBlockContent(converted.content);
+    expect(table?.children[0]?.header).toBe(true);
+    expect(table?.children.map((row) => row.children.map((cell) => getTextContent([{ type: 'paragraph', children: cell.children }])))).toEqual([
+      ['Name', 'Role'],
+      ['Ada', 'Engineer'],
+    ]);
+
+    const code = createDocumentWithTextNode('code');
+    const codeNode = code.document.nodes[code.textId];
+    if (!isTextNode(codeNode) || codeNode.subtype !== 'code') {
+      throw new Error('Expected code node');
+    }
+    codeNode.content = createTextDocumentContent([
+      createRichCodeBlock('A | B\nC | D'),
+    ]);
+
+    const pipeDoc = convertTextNodeDoc(code.document, code.textId, 'table');
+    const pipeNode = pipeDoc.nodes[code.textId];
+    if (!isTextNode(pipeNode) || pipeNode.subtype !== 'table') {
+      throw new Error('Expected table node');
+    }
+    const pipeTable = getSingleTableBlockContent(pipeNode.content);
+    expect(pipeTable?.children.map((row) => row.children.map((cell) => getTextContent([{ type: 'paragraph', children: cell.children }])))).toEqual([
+      ['A', 'B'],
+      ['C', 'D'],
+    ]);
+  });
+
+  it('converts lists to one-column tables while preserving compatible inline children', () => {
+    const { document, textId } = createDocumentWithTextNode('list');
+    const node = document.nodes[textId];
+    if (!isTextNode(node) || node.subtype !== 'list') {
+      throw new Error('Expected list node');
+    }
+    node.content = createTextDocumentContent([
+      createRichListBlock('ul', [
+        {
+          type: 'list-item',
+          children: [
+            { text: 'Styled', bold: true },
+            {
+              type: 'link',
+              linkType: 'external',
+              href: 'https://example.com',
+              children: [{ text: ' link', italic: true }],
+            },
+          ],
+        },
+        createRichListItemFromText('Plain'),
+      ]),
+    ]);
+
+    const next = convertTextNodeDoc(document, textId, 'table');
+    const converted = next.nodes[textId];
+    if (!isTextNode(converted) || converted.subtype !== 'table') {
+      throw new Error('Expected table node');
+    }
+    const table = getSingleTableBlockContent(converted.content);
+    expect(table?.children[0]?.header).toBe(true);
+    expect(table?.children[0]?.children[0]?.children).toMatchObject([
+      { text: 'Styled', bold: true },
+      { type: 'link', href: 'https://example.com', children: [{ text: ' link', italic: true }] },
+    ]);
+    expect(table?.children[1]?.children[0]?.children).toEqual([{ text: 'Plain' }]);
+  });
+
+  it('preserves a single rich table block when converting rich text to table', () => {
+    const { document, textId } = createDocumentWithTextNode('rich');
+    const node = document.nodes[textId];
+    if (!isTextNode(node) || node.subtype !== 'rich') {
+      throw new Error('Expected rich node');
+    }
+    const sourceTable = createRichTableBlock([
+      createRichTableRow([
+        createRichTableCell([createRichTextLeaf('H1')]),
+        createRichTableCell([createRichTextLeaf('H2')]),
+      ], { header: true }),
+      createRichTableRow([
+        createRichTableCell([createRichTextLeaf('A')]),
+        createRichTableCell([createRichTextLeaf('B')]),
+      ]),
+    ], { columnAlignments: ['left', 'right'] });
+    node.content = createTextDocumentContent([sourceTable]);
+
+    const next = convertTextNodeDoc(document, textId, 'table');
+    const converted = next.nodes[textId];
+    if (!isTextNode(converted) || converted.subtype !== 'table') {
+      throw new Error('Expected table node');
+    }
+    expect(getSingleTableBlockContent(converted.content)).toEqual(sourceTable);
+  });
+
+  it('flattens tables deterministically when converting to block, code, rich, and list', () => {
+    const { document, textId } = createDocumentWithTextNode('table');
+    const node = document.nodes[textId];
+    if (!isTextNode(node) || node.subtype !== 'table') {
+      throw new Error('Expected table node');
+    }
+    node.content = createTextDocumentContent([
+      createRichTableBlock([
+        createRichTableRow([
+          createRichTableCell([createRichTextLeaf('A')]),
+          createRichTableCell([createRichTextLeaf('B')]),
+        ], { header: true }),
+        createRichTableRow([
+          createRichTableCell([createRichTextLeaf('C')]),
+          createRichTableCell([createRichTextLeaf('D')]),
+        ]),
+      ]),
+    ]);
+
+    const blockDoc = convertTextNodeDoc(document, textId, 'block');
+    const blockNode = blockDoc.nodes[textId];
+    if (!isTextNode(blockNode) || blockNode.subtype !== 'block') {
+      throw new Error('Expected block node');
+    }
+    expect(getTextContent(blockNode.content.blocks, { blockSeparator: '\n' })).toBe('A\tB\nC\tD');
+
+    const codeDoc = convertTextNodeDoc(document, textId, 'code');
+    const codeNode = codeDoc.nodes[textId];
+    if (!isTextNode(codeNode) || codeNode.subtype !== 'code') {
+      throw new Error('Expected code node');
+    }
+    expect(getTextContent(codeNode.content.blocks, { blockSeparator: '\n' })).toBe('A\tB\nC\tD');
+
+    const richDoc = convertTextNodeDoc(document, textId, 'rich');
+    const richNode = richDoc.nodes[textId];
+    if (!isTextNode(richNode) || richNode.subtype !== 'rich') {
+      throw new Error('Expected rich node');
+    }
+    expect(getSingleTextBlockContent(richNode.content)?.children).toEqual([
+      { text: 'A\tB' },
+      { text: '\n' },
+      { text: 'C\tD' },
+    ]);
+
+    const listDoc = convertTextNodeDoc(document, textId, 'list');
+    const listNode = listDoc.nodes[textId];
+    if (!isTextNode(listNode) || listNode.subtype !== 'list') {
+      throw new Error('Expected list node');
+    }
+    expect(richListBlockToListContent(getSingleListBlockContent(listNode.content)!)).toMatchObject({
+      items: [
+        { text: 'A\tB' },
+        { text: 'C\tD' },
+      ],
+    });
   });
 });
 

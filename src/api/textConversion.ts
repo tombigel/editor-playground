@@ -5,10 +5,14 @@ import {
   createTextDocumentFromText,
   createRichCodeBlock,
   createRichListBlock,
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
   createRichTextBlock,
   createRichTextLeaf,
   getSingleCodeBlockContent,
   getSingleListBlockContent,
+  getSingleTableBlockContent,
   getSingleTextBlockContent,
   getTextContent,
   getTextDocumentBlocks,
@@ -32,6 +36,8 @@ import type {
   RichInlineNode,
   RichListBlock,
   RichListItem,
+  RichTableBlock,
+  RichTableRow,
   RichTextLeaf,
   RichTextBlock,
   TextNode,
@@ -136,6 +142,10 @@ function convertTextContent(
   targetSubtype: TextSubtype,
   _mode: TextConversionMode,
 ): TextDocumentContent {
+  if (targetSubtype === 'table') {
+    return convertToTableContent(source);
+  }
+
   if (targetSubtype === 'list') {
     const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
     const richListBlock = convertRichBlocksToListBlock(richContent, source.style?.direction);
@@ -146,6 +156,14 @@ function convertTextContent(
   }
 
   if (targetSubtype === 'rich') {
+    if (source.subtype === 'table') {
+      return createTextDocumentContent([
+        createRichTextBlock('paragraph', textToInlineChildren(flattenTextContent(source.content)), {
+          direction: source.style?.direction,
+        }),
+      ]);
+    }
+
     if (source.subtype === 'list') {
       const listBlock = getSingleListBlockContent(source.content);
       return createTextDocumentContent(
@@ -322,6 +340,10 @@ function richBlockToListContent(block: RichBlock): ListContent {
     );
   }
 
+  if (block.type === 'table') {
+    return createUnorderedListContentFromLines(getTextContent([block]).split(/\r?\n/));
+  }
+
   return createUnorderedListContentFromLines(flattenRichInlineChildren(block.children).split(/\r?\n/));
 }
 
@@ -333,6 +355,13 @@ function convertSingleRichBlock(
     return createTextDocumentContent([
       convertSingleRichBlockToList(block) ?? listContentToRichListBlock(richBlockToListContent(block)),
     ]);
+  }
+
+  if (targetSubtype === 'table') {
+    if (block.type === 'table') {
+      return createTextDocumentContent([structuredClone(block)]);
+    }
+    return createTextDocumentContent([createTableBlockFromText(getTextContent([block]))]);
   }
 
   if (targetSubtype === 'code') {
@@ -368,12 +397,12 @@ function convertSingleRichBlock(
 
   return createTextDocumentFromText(getTextContent([block]), {
     type: 'paragraph',
-    direction: block.direction,
+    direction: block.type === 'table' ? undefined : block.direction,
   });
 }
 
 function isRichTextBlockForStandaloneBlock(block: RichBlock): block is RichTextBlock {
-  return block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol';
+  return block.type !== 'code-block' && block.type !== 'ul' && block.type !== 'ol' && block.type !== 'table';
 }
 
 function flattenRichInlineChildren(children: RichInlineNode[]): string {
@@ -401,10 +430,106 @@ function flattenRichBlockInlineChildren(block: RichBlock): RichInlineNode[] {
     return flattenListBlockInlineChildren(block);
   }
 
+  if (block.type === 'table') {
+    return textToInlineChildren(getTextContent([block]));
+  }
+
   return block.children.flatMap((line, index) => [
     ...(index > 0 ? [createRichTextLeaf('\n')] : []),
     ...cloneInlineNodes(line.children),
   ]);
+}
+
+function textToInlineChildren(text: string): RichInlineNode[] {
+  const lines = text.split(/\r?\n/);
+  const children = lines.flatMap((line, index) => [
+    ...(index > 0 ? [createRichTextLeaf('\n')] : []),
+    createRichTextLeaf(line),
+  ]);
+  return children.length > 0 ? children : [createRichTextLeaf('')];
+}
+
+function convertToTableContent(source: TextNode): TextDocumentContent {
+  if (source.subtype === 'table') {
+    const tableBlock = getSingleTableBlockContent(source.content);
+    return createTextDocumentContent([tableBlock ? structuredClone(tableBlock) : createRichTableBlock()]);
+  }
+
+  if (source.subtype === 'list') {
+    const listBlock = getSingleListBlockContent(source.content);
+    if (listBlock) {
+      return createTextDocumentContent([createTableBlockFromList(listBlock)]);
+    }
+  }
+
+  if (source.subtype === 'rich') {
+    const richContent = normalizeRichContent(getTextDocumentBlocks(source.content));
+    if (richContent.length === 1 && richContent[0]?.type === 'table') {
+      return createTextDocumentContent([structuredClone(richContent[0])]);
+    }
+    return createTextDocumentContent([createTableBlockFromText(getTextContent(richContent, { blockSeparator: '\n' }))]);
+  }
+
+  return createTextDocumentContent([createTableBlockFromText(flattenTextContent(source.content))]);
+}
+
+function createTableBlockFromList(block: RichListBlock): RichTableBlock {
+  const rows = block.children.map((item, index) => createRichTableRow([
+    createRichTableCell(cloneInlineNodes(item.children)),
+  ], { header: index === 0 && block.children.length > 1 }));
+  return createRichTableBlock(rows);
+}
+
+function createTableBlockFromText(text: string): RichTableBlock {
+  const lines = text.split(/\r?\n/);
+  const sourceLines = lines.length > 0 ? lines : [''];
+  const rows: RichTableRow[] = sourceLines.map((line, index) => createRichTableRow(
+    splitTableLine(line).map((cellText) => createRichTableCell([createRichTextLeaf(cellText)])),
+    { header: index === 0 && sourceLines.length > 1 },
+  ));
+  return createRichTableBlock(rows);
+}
+
+function splitTableLine(line: string): string[] {
+  if (line.includes('\t')) {
+    return line.split('\t');
+  }
+
+  if (!line.includes('|')) {
+    return [line];
+  }
+
+  const trimmed = line.trim();
+  const withoutOuterPipes = trimmed.startsWith('|') && trimmed.endsWith('|')
+    ? trimmed.slice(1, -1)
+    : line;
+  const cells: string[] = [];
+  let current = '';
+  let escaped = false;
+
+  for (const char of withoutOuterPipes) {
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+    if (char === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (char === '|') {
+      cells.push(current.trim());
+      current = '';
+      continue;
+    }
+    current += char;
+  }
+
+  if (escaped) {
+    current += '\\';
+  }
+  cells.push(current.trim());
+  return cells.length > 0 ? cells : [''];
 }
 
 function flattenRichBlocksInlineChildren(blocks: RichBlock[]): RichInlineNode[] {

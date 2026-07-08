@@ -40,6 +40,37 @@ function withDocumentFontLibrary(document: Omit<DocumentModel, 'fontLibrary'>): 
 }
 
 describe('stage/Stage', () => {
+  it('uses the site background on the stage canvas', () => {
+    const document = createInitialDocument();
+    document.siteSettings = { ...document.siteSettings!, background: '#fef3c7' };
+
+    const markup = renderToStaticMarkup(
+      <StageScene
+        document={document}
+        selectedId={null}
+        selectedIds={[]}
+        singleSelectionOverlay={null}
+        multiSelectionBounds={null}
+        previewSticky={true}
+        spacerVisibility="selected"
+        showGridLanes={false}
+        onResizeStart={() => {}}
+        dragSourceIds={[]}
+        highlightedDropId={null}
+        registerDraggableNode={() => {}}
+        registerDropTarget={() => {}}
+        resizeState={null}
+        setResizeState={() => {}}
+        onSelectionOverlayHandleMouseDown={() => {}}
+        measuredNodeSizes={{}}
+        viewport={DEFAULT_STAGE_VIEWPORT}
+      />,
+    );
+
+    expect(markup).toContain('class="stage-canvas"');
+    expect(markup).toContain('background:#fef3c7');
+  });
+
   it('applies the shared editor scrollbar class to the stage shell', () => {
     const markup = renderToStaticMarkup(
       <Stage

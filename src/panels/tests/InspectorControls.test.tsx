@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { LockKeyhole } from 'lucide-react';
 import { forceOpaqueColorValue } from '../../model/colors';
 import type { DocumentFontFamily } from '../../model/types';
 import { resolveFontSizeMeasurementInput, resolveSpacingMeasurementInput } from '../controls/FontControls';
@@ -37,6 +38,23 @@ describe('panels/InspectorControls', () => {
     expect(markup).toContain('aria-label="Text color"');
     expect(markup).toContain('value="oklch(62% 0.18 252 / 0.8)"');
     expect(markup).toContain('editor-color-picker');
+  });
+
+  it('renders a centered indicator icon over color swatches', () => {
+    const markup = renderToStaticMarkup(
+      <HoverColorField
+        value="#1668ff"
+        onChange={() => {}}
+        ariaLabel="Text color"
+        indicatorIcon={<LockKeyhole className="h-4 w-4" aria-hidden="true" />}
+        disabled
+      />,
+    );
+
+    expect(markup).toContain('absolute inset-0 flex items-center justify-center');
+    expect(markup).toContain('lucide-lock-keyhole');
+    expect(markup).toContain('data-disabled="true"');
+    expect(markup).toContain('aria-disabled="true"');
   });
 
   it('renders shadow numeric controls with compact fixed unit suffixes', () => {

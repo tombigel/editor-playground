@@ -1,5 +1,5 @@
 import type { CSSProperties, ComponentType, ReactNode, Ref } from 'react';
-import { AlignLeft, Clapperboard, Code2, FileText, Heading2, ImageIcon, ListOrdered, Navigation, Newspaper, PanelRight, Rows3, Shapes, SquareStack, TvMinimalPlay, Type } from 'lucide-react';
+import { AlignLeft, Clapperboard, Code2, FileText, Heading2, ImageIcon, ListOrdered, Navigation, Newspaper, PanelRight, Rows3, Shapes, SquareStack, Table2, TvMinimalPlay, Type } from 'lucide-react';
 import { SECTION_TEMPLATES, type SectionTemplateId } from '../api/editorApi';
 import type { ContainerSubtype } from '../api/documentApi';
 import { Button } from '@/components/ui/button';
@@ -162,7 +162,7 @@ export function SectionTemplatePopover({
   );
 }
 
-export type TextTypeRole = 'heading' | 'text' | 'list' | 'code' | 'richtext';
+export type TextTypeRole = 'heading' | 'text' | 'list' | 'table' | 'code' | 'richtext';
 export type MediaTypeRole = 'image' | 'video' | 'svg';
 export type ContainerTypeRole = Extract<ContainerSubtype, 'container' | 'nav' | 'aside' | 'article'>;
 
@@ -252,6 +252,7 @@ const TEXT_TYPE_OPTIONS: {
   { role: 'heading', label: 'Heading', description: 'Section title (h2)', icon: Heading2 },
   { role: 'text', label: 'Paragraph', description: 'Plain text block', icon: AlignLeft },
   { role: 'list', label: 'List', description: 'Standalone list block', icon: ListOrdered },
+  { role: 'table', label: 'Table', description: 'Simple text table', icon: Table2 },
   { role: 'code', label: 'Code', description: 'Monospace code snippet', icon: Code2 },
   { role: 'richtext', label: 'Rich text', description: 'Formatted inline content', icon: FileText },
 ];

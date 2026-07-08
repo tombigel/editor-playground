@@ -787,7 +787,7 @@ export function switchSubtypeDoc(
 
   // Determine the target family from the targetSubtype value.
   const mediaSubtypes: MediaSubtype[] = ['image', 'video', 'svg', 'embed'];
-  const textSubtypes: TextSubtype[] = ['block', 'rich', 'code', 'list'];
+  const textSubtypes: TextSubtype[] = ['block', 'rich', 'code', 'list', 'table'];
   const targetIsMedia = (mediaSubtypes as string[]).includes(targetSubtype);
   const targetIsText = (textSubtypes as string[]).includes(targetSubtype);
 

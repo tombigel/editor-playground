@@ -14,8 +14,12 @@ import type {
 } from '../types';
 import {
   createRichCodeBlock,
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
   createRichListBlock,
   createRichListItem,
+  getSingleTableBlockContent,
   getTextDocumentBlocks,
   isCodeBlockContent,
   isEmpty,
@@ -460,6 +464,41 @@ describe('model/richContent', () => {
         blockGap: 16,
       });
     });
+
+    it('normalizes ragged table rows and column alignments', () => {
+      const table = normalizeTextDocumentContent({
+        blocks: [
+          {
+            type: 'table',
+            columnAlignments: ['left', 'bad', 'right', 'center'],
+            children: [
+              {
+                type: 'table-row',
+                children: [
+                  { type: 'table-cell', children: [makeLeaf('A')] },
+                  { type: 'table-cell', children: [makeLeaf('B')] },
+                ],
+              },
+              {
+                type: 'table-row',
+                header: false,
+                children: [
+                  { type: 'table-cell', children: [makeLeaf('C')] },
+                ],
+              },
+            ],
+          },
+        ],
+      });
+
+      const tableBlock = getSingleTableBlockContent(table);
+      expect(tableBlock?.children).toHaveLength(2);
+      expect(tableBlock?.children[0]?.header).toBe(true);
+      expect(tableBlock?.children[1]?.header).toBe(false);
+      expect(tableBlock?.children[1]?.children).toHaveLength(2);
+      expect(tableBlock?.children[1]?.children[1]?.children).toEqual([{ text: '' }]);
+      expect(tableBlock?.columnAlignments).toEqual(['left', null]);
+    });
   });
 
   describe('validateRichContentStructure', () => {
@@ -471,10 +510,27 @@ describe('model/richContent', () => {
 
     it('reports unsupported root block types', () => {
       expect(validateRichContentStructure([
-        { type: 'table', children: [] },
+        { type: 'unsupported', children: [] },
       ])).toEqual([
         'Rich content root item 0 must be a supported block.',
       ]);
+    });
+
+    it('validates table block structure', () => {
+      expect(validateRichContentStructure([
+        { type: 'table', children: [] },
+      ])).toEqual([
+        'Rich table block 0 must contain at least one row.',
+      ]);
+      expect(validateRichContentStructure([
+        createRichTableBlock([
+          createRichTableRow([createRichTableCell([makeLeaf('A')])], { header: true }),
+          createRichTableRow([
+            createRichTableCell([makeLeaf('B')]),
+            createRichTableCell([makeLeaf('C')]),
+          ]),
+        ]),
+      ])).toEqual([]);
     });
 
     it('reports invalid code block children', () => {
@@ -567,6 +623,21 @@ describe('model/richContent', () => {
         blockGap: 12,
       })).toEqual([
         'Text subtype "code" cannot define blockGap.',
+      ]);
+    });
+
+    it('requires table subtype content to contain one table block and no blockGap', () => {
+      expect(validateTextSubtypeContentStructure('table', {
+        blocks: [createRichTableBlock()],
+      })).toEqual([]);
+      expect(validateTextSubtypeContentStructure('table', {
+        blocks: [createRichTableBlock()],
+        blockGap: 12,
+      })).toContain('Text subtype "table" cannot define blockGap.');
+      expect(validateTextSubtypeContentStructure('table', {
+        blocks: [makeParagraph([makeLeaf('Paragraph')])],
+      })).toEqual([
+        'Table subtype content must contain exactly one table block.',
       ]);
     });
 

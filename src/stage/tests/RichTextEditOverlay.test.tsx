@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { RichTextEditOverlay } from "../stageRenderers/RichTextEditOverlay";
 import { CompactFontSizeField } from "../stageRenderers/richTextEditOverlay/controls";
+import { renderEditElement } from "../stageRenderers/richTextEditOverlay/renderers";
 import { FONT_SIZE_SUGGESTIONS_BY_UNIT } from "../stageRenderers/richTextEditOverlay/types";
 import {
+	createRichTableBlock,
+	createRichTableCell,
+	createRichTableRow,
 	createTextDocumentContent,
 	listContentToRichListBlock,
 } from "../../model/richContent";
@@ -252,4 +256,50 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).not.toContain('aria-label="Line height"');
 		expect(markup).not.toContain('aria-label="Block spacing"');
 	});
-});
+
+	it("restricts table mode to inline controls", () => {
+		const markup = renderToStaticMarkup(
+			<RichTextEditOverlay
+				nodeId="table-node"
+				mode="table"
+				content={createTextDocumentContent([
+						createRichTableBlock([
+							createRichTableRow([
+								createRichTableCell([{ text: "Header" }]),
+							], { header: true }),
+							createRichTableRow([
+								createRichTableCell([{ text: "Body" }]),
+							]),
+						], { columnAlignments: ["right"] }),
+				])}
+				minHeight="96px"
+				onCommit={() => {}}
+				onUpdateBlockGap={() => {}}
+				onDiscard={() => {}}
+			/>,
+		);
+
+		expect(markup).toContain("<table");
+		expect(markup).not.toContain('aria-label="Use ordered list"');
+		expect(markup).not.toContain('aria-label="Line height"');
+	});
+
+	it("renders editable table cell metadata as header cells and alignment", () => {
+		const markup = renderToStaticMarkup(
+			renderEditElement({
+				attributes: { "data-slate-node": "element", ref: () => {} },
+				children: "Header",
+				element: {
+					type: "table-cell",
+					header: true,
+					alignment: "right",
+					children: [{ text: "Header" }],
+				},
+			} as never, undefined),
+		);
+
+		expect(markup).toContain('<th data-slate-node="element" scope="col" style="');
+		expect(markup).toContain("text-align:right");
+		expect(markup).toContain(">Header</th>");
+	});
+	});

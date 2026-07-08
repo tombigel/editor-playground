@@ -88,7 +88,7 @@ export function RichTextToolbar({
 	onBlockSpacingCommit,
 	resolveSpacingUnitValue,
 }: {
-	mode?: "rich" | "block" | "list";
+		mode?: "rich" | "block" | "list" | "table";
 	toolbarRef: Ref<HTMLDivElement>;
 	toolbarPosition: { top: number; left: number };
 	toolbarDragging: boolean;

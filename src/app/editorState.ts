@@ -58,6 +58,12 @@ import {
   setContainerSemanticTypeDoc,
   setContainerAriaLabelDoc,
   convertGroupToContainerDoc,
+  insertTableColumnDoc,
+  insertTableRowDoc,
+  removeTableColumnDoc,
+  removeTableRowDoc,
+  setTableColumnAlignmentDoc,
+  setTableHeaderRowDoc,
 } from '../api/documentApi';
 import {
   setPresetAnimation,
@@ -203,6 +209,18 @@ export function editorReducer(state: EditorState, action: EditorAction) {
           mode: action.conversionMode,
         }),
       };
+    case 'insertTableRow':
+      return { ...state, document: insertTableRowDoc(state.document, action.nodeId, action.rowIndex) };
+    case 'insertTableColumn':
+      return { ...state, document: insertTableColumnDoc(state.document, action.nodeId, action.columnIndex) };
+    case 'removeTableRow':
+      return { ...state, document: removeTableRowDoc(state.document, action.nodeId, action.rowIndex) };
+    case 'removeTableColumn':
+      return { ...state, document: removeTableColumnDoc(state.document, action.nodeId, action.columnIndex) };
+    case 'setTableHeaderRow':
+      return { ...state, document: setTableHeaderRowDoc(state.document, action.nodeId, action.enabled) };
+    case 'setTableColumnAlignment':
+      return { ...state, document: setTableColumnAlignmentDoc(state.document, action.nodeId, action.columnIndex, action.alignment) };
     case 'mergeTextSelectionToRich': {
       const nodeIds = action.nodeIds ?? selectedIds;
       if (nodeIds.length < 2) {

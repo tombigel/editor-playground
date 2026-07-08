@@ -44,10 +44,11 @@ export const StageScene = memo(function StageScene({
     () => (animationPreview?.enabled ? collectInteractKeys(document) : new Set<string>()),
     [document, animationPreview?.enabled],
   );
+  const siteBackground = document.siteSettings?.background ?? '#ffffff';
 
   return (
       <div className="stage-frame">
-        <div className="stage-canvas" style={{ fontFamily: buildDocumentDefaultFontStack(document) }}>
+        <div className="stage-canvas" style={{ fontFamily: buildDocumentDefaultFontStack(document), background: siteBackground }}>
           {plan.header
             ? renderWrapper({
                 document,

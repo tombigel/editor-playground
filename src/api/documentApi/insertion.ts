@@ -153,6 +153,10 @@ function createLeafNode(role: LeafInsertionRole, parentId: NodeId): TextNode | R
     return createTextNode('list', parentId);
   }
 
+  if (role === 'table') {
+    return createTextNode('table', parentId);
+  }
+
   if (role === 'code') {
     const node = createTextNode('code', parentId);
     const codeText = getTextContent(node.content.blocks, { blockSeparator: '\n' });
