@@ -46,6 +46,7 @@ type Props = Pick<
   | 'onContainerChildBoundaryChange'
   | 'onRectChange'
   | 'onSetNodeVisibility'
+  | 'onSelectNode'
   | 'onSetTopLevelWrapperVisibility'
   | 'onPromote'
   | 'onDemote'
@@ -71,9 +72,19 @@ type Props = Pick<
   | 'onSetSvgMarkup'
   | 'onConvertImageToSvg'
   | 'onApplyTextNodeMarkdown'
-  | 'onSetTextDocumentContent'
-  | 'onSetTextDocumentBlockGap'
-  | 'onEnterFocusedMode'
+	  | 'onSetTextDocumentContent'
+	  | 'onSetTextDocumentBlockGap'
+	  | 'onInsertTableRow'
+	  | 'onInsertTableColumn'
+	  | 'onRemoveTableRow'
+	  | 'onRemoveTableColumn'
+	  | 'onSetTableHeaderRow'
+	  | 'onSetTableColumnAlignment'
+	  | 'onSetTableDirection'
+	  | 'onSetTableColumnWidth'
+	  | 'onSetTableRowHeight'
+	  | 'onSetTableStyle'
+	  | 'onEnterFocusedMode'
   | 'onActivateRichEdit'
   | 'onOpenManageFonts'
 > & {
@@ -115,6 +126,7 @@ export function FocusedModePanel({
   onContainerChildBoundaryChange,
   onRectChange,
   onSetNodeVisibility,
+  onSelectNode,
   onSetTopLevelWrapperVisibility,
   onPromote,
   onDemote,
@@ -140,9 +152,19 @@ export function FocusedModePanel({
   onSetSvgMarkup,
   onConvertImageToSvg,
   onApplyTextNodeMarkdown,
-  onSetTextDocumentContent,
-  onSetTextDocumentBlockGap,
-  onEnterFocusedMode,
+	  onSetTextDocumentContent,
+	  onSetTextDocumentBlockGap,
+	  onInsertTableRow,
+	  onInsertTableColumn,
+	  onRemoveTableRow,
+	  onRemoveTableColumn,
+	  onSetTableHeaderRow,
+	  onSetTableColumnAlignment,
+	  onSetTableDirection,
+	  onSetTableColumnWidth,
+	  onSetTableRowHeight,
+	  onSetTableStyle,
+	  onEnterFocusedMode,
   onActivateRichEdit,
   onOpenManageFonts,
   mode,
@@ -162,6 +184,7 @@ export function FocusedModePanel({
     onContainerChildBoundaryChange,
     onRectChange,
     onSetNodeVisibility,
+    onSelectNode,
     onSetTopLevelWrapperVisibility: (nodeId, visibility, pageIds) => {
       if (resolvedActivePageId) {
         onSetTopLevelWrapperVisibility(resolvedActivePageId, nodeId, visibility, pageIds);
@@ -190,9 +213,19 @@ export function FocusedModePanel({
     onSetSvgMarkup,
     onConvertImageToSvg,
     onApplyTextNodeMarkdown,
-    onSetTextDocumentContent,
-    onSetTextDocumentBlockGap,
-    onEnterFocusedMode,
+	    onSetTextDocumentContent,
+	    onSetTextDocumentBlockGap,
+	    onInsertTableRow,
+	    onInsertTableColumn,
+	    onRemoveTableRow,
+	    onRemoveTableColumn,
+	    onSetTableHeaderRow,
+	    onSetTableColumnAlignment,
+	    onSetTableDirection,
+	    onSetTableColumnWidth,
+	    onSetTableRowHeight,
+	    onSetTableStyle,
+	    onEnterFocusedMode,
     onActivateRichEdit,
     onOpenManageFonts,
   };

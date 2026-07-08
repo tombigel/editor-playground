@@ -12,6 +12,7 @@ import type {
   RichTableBlock,
   RichTableCell,
   RichTableRow,
+  RichTableStyle,
   RichTextBlock,
   RichTextBlockType,
   RichTextLeaf,
@@ -190,6 +191,32 @@ function normalizeTableCssLengthArray(
   return normalized.some((value) => value !== null) ? normalized : undefined;
 }
 
+const TABLE_STYLE_KEYS = [
+  'tableBackground',
+  'tableBorderColor',
+  'tableBorderWidth',
+  'cellBorderColor',
+  'cellBorderWidth',
+  'cellPadding',
+  'headerBackground',
+  'headerColor',
+] as const satisfies ReadonlyArray<keyof RichTableStyle>;
+
+function normalizeRichTableStyle(style: unknown): RichTableStyle | undefined {
+  if (!style || typeof style !== 'object') {
+    return undefined;
+  }
+  const source = style as Record<string, unknown>;
+  const normalized: RichTableStyle = {};
+  for (const key of TABLE_STYLE_KEYS) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) {
+      normalized[key] = value.trim();
+    }
+  }
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
 export function createRichTableCell(children: RichInlineNode[] = [createRichTextLeaf('')]): RichTableCell {
   return {
     type: 'table-cell',
@@ -215,6 +242,7 @@ export function createRichTableBlock(
     columnAlignments?: readonly unknown[];
     columnWidths?: readonly unknown[];
     rowHeights?: readonly unknown[];
+    style?: unknown;
   } = {},
 ): RichTableBlock {
   const sourceRows = rows.length > 0
@@ -231,12 +259,14 @@ export function createRichTableBlock(
   const columnAlignments = normalizeTableColumnAlignments(options.columnAlignments, columnCount);
   const columnWidths = normalizeTableCssLengthArray(options.columnWidths, columnCount);
   const rowHeights = normalizeTableCssLengthArray(options.rowHeights, normalizedRows.length);
+  const style = normalizeRichTableStyle(options.style);
   return {
     type: 'table',
     ...(options.direction === 'ltr' || options.direction === 'rtl' ? { direction: options.direction } : {}),
     ...(columnAlignments ? { columnAlignments } : {}),
     ...(columnWidths ? { columnWidths } : {}),
     ...(rowHeights ? { rowHeights } : {}),
+    ...(style ? { style } : {}),
     children: normalizedRows,
   };
 }

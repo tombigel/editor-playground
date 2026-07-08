@@ -9,6 +9,7 @@ import type {
   DocumentModel,
   NodeId,
   RichTableBlock,
+  RichTableStyle,
   TableColumnAlignment,
 } from '../../model/types';
 import { isTextNode } from '../../model/types';
@@ -40,6 +41,7 @@ function getTableBlockOptions(block: RichTableBlock) {
     columnAlignments: block.columnAlignments,
     columnWidths: block.columnWidths,
     rowHeights: block.rowHeights,
+    style: block.style,
   };
 }
 
@@ -53,6 +55,36 @@ function getTableRowHeights(block: RichTableBlock): Array<string | null> {
 
 function normalizeTableCssLength(value: string | null): string | null {
   return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+const TABLE_STYLE_KEYS = [
+  'tableBackground',
+  'tableBorderColor',
+  'tableBorderWidth',
+  'cellBorderColor',
+  'cellBorderWidth',
+  'cellPadding',
+  'headerBackground',
+  'headerColor',
+] as const satisfies ReadonlyArray<keyof RichTableStyle>;
+
+function mergeTableStyle(
+  style: RichTableStyle | undefined,
+  patch: Partial<Record<keyof RichTableStyle, string | null>>,
+): RichTableStyle | undefined {
+  const next: RichTableStyle = { ...(style ?? {}) };
+  for (const key of TABLE_STYLE_KEYS) {
+    if (!(key in patch)) {
+      continue;
+    }
+    const value = patch[key];
+    if (typeof value === 'string' && value.trim()) {
+      next[key] = value.trim();
+    } else {
+      delete next[key];
+    }
+  }
+  return Object.keys(next).length > 0 ? next : undefined;
 }
 
 function normalizeInsertIndex(index: number, length: number): number {
@@ -295,5 +327,21 @@ export function setTableRowHeightDoc(
   return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
     ...getTableBlockOptions(block),
     rowHeights: nextRowHeights,
+  }));
+}
+
+export function setTableStyleDoc(
+  document: DocumentModel,
+  nodeId: NodeId,
+  patch: Partial<Record<keyof RichTableStyle, string | null>>,
+): DocumentModel {
+  const block = getTableBlock(document, nodeId);
+  if (!block) {
+    return document;
+  }
+
+  return commitTableBlock(document, nodeId, createRichTableBlock(structuredClone(block.children), {
+    ...getTableBlockOptions(block),
+    style: mergeTableStyle(block.style, patch),
   }));
 }

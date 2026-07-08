@@ -406,6 +406,7 @@ function addTableEditCellMetadata(block: RichTableBlock): RichTableBlock {
           header: row.header === true,
           alignment: block.columnAlignments?.[columnIndex] ?? null,
           width: block.columnWidths?.[columnIndex] ?? null,
+          tableStyle: block.style,
         })),
       })),
     };

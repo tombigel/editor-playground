@@ -178,13 +178,24 @@ function getTableCellAlignment(block: RichTableBlock, cellIndex: number): CSSPro
   return alignment ? { textAlign: alignment } : undefined;
 }
 
-function getTableCellStyle(block: RichTableBlock, cellIndex: number): CSSProperties | undefined {
+function getTableCellStyle(block: RichTableBlock, cellIndex: number, header = false): CSSProperties | undefined {
   const alignmentStyle = getTableCellAlignment(block, cellIndex);
   const width = block.columnWidths?.[cellIndex];
-  return alignmentStyle || width
+  const style = block.style;
+  const cellBorderColor = style?.cellBorderColor;
+  const cellBorderWidth = style?.cellBorderWidth;
+  const cellPadding = style?.cellPadding;
+  const headerBackground = header ? style?.headerBackground : undefined;
+  const headerColor = header ? style?.headerColor : undefined;
+  return alignmentStyle || width || cellBorderColor || cellBorderWidth || cellPadding || headerBackground || headerColor
     ? {
         ...alignmentStyle,
         ...(width ? { width } : {}),
+        ...(cellBorderColor ? { borderColor: cellBorderColor } : {}),
+        ...(cellBorderWidth ? { borderStyle: 'solid', borderWidth: cellBorderWidth } : {}),
+        ...(cellPadding ? { padding: cellPadding } : {}),
+        ...(headerBackground ? { background: headerBackground } : {}),
+        ...(headerColor ? { color: headerColor } : {}),
       }
     : undefined;
 }
@@ -209,6 +220,15 @@ function renderRichTableBlock(
   const headerRow = block.children[0]?.header === true ? block.children[0] : undefined;
   const bodyRows = headerRow ? block.children.slice(1) : block.children;
   const hasColumnWidths = block.columnWidths?.some((width) => typeof width === 'string' && width.length > 0) === true;
+  const tableStyle = block.style;
+  const mergedTableStyle: CSSProperties | undefined = tableStyle
+    ? {
+        ...style,
+        ...(tableStyle.tableBackground ? { background: tableStyle.tableBackground } : {}),
+        ...(tableStyle.tableBorderColor ? { borderColor: tableStyle.tableBorderColor } : {}),
+        ...(tableStyle.tableBorderWidth ? { borderStyle: 'solid', borderWidth: tableStyle.tableBorderWidth } : {}),
+      }
+    : style;
 
   return (
     <table
@@ -216,7 +236,7 @@ function renderRichTableBlock(
       className={className}
       data-node-id={dataNodeId}
       dir={block.direction}
-      style={style}
+      style={mergedTableStyle}
     >
       {hasColumnWidths ? (
         <colgroup>
@@ -237,7 +257,7 @@ function renderRichTableBlock(
                 key={cellPath}
                 scope="col"
                 tabIndex={tabIndex}
-                style={getTableCellStyle(block, cellIndex)}
+                style={getTableCellStyle(block, cellIndex, true)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </th>

@@ -50,6 +50,7 @@ import {
   setTableDirectionDoc,
   setTableHeaderRowDoc,
   setTableRowHeightDoc,
+  setTableStyleDoc,
   setListContentDoc,
   setNodeVisibilityDoc,
   setNodeRect,
@@ -1322,7 +1323,24 @@ describe('api/documentApi', () => {
     expect(readTable(sizedRow).rowHeights).toEqual(['44px', null, null]);
     expect(setTableRowHeightDoc(sizedRow, tableNode.id, 99, '20px')).toBe(sizedRow);
 
-    const defaultDirection = setTableDirectionDoc(sizedRow, tableNode.id, null);
+    const styled = setTableStyleDoc(sizedRow, tableNode.id, {
+      tableBackground: ' #ffffff ',
+      cellPadding: '8px',
+      headerColor: '#111111',
+    });
+    expect(readTable(styled).style).toEqual({
+      tableBackground: '#ffffff',
+      cellPadding: '8px',
+      headerColor: '#111111',
+    });
+
+    const clearedStyle = setTableStyleDoc(styled, tableNode.id, { headerColor: null });
+    expect(readTable(clearedStyle).style).toEqual({
+      tableBackground: '#ffffff',
+      cellPadding: '8px',
+    });
+
+    const defaultDirection = setTableDirectionDoc(clearedStyle, tableNode.id, null);
     expect(readTable(defaultDirection).direction).toBeUndefined();
 
     const noHeader = setTableHeaderRowDoc(defaultDirection, tableNode.id, false);

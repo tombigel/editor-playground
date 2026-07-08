@@ -195,6 +195,17 @@ export type RichBlockStyle = {
   textWrap?: TextWrapMode;
 };
 
+export type RichTableStyle = {
+  tableBackground?: string;
+  tableBorderColor?: string;
+  tableBorderWidth?: string;
+  cellBorderColor?: string;
+  cellBorderWidth?: string;
+  cellPadding?: string;
+  headerBackground?: string;
+  headerColor?: string;
+};
+
 export type StandaloneTextNodeSnapshot = {
   subtype: 'block' | 'code' | 'list' | 'table';
   name: string;
@@ -281,6 +292,7 @@ export interface RichTableBlock extends SlateElement {
   columnAlignments?: TableColumnAlignment[];
   columnWidths?: Array<string | null>;
   rowHeights?: Array<string | null>;
+  style?: RichTableStyle;
   children: RichTableRow[];
 }
 

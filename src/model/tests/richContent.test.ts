@@ -474,6 +474,11 @@ describe('model/richContent', () => {
             columnAlignments: ['left', 'bad', 'right', 'center'],
             columnWidths: ['12rem', 0, '30px'],
             rowHeights: ['44px', '', '20px'],
+            style: {
+              tableBackground: ' #fff ',
+              cellPadding: '8px',
+              headerColor: '',
+            },
             children: [
               {
                 type: 'table-row',
@@ -504,6 +509,7 @@ describe('model/richContent', () => {
       expect(tableBlock?.columnAlignments).toEqual(['left', null]);
       expect(tableBlock?.columnWidths).toEqual(['12rem', null]);
       expect(tableBlock?.rowHeights).toEqual(['44px', null]);
+      expect(tableBlock?.style).toEqual({ tableBackground: '#fff', cellPadding: '8px' });
     });
   });
 
@@ -532,10 +538,12 @@ describe('model/richContent', () => {
           ...createRichTableBlock(),
           columnWidths: ['10px'],
           rowHeights: ['20px', 30],
+          style: { cellPadding: 4 },
         },
       ])).toEqual([
         'Rich table block 0 columnWidths length must match the column count.',
         'Rich table block 0 row height 1 must be a string or null.',
+        'Rich table block 0 style cellPadding must be a string.',
       ]);
     });
 

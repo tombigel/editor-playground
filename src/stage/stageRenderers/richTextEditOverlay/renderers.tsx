@@ -7,6 +7,7 @@ import type {
 	RichListItem,
 	RichTableCell,
 	TableColumnAlignment,
+	RichTableStyle,
 	RichTextLeaf,
 	RichTextLink,
 } from "../../../model/types";
@@ -22,6 +23,7 @@ type EditableTableCell = RichTableCell & {
 	header?: boolean;
 	alignment?: TableColumnAlignment;
 	width?: string | null;
+	tableStyle?: RichTableStyle;
 };
 type EditableTableRow = {
 	type?: string;
@@ -111,6 +113,11 @@ export function renderEditElement(
 					WebkitUserSelect: "text",
 					...(cell.alignment ? { textAlign: cell.alignment } : {}),
 					...(cell.width ? { width: cell.width } : {}),
+					...(cell.tableStyle?.cellBorderColor ? { borderColor: cell.tableStyle.cellBorderColor } : {}),
+					...(cell.tableStyle?.cellBorderWidth ? { borderStyle: "solid", borderWidth: cell.tableStyle.cellBorderWidth } : {}),
+					...(cell.tableStyle?.cellPadding ? { padding: cell.tableStyle.cellPadding } : {}),
+					...(cell.header && cell.tableStyle?.headerBackground ? { background: cell.tableStyle.headerBackground } : {}),
+					...(cell.header && cell.tableStyle?.headerColor ? { color: cell.tableStyle.headerColor } : {}),
 				}}
 			>
 				{children}
@@ -132,6 +139,7 @@ export function renderEditElement(
 
 	if ("type" in el && el.type === "table") {
 		const table = el as RichBlock & { type: "table" };
+		const tableStyle = table.style as RichTableStyle | undefined;
 		return (
 			<table
 				{...attributes}
@@ -141,6 +149,9 @@ export function renderEditElement(
 					borderCollapse: "collapse",
 					font: "inherit",
 					color: "inherit",
+					...(tableStyle?.tableBackground ? { background: tableStyle.tableBackground } : {}),
+					...(tableStyle?.tableBorderColor ? { borderColor: tableStyle.tableBorderColor } : {}),
+					...(tableStyle?.tableBorderWidth ? { borderStyle: "solid", borderWidth: tableStyle.tableBorderWidth } : {}),
 				}}
 			>
 				<tbody>{children}</tbody>

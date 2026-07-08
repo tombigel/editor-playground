@@ -4,7 +4,7 @@ import type { SemanticContainerSubtype } from '../../../api/documentApi';
 import type { TextConversionMode } from '../../../api/textConversion';
 import type { NodeDebugInfo } from '../../../editor/types';
 import type { ReactNode } from 'react';
-import type { PageId, ContainerNode, MediaNode, TextDocumentContent, TextNode, TextSubtype } from '../../../api/documentViewApi';
+import type { PageId, ContainerNode, MediaNode, RichTableStyle, TextDocumentContent, TextNode, TextSubtype } from '../../../api/documentViewApi';
 import type { ContainerChildBoundary } from '../../../api/documentViewApi';
 import type { AnimationTriggerType, AnimationTimingOptions, OngoingTimingOptions, HoverOutAction, KeyframeAnimationEffect, ReducedMotionResponse, DocumentAnimationSettings } from '../../../animations/types';
 
@@ -59,6 +59,7 @@ export type InspectorActionHandlers = {
   onSetTableDirection?: (nodeId: string, direction: 'ltr' | 'rtl' | null) => void;
   onSetTableColumnWidth?: (nodeId: string, columnIndex: number, width: string | null) => void;
   onSetTableRowHeight?: (nodeId: string, rowIndex: number, height: string | null) => void;
+  onSetTableStyle?: (nodeId: string, patch: Partial<Record<keyof RichTableStyle, string | null>>) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onSplitRichTextNode?: (nodeId: string) => void;
   onAnimationPresetChange: (trigger: AnimationTriggerType, preset: string, params?: Record<string, unknown>) => void;

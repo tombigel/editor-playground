@@ -712,18 +712,28 @@ describe('render/nodePresentation', () => {
         columnAlignments: ['left', 'right'],
         columnWidths: ['12rem', null],
         rowHeights: ['44px', null],
+        style: {
+          tableBackground: '#ffffff',
+          tableBorderColor: '#333333',
+          tableBorderWidth: '1px',
+          cellBorderColor: '#cccccc',
+          cellBorderWidth: '1px',
+          cellPadding: '8px',
+          headerBackground: '#eeeeee',
+          headerColor: '#111111',
+        },
       }),
     ]);
 
     const markup = renderToStaticMarkup(renderLeafContent(table));
 
-    expect(markup).toContain('<table dir="rtl"');
+    expect(markup).toContain('<table dir="rtl" style="background:#ffffff;border-color:#333333;border-style:solid;border-width:1px"');
     expect(markup).toContain('<colgroup><col style="width:12rem"/><col/></colgroup>');
     expect(markup).toContain('<thead>');
     expect(markup).toContain('<tr style="height:44px;min-height:44px">');
-    expect(markup).toContain('<th scope="col" style="text-align:left;width:12rem"><span style="font-weight:bold">Name</span></th>');
+    expect(markup).toContain('<th scope="col" style="text-align:left;width:12rem;border-color:#cccccc;border-style:solid;border-width:1px;padding:8px;background:#eeeeee;color:#111111"><span style="font-weight:bold">Name</span></th>');
     expect(markup).toContain('<tbody>');
-    expect(markup).toContain('<td style="text-align:right"><a href="https://example.com/ada"');
+    expect(markup).toContain('<td style="text-align:right;border-color:#cccccc;border-style:solid;border-width:1px;padding:8px"><a href="https://example.com/ada"');
     expect(markup).toContain('font-style:italic');
 
     const rich = createTextNode('rich', 'root');

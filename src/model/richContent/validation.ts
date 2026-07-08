@@ -209,6 +209,30 @@ export function validateRichContentStructure(content: unknown): string[] {
         }
       }
 
+      if (block.style !== undefined) {
+        if (!isObjectRecord(block.style)) {
+          errors.push(`Rich table block ${blockIndex} style must be an object.`);
+        } else {
+          const tableStyle = block.style as Record<string, unknown>;
+          const tableStyleKeys = [
+            'tableBackground',
+            'tableBorderColor',
+            'tableBorderWidth',
+            'cellBorderColor',
+            'cellBorderWidth',
+            'cellPadding',
+            'headerBackground',
+            'headerColor',
+          ] as const;
+          tableStyleKeys.forEach((styleKey) => {
+            const value = tableStyle[styleKey];
+            if (value !== undefined && typeof value !== 'string') {
+              errors.push(`Rich table block ${blockIndex} style ${styleKey} must be a string.`);
+            }
+          });
+        }
+      }
+
       block.children.forEach((row, rowIndex) => {
         if (!isObjectRecord(row) || row.type !== 'table-row' || !Array.isArray(row.children)) {
           errors.push(`Rich table block ${blockIndex} child ${rowIndex} must be a table-row element.`);

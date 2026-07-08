@@ -4,6 +4,7 @@ import type {
   EditorTextField,
   FontLibrary,
   NodeId,
+  RichTableStyle,
   SectionTemplateId,
   StickyDefinition,
   TextDocumentContent,
@@ -112,6 +113,7 @@ export type EditorAction =
   | { type: 'setTableDirection'; nodeId: NodeId; direction: 'ltr' | 'rtl' | null }
   | { type: 'setTableColumnWidth'; nodeId: NodeId; columnIndex: number; width: string | null }
   | { type: 'setTableRowHeight'; nodeId: NodeId; rowIndex: number; height: string | null }
+  | { type: 'setTableStyle'; nodeId: NodeId; patch: Partial<Record<keyof RichTableStyle, string | null>> }
   | { type: 'mergeTextSelectionToRich'; nodeIds?: NodeId[] }
   | { type: 'splitRichTextNode'; nodeId?: NodeId }
   | { type: 'move'; id: string; x: string; y: string; options?: DragCommitOptions }

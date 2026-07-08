@@ -100,6 +100,7 @@ Ordered marker styles: `'decimal'` | `'lower-alpha'` | `'upper-alpha'` | `'lower
 | `setTableDirectionDoc` | `(document, nodeId, direction: 'ltr' \| 'rtl' \| null)` | Set or clear table structure direction |
 | `setTableColumnWidthDoc` | `(document, nodeId, columnIndex: number, width: string \| null)` | Set or clear a column width |
 | `setTableRowHeightDoc` | `(document, nodeId, rowIndex: number, height: string \| null)` | Set or clear a row height |
+| `setTableStyleDoc` | `(document, nodeId, patch: Partial<Record<keyof RichTableStyle, string \| null>>)` | Patch table-wide style fields |
 
 `TableColumnAlignment`: `'left'` | `'center'` | `'right'` | `null`
 
@@ -1225,7 +1226,7 @@ This index keeps the split API reference synchronized with the public export sur
 ### Document and Editor API
 
 - `SECTION_TEMPLATES`, `SectionTemplateId`, `SectionTemplateSummary`, `SectionTemplateInsertionOptions`, `createBlankInitialDocument`, `createSectionFromTemplate`
-- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `insertTableRowDoc`, `insertTableColumnDoc`, `removeTableRowDoc`, `removeTableColumnDoc`, `setTableHeaderRowDoc`, `setTableColumnAlignmentDoc`, `setTableDirectionDoc`, `setTableColumnWidthDoc`, `setTableRowHeightDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
+- `LeafInsertionRole`, `InsertContainerOptions`, `insertLeafDoc`, `setListContentDoc`, `insertTableRowDoc`, `insertTableColumnDoc`, `removeTableRowDoc`, `removeTableColumnDoc`, `setTableHeaderRowDoc`, `setTableColumnAlignmentDoc`, `setTableDirectionDoc`, `setTableColumnWidthDoc`, `setTableRowHeightDoc`, `setTableStyleDoc`, `NodeOrderAction`, `NodeAlignmentMode`, `NodeDistributionMode`, `NodeTextField`, `SelectionRect`, `alignNodesDoc`, `distributeNodesDoc`, `reorderNodesDoc`, `promoteWrapperRoleDoc`, `demoteWrapperRoleDoc`, `PromoteWrapperRoleOptions`, `SemanticContainerSubtype`, `setContainerSemanticTypeDoc`, `setContainerAriaLabelDoc`, `groupNodesDoc`, `ungroupNodeDoc`, `convertGroupToContainerDoc`, `expandParentHeightDoc`, `ParentExpansionRequest`, `ParentExpansionOptions`
 - `adoptVideoIntrinsicRatioDoc`, `MediaFitField`, `MediaObjectFit`, `VideoPreload`, `VideoSettingField`
 - `setSvgMarkupDoc`, `convertImageToInlineSvgDoc`, `setSvgViewBoxDoc`, `SvgMarkupPayload`, `SvgExtension`, `SvgA11y`, `SvgStrokeCap`, `SvgStrokeJoin`, `SvgStrokePaintOrder`, `SvgStrokeStyle`, `SvgSettingField`
 - `StickyGeometrySnapshot`, `StickyLayoutState`, `ComputedStickyRegistration`, `ComputedWrapperStickyState`

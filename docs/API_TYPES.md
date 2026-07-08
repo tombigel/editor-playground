@@ -13,7 +13,7 @@ The canonical exported type surfaces live in:
 - `DocumentModel`, `DocumentNode`, and node subtype families
 - `DocumentCommand`
 - `TextDocumentContent` and text block variants, including standalone `table` blocks
-- `TableColumnAlignment`, `RichTableCell`, `RichTableRow`, `RichTableBlock` with optional `direction`, `columnWidths`, and `rowHeights`, and `TableBlockContent`
+- `TableColumnAlignment`, `RichTableStyle`, `RichTableCell`, `RichTableRow`, `RichTableBlock` with optional `direction`, `columnWidths`, `rowHeights`, and `style`, and `TableBlockContent`
 - page/site route types
 - sticky geometry and layout result types
 - editor-state wrappers exposed through `editorApi`

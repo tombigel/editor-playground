@@ -94,6 +94,7 @@ export {
   setTableDirectionDoc,
   setTableHeaderRowDoc,
   setTableRowHeightDoc,
+  setTableStyleDoc,
 } from './documentApi/table';
 export {
   applyMarkdownToTextNodeDoc,

@@ -67,6 +67,7 @@ import {
   setTableDirectionDoc,
   setTableHeaderRowDoc,
   setTableRowHeightDoc,
+  setTableStyleDoc,
 } from '../api/documentApi';
 import {
   setPresetAnimation,
@@ -230,6 +231,8 @@ export function editorReducer(state: EditorState, action: EditorAction) {
       return { ...state, document: setTableColumnWidthDoc(state.document, action.nodeId, action.columnIndex, action.width) };
     case 'setTableRowHeight':
       return { ...state, document: setTableRowHeightDoc(state.document, action.nodeId, action.rowIndex, action.height) };
+    case 'setTableStyle':
+      return { ...state, document: setTableStyleDoc(state.document, action.nodeId, action.patch) };
     case 'mergeTextSelectionToRich': {
       const nodeIds = action.nodeIds ?? selectedIds;
       if (nodeIds.length < 2) {

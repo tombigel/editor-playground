@@ -313,6 +313,18 @@ export function AppShellOverlays({ ctx }: AppShellOverlaysProps) {
 						onSetTableColumnAlignment={(nodeId, columnIndex, alignment) =>
 							dispatch({ type: "setTableColumnAlignment", nodeId, columnIndex, alignment })
 						}
+						onSetTableDirection={(nodeId, direction) =>
+							dispatch({ type: "setTableDirection", nodeId, direction })
+						}
+						onSetTableColumnWidth={(nodeId, columnIndex, width) =>
+							dispatch({ type: "setTableColumnWidth", nodeId, columnIndex, width })
+						}
+						onSetTableRowHeight={(nodeId, rowIndex, height) =>
+							dispatch({ type: "setTableRowHeight", nodeId, rowIndex, height })
+						}
+						onSetTableStyle={(nodeId, patch) =>
+							dispatch({ type: "setTableStyle", nodeId, patch })
+						}
 						onEnterFocusedMode={(value) =>
 							dispatch({ type: "setFocusedMode", value })
 						}

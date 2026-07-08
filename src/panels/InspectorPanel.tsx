@@ -12,7 +12,7 @@ import type { InspectorActionHandlers, InspectorOrderState } from './inspector/t
 import { resolveInspectorBlocks } from './inspector/schema';
 import type { BulkEditOperation, AlignmentAction, DistributionMode } from '../app/types';
 import type { TextConversionMode } from '../api/textConversion';
-import type { TextDocumentContent, TextSubtype } from '../api/documentViewApi';
+import type { RichTableStyle, TextDocumentContent, TextSubtype } from '../api/documentViewApi';
 
 export {
   buildSizeFieldValue,
@@ -101,6 +101,10 @@ export type InspectorPanelProps = {
   onRemoveTableColumn?: (nodeId: string, columnIndex: number) => void;
   onSetTableHeaderRow?: (nodeId: string, enabled: boolean) => void;
   onSetTableColumnAlignment?: (nodeId: string, columnIndex: number, alignment: 'left' | 'center' | 'right' | null) => void;
+  onSetTableDirection?: (nodeId: string, direction: 'ltr' | 'rtl' | null) => void;
+  onSetTableColumnWidth?: (nodeId: string, columnIndex: number, width: string | null) => void;
+  onSetTableRowHeight?: (nodeId: string, rowIndex: number, height: string | null) => void;
+  onSetTableStyle?: (nodeId: string, patch: Partial<Record<keyof RichTableStyle, string | null>>) => void;
   onMergeTextSelectionToRich?: (nodeIds: string[]) => void;
   onSplitRichTextNode?: (nodeId: string) => void;
   onEnterFocusedMode: (mode: FocusedMode) => void;
@@ -178,6 +182,10 @@ export function InspectorPanel({
   onRemoveTableColumn,
   onSetTableHeaderRow,
   onSetTableColumnAlignment,
+  onSetTableDirection,
+  onSetTableColumnWidth,
+  onSetTableRowHeight,
+  onSetTableStyle,
   onMergeTextSelectionToRich,
   onSplitRichTextNode,
   onEnterFocusedMode,
@@ -238,6 +246,10 @@ export function InspectorPanel({
       onRemoveTableColumn,
       onSetTableHeaderRow,
       onSetTableColumnAlignment,
+      onSetTableDirection,
+      onSetTableColumnWidth,
+      onSetTableRowHeight,
+      onSetTableStyle,
       onMergeTextSelectionToRich,
       onSplitRichTextNode,
       onEnterFocusedMode,
@@ -259,6 +271,7 @@ export function InspectorPanel({
       onSetTextDocumentBlockGap,
       onInsertTableRow, onInsertTableColumn, onRemoveTableRow, onRemoveTableColumn,
       onSetTableHeaderRow, onSetTableColumnAlignment,
+      onSetTableDirection, onSetTableColumnWidth, onSetTableRowHeight, onSetTableStyle,
       onMergeTextSelectionToRich, onSplitRichTextNode, onEnterFocusedMode, onActivateRichEdit, onOpenManageFonts,
     ],
   );

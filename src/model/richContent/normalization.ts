@@ -298,6 +298,7 @@ function normalizeRichBlock(node: unknown): RichBlock | null {
       columnAlignments,
       columnWidths,
       rowHeights,
+      style: node.style,
     });
   }
 
