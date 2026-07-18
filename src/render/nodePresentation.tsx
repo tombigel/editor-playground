@@ -44,6 +44,7 @@ import {
   styleRecordToReactStyle,
 } from './leafPresentation';
 import { renderVideoElement } from './videoPresentation';
+import { getRichTableRenderLayout } from './tablePresentation';
 export type { PresentationLeafNode, RenderLeafContentOptions, StageOrSiteNode } from './types';
 
 export function formatNodeLabel(node: StageOrSiteNode) {
@@ -197,9 +198,16 @@ function getTableCellEdgeStyle(cell: RichTableCell): CSSProperties {
   };
 }
 
-function getTableCellStyle(block: RichTableBlock, cell: RichTableCell, cellIndex: number, header = false): CSSProperties | undefined {
+function getTableCellStyle(
+  block: RichTableBlock,
+  cell: RichTableCell,
+  cellIndex: number,
+  rowIndex: number,
+  header = false,
+): CSSProperties | undefined {
   const alignmentStyle = getTableCellAlignment(block, cellIndex);
   const width = block.columnWidths?.[cellIndex];
+  const height = block.rowHeights?.[rowIndex];
   const style = block.style;
   const cellBorderColor = style?.cellBorderColor;
   const cellBorderWidth = style?.cellBorderWidth;
@@ -207,10 +215,11 @@ function getTableCellStyle(block: RichTableBlock, cell: RichTableCell, cellIndex
   const headerBackground = header ? style?.headerBackground : undefined;
   const headerColor = header ? style?.headerColor : undefined;
   const cellStyle = getTableCellEdgeStyle(cell);
-  return alignmentStyle || width || cellBorderColor || cellBorderWidth || cellPadding || headerBackground || headerColor || Object.keys(cellStyle).length > 0
+  return alignmentStyle || width || height || cellBorderColor || cellBorderWidth || cellPadding || headerBackground || headerColor || Object.keys(cellStyle).length > 0
     ? {
         ...alignmentStyle,
         ...(width ? { width } : {}),
+        ...(height ? { height, minHeight: height } : {}),
         ...(cellBorderColor ? { borderColor: cellBorderColor } : {}),
         ...(cellBorderWidth ? { borderStyle: 'solid', borderWidth: cellBorderWidth } : {}),
         ...(cellPadding ? { padding: cellPadding } : {}),
@@ -241,15 +250,17 @@ function renderRichTableBlock(
   const headerRow = block.children[0]?.header === true ? block.children[0] : undefined;
   const bodyRows = headerRow ? block.children.slice(1) : block.children;
   const hasColumnWidths = block.columnWidths?.some((width) => typeof width === 'string' && width.length > 0) === true;
+  const layout = getRichTableRenderLayout(block);
   const tableStyle = block.style;
   const mergedTableStyle: CSSProperties | undefined = tableStyle
     ? {
         ...style,
+        ...layout.style,
         ...(tableStyle.tableBackground ? { background: tableStyle.tableBackground } : {}),
         ...(tableStyle.tableBorderColor ? { borderColor: tableStyle.tableBorderColor } : {}),
         ...(tableStyle.tableBorderWidth ? { borderStyle: 'solid', borderWidth: tableStyle.tableBorderWidth } : {}),
       }
-    : style;
+    : { ...style, ...layout.style };
 
   return (
     <table
@@ -265,7 +276,7 @@ function renderRichTableBlock(
             <col
               // biome-ignore lint/suspicious/noArrayIndexKey: table columns are positional render output.
               key={columnIndex}
-              style={block.columnWidths?.[columnIndex] ? { width: block.columnWidths[columnIndex] ?? undefined } : undefined}
+              style={layout.columnWidths[columnIndex] ? { width: layout.columnWidths[columnIndex] ?? undefined } : undefined}
             />
           ))}
         </colgroup>
@@ -278,7 +289,7 @@ function renderRichTableBlock(
                 key={cellPath}
                 scope="col"
                 tabIndex={tabIndex}
-                style={getTableCellStyle(block, cell, cellIndex, true)}
+                style={getTableCellStyle(block, cell, cellIndex, 0, true)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </th>
@@ -293,7 +304,7 @@ function renderRichTableBlock(
               <td
                 key={cellPath}
                 tabIndex={tabIndex}
-                style={getTableCellStyle(block, cell, cellIndex)}
+                style={getTableCellStyle(block, cell, cellIndex, headerRow ? bodyRowIndex + 1 : bodyRowIndex)}
               >
                 {renderRichInlineContent(cell.children, document, `${cellPath}.inline`)}
               </td>

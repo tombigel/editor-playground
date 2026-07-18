@@ -6,9 +6,8 @@ import type {
 	DocumentModel,
 	RichBlock,
 	RichListItem,
-	RichTableCell,
+	RichTableBlock,
 	RichTableCellStyle,
-	TableColumnAlignment,
 	RichTableStyle,
 	RichTextLeaf,
 	RichTextLink,
@@ -19,19 +18,13 @@ import {
 	getRichTextBlockTag,
 	richLeafStyle,
 } from "../../../render/nodePresentation";
+import { getRichTableRenderLayout } from "../../../render/tablePresentation";
+import type {
+	EditableTableCell,
+	EditableTableRow,
+} from "./tableEditMetadata";
 
 type RetainedSelectionLeaf = RichTextLeaf & { retainedSelection?: boolean };
-type EditableTableCell = RichTableCell & {
-	header?: boolean;
-	alignment?: TableColumnAlignment;
-	width?: string | null;
-	tableStyle?: RichTableStyle;
-};
-type EditableTableRow = {
-	type?: string;
-	height?: string | null;
-};
-
 function tableCellStyleToCss(style: RichTableCellStyle | undefined): CSSProperties {
 	if (!style) {
 		return {};
@@ -133,6 +126,7 @@ export function renderEditElement(
 					WebkitUserSelect: "text",
 					...(cell.alignment ? { textAlign: cell.alignment } : {}),
 					...(cell.width ? { width: cell.width } : {}),
+					...(cell.height ? { height: cell.height, minHeight: cell.height } : {}),
 					...(cell.tableStyle?.cellBorderColor ? { borderColor: cell.tableStyle.cellBorderColor } : {}),
 					...(cell.tableStyle?.cellBorderWidth ? { borderStyle: "solid", borderWidth: cell.tableStyle.cellBorderWidth } : {}),
 					...(cell.tableStyle?.cellPadding ? { padding: cell.tableStyle.cellPadding } : {}),
@@ -159,22 +153,36 @@ export function renderEditElement(
 	}
 
 	if ("type" in el && el.type === "table") {
-		const table = el as RichBlock & { type: "table" };
+		const table = el as RichTableBlock;
 		const tableStyle = table.style as RichTableStyle | undefined;
+		const layout = getRichTableRenderLayout(table);
 		return (
 			<table
 				{...attributes}
 				dir={table.direction}
 				style={{
 					width: "100%",
+					maxWidth: "100%",
 					borderCollapse: "collapse",
 					font: "inherit",
 					color: "inherit",
+					...layout.style,
 					...(tableStyle?.tableBackground ? { background: tableStyle.tableBackground } : {}),
 					...(tableStyle?.tableBorderColor ? { borderColor: tableStyle.tableBorderColor } : {}),
 					...(tableStyle?.tableBorderWidth ? { borderStyle: "solid", borderWidth: tableStyle.tableBorderWidth } : {}),
 				}}
 			>
+				{table.columnWidths?.some(Boolean) ? (
+					<colgroup contentEditable={false}>
+						{layout.columnWidths.map((width, columnIndex) => (
+							<col
+								// biome-ignore lint/suspicious/noArrayIndexKey: table columns are positional render output.
+								key={columnIndex}
+								style={width ? { width } : undefined}
+							/>
+						))}
+					</colgroup>
+				) : null}
 				<tbody>{children}</tbody>
 			</table>
 		);

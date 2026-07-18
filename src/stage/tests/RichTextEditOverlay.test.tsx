@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { RichTextEditOverlay } from "../stageRenderers/RichTextEditOverlay";
-import { CompactFontSizeField } from "../stageRenderers/richTextEditOverlay/controls";
-import { renderEditElement } from "../stageRenderers/richTextEditOverlay/renderers";
-import { FONT_SIZE_SUGGESTIONS_BY_UNIT } from "../stageRenderers/richTextEditOverlay/types";
+import { describe, expect, it } from "vitest";
+import {
+	setTableColumnWidthBlock,
+	setTableRowHeightBlock,
+} from "../../api/documentApi/table";
 import {
 	createRichTableBlock,
 	createRichTableCell,
@@ -11,6 +11,14 @@ import {
 	createTextDocumentContent,
 	listContentToRichListBlock,
 } from "../../model/richContent";
+import { RichTextEditOverlay } from "../stageRenderers/RichTextEditOverlay";
+import {
+	CompactFontSizeField,
+	resolveTableLengthOptionValue,
+} from "../stageRenderers/richTextEditOverlay/controls";
+import { renderEditElement } from "../stageRenderers/richTextEditOverlay/renderers";
+import { addTableEditMetadata } from "../stageRenderers/richTextEditOverlay/tableEditMetadata";
+import { FONT_SIZE_SUGGESTIONS_BY_UNIT } from "../stageRenderers/richTextEditOverlay/types";
 
 const CONTENT = createTextDocumentContent([
 	{ type: "paragraph", children: [{ text: "Edit me on stage" }] },
@@ -263,14 +271,15 @@ describe("stage/RichTextEditOverlay", () => {
 				nodeId="table-node"
 				mode="table"
 				content={createTextDocumentContent([
-						createRichTableBlock([
-							createRichTableRow([
-								createRichTableCell([{ text: "Header" }]),
-							], { header: true }),
-							createRichTableRow([
-								createRichTableCell([{ text: "Body" }]),
-							]),
-						], { columnAlignments: ["right"] }),
+					createRichTableBlock(
+						[
+							createRichTableRow([createRichTableCell([{ text: "Header" }])], {
+								header: true,
+							}),
+							createRichTableRow([createRichTableCell([{ text: "Body" }])]),
+						],
+						{ columnAlignments: ["right"] },
+					),
 				])}
 				minHeight="96px"
 				onCommit={() => {}}
@@ -283,48 +292,145 @@ describe("stage/RichTextEditOverlay", () => {
 		expect(markup).toContain(">Cell</span>");
 		expect(markup).toContain('aria-label="Active column width"');
 		expect(markup).toContain('aria-label="Active row height"');
-		expect(markup).toContain('aria-label="Insert row below"');
-		expect(markup).toContain('aria-label="Remove active row"');
-		expect(markup).toContain('aria-label="Insert column after"');
-		expect(markup).toContain('aria-label="Remove active column"');
+		expect(markup).toContain('aria-label="Rows actions"');
+		expect(markup).toContain('aria-label="Columns actions"');
+		expect(markup).not.toContain(">Rows</span>");
+		expect(markup).not.toContain(">Columns</span>");
+		expect(markup).toContain("Insert row above");
+		expect(markup).toContain("Insert row below");
+		expect(markup).toContain("Insert column left");
+		expect(markup).toContain("Insert column right");
+		expect(markup).toContain("Delete row");
+		expect(markup).toContain("Delete column");
 		expect(markup).toContain('aria-label="Toggle header row"');
 		expect(markup).toContain('aria-label="Use right-to-left table direction"');
 		expect(markup).toContain('aria-label="Align active column left"');
 		expect(markup).toContain('aria-label="Align active column center"');
 		expect(markup).toContain('aria-label="Align active column right"');
+		expect(
+			markup.indexOf('aria-label="Align active column left"'),
+		).toBeLessThan(markup.indexOf(">Cell</span>"));
 		expect(markup).toContain('aria-label="Selected cell background"');
 		expect(markup).toContain('aria-label="Selected cell padding"');
-		expect(markup).toContain('aria-label="Target all borders"');
-		expect(markup).toContain('aria-label="Target outer borders"');
-		expect(markup).toContain('aria-label="Target inner borders"');
-		expect(markup).toContain('aria-label="Target horizontal borders"');
-		expect(markup).toContain('aria-label="Target vertical borders"');
-		expect(markup).toContain('aria-label="Target top border"');
-		expect(markup).toContain('aria-label="Target right border"');
-		expect(markup).toContain('aria-label="Target bottom border"');
-		expect(markup).toContain('aria-label="Target left border"');
+		expect(markup).toContain('aria-label="Borders"');
+		expect(markup).toContain(">Table border target</legend>");
+		expect(markup).toContain('aria-label="All borders"');
+		expect(markup).toContain('aria-label="Outer borders"');
+		expect(markup).toContain('aria-label="Inner borders"');
+		expect(markup).toContain('aria-label="Horizontal borders"');
+		expect(markup).toContain('aria-label="Vertical borders"');
+		expect(markup).toContain('aria-label="Top border"');
+		expect(markup).toContain('aria-label="Right border"');
+		expect(markup).toContain('aria-label="Bottom border"');
+		expect(markup).toContain('aria-label="Left border"');
 		expect(markup).toContain('aria-label="Selected border width"');
 		expect(markup).toContain('aria-label="Selected border color"');
+		expect(
+			markup.match(/data-mode="number-or-keyword-select"/g)?.length,
+		).toBeGreaterThanOrEqual(2);
+		expect(markup).toContain('aria-label="Selected cell padding"');
+		expect(markup).toContain('value="0.5"');
 		expect(markup).not.toContain('aria-label="Use ordered list"');
 		expect(markup).not.toContain('aria-label="Line height"');
 	});
 
+	it("seeds a concrete table length when changing auto to a numeric unit", () => {
+		expect(
+			resolveTableLengthOptionValue({
+				nextOption: "px",
+				currentDraft: "",
+				currentMode: "auto",
+				keywordValue: "auto",
+				numericDefaults: { px: 120, em: 8, "%": 50 },
+			}),
+	).toEqual({ value: "120px", draft: "120", mode: "px" });
+		expect(
+			resolveTableLengthOptionValue({
+				nextOption: "%",
+				currentDraft: "",
+				currentMode: "auto",
+				keywordValue: "auto",
+				numericDefaults: { px: 120, em: 8, "%": 50 },
+			}),
+		).toEqual({ value: "50%", draft: "50", mode: "%" });
+	});
+
 	it("renders editable table cell metadata as header cells and alignment", () => {
 		const markup = renderToStaticMarkup(
-			renderEditElement({
-				attributes: { "data-slate-node": "element", ref: () => {} },
-				children: "Header",
-				element: {
-					type: "table-cell",
-					header: true,
-					alignment: "right",
-					children: [{ text: "Header" }],
-				},
-			} as never, undefined),
+			renderEditElement(
+				{
+					attributes: { "data-slate-node": "element", ref: () => {} },
+					children: "Header",
+						element: {
+							type: "table-cell",
+							header: true,
+							alignment: "right",
+							width: "100px",
+							height: "200px",
+							children: [{ text: "Header" }],
+					},
+				} as never,
+				undefined,
+			),
 		);
 
-		expect(markup).toContain('<th data-slate-node="element" scope="col" style="');
+		expect(markup).toContain(
+			'<th data-slate-node="element" scope="col" style="',
+		);
 		expect(markup).toContain("text-align:right");
+		expect(markup).toContain("width:100px");
+		expect(markup).toContain("height:200px;min-height:200px");
 		expect(markup).toContain(">Header</th>");
 	});
+
+	it("renders live table widths through an editable colgroup", () => {
+		const table = createRichTableBlock([
+			createRichTableRow([createRichTableCell([{ text: "Sized" }])]),
+		], {
+			columnWidths: ["100px"],
+			rowHeights: ["200px"],
+		});
+		const markup = renderToStaticMarkup(
+			renderEditElement(
+				{
+					attributes: { "data-slate-node": "element", ref: () => {} },
+					children: "Rows",
+					element: table,
+				} as never,
+				undefined,
+			),
+		);
+
+		expect(markup).toContain("width:100px");
+		expect(markup).toContain("table-layout:fixed");
+		expect(markup).toContain(
+			'<colgroup contentEditable="false"><col style="width:100px"/></colgroup>',
+		);
 	});
+
+	it("refreshes editable descendant sizing metadata after table mutations", () => {
+		const table = addTableEditMetadata(
+			createRichTableBlock([
+				createRichTableRow([createRichTableCell([{ text: "Sized" }])]),
+			]),
+		);
+		const resized = addTableEditMetadata(
+			setTableRowHeightBlock(
+				setTableColumnWidthBlock(table, 0, "100px"),
+				0,
+				"200px",
+			),
+		);
+		const row = resized.children[0] as typeof resized.children[0] & {
+			height?: string | null;
+		};
+		const cell = row.children[0] as typeof row.children[0] & {
+			width?: string | null;
+			height?: string | null;
+		};
+
+		expect(row.height).toBe("200px");
+		expect(cell.width).toBe("100px");
+		expect(cell.height).toBe("200px");
+	});
+});

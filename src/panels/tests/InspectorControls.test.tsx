@@ -106,6 +106,48 @@ describe('panels/InspectorControls', () => {
     expect(markup.match(/data-ui="select-trigger"/g)?.length).toBe(1);
   });
 
+  it('supports radius-free border controls with px and em width units', () => {
+    const markup = renderToStaticMarkup(
+      <BorderControlGroup
+        colorValue="rgb(216 224 234 / 1)"
+        widthValue="0.125em"
+        widthUnits={['px', 'em']}
+        showRadius={false}
+        colorAriaLabel="Cell border color"
+        widthAriaLabel="Cell border width"
+        onColorChange={() => {}}
+        onWidthChange={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('>Width<');
+    expect(markup).not.toContain('>Radius<');
+    expect(markup).toContain('aria-label="Cell border color"');
+    expect(markup).toContain('aria-label="Cell border width"');
+    expect(markup).toContain('aria-label="Cell border width unit"');
+    expect(markup).toContain('value="0.125"');
+  });
+
+  it('supports a compact inline width and color layout', () => {
+    const markup = renderToStaticMarkup(
+      <BorderControlGroup
+        layout="inline"
+        showRadius={false}
+        colorValue="rgb(216 224 234 / 1)"
+        widthValue="1px"
+        colorAriaLabel="Cell border color"
+        widthAriaLabel="Cell border width"
+        onColorChange={() => {}}
+        onWidthChange={() => {}}
+      />,
+    );
+
+    expect(markup).toContain('class="flex w-full min-w-0 items-center gap-1"');
+    expect(markup).toContain('aria-label="Cell border width"');
+    expect(markup).toContain('aria-label="Cell border color"');
+    expect(markup).not.toContain('>Width<');
+  });
+
   it('renders the combined font picker with nested family and weight lists', () => {
     const markup = renderToStaticMarkup(
       <FontPickerPopover

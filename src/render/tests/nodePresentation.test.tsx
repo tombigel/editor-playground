@@ -734,11 +734,11 @@ describe('render/nodePresentation', () => {
 
     const markup = renderToStaticMarkup(renderLeafContent(table));
 
-    expect(markup).toContain('<table dir="rtl" style="background:#ffffff;border-color:#333333;border-style:solid;border-width:1px"');
+    expect(markup).toContain('<table dir="rtl" style="table-layout:fixed;background:#ffffff;border-color:#333333;border-style:solid;border-width:1px"');
     expect(markup).toContain('<colgroup><col style="width:12rem"/><col/></colgroup>');
     expect(markup).toContain('<thead>');
     expect(markup).toContain('<tr style="height:44px;min-height:44px">');
-    expect(markup).toContain('<th scope="col" style="text-align:left;width:12rem;border-color:#cccccc;border-style:solid;border-width:1px;padding:8px;background:#eeeeee;color:#111111"><span style="font-weight:bold">Name</span></th>');
+    expect(markup).toContain('<th scope="col" style="text-align:left;width:12rem;height:44px;min-height:44px;border-color:#cccccc;border-style:solid;border-width:1px;padding:8px;background:#eeeeee;color:#111111"><span style="font-weight:bold">Name</span></th>');
     expect(markup).toContain('<tbody>');
     expect(markup).toContain('<td style="text-align:right;border-color:#cccccc;border-style:solid;border-width:1px;padding:1em;background:#ffeeaa;border-left-color:#123456;border-left-style:solid;border-left-width:2px"><a href="https://example.com/ada"');
     expect(markup).toContain('font-style:italic');
@@ -751,6 +751,25 @@ describe('render/nodePresentation', () => {
       ]),
     ]);
     expect(renderToStaticMarkup(renderLeafContent(rich))).toContain('<th scope="col">Only</th>');
+  });
+
+  it('makes fully authored table column widths and row heights authoritative', () => {
+    const table = createTextNode('table', 'root');
+    table.content = createTextDocumentContent([
+      createRichTableBlock([
+        createRichTableRow([createRichTableCell([{ text: 'Sized' }])]),
+      ], {
+        columnWidths: ['100px'],
+        rowHeights: ['200px'],
+      }),
+    ]);
+
+    const markup = renderToStaticMarkup(renderLeafContent(table));
+
+    expect(markup).toContain('<table style="table-layout:fixed;width:100px">');
+    expect(markup).toContain('<colgroup><col style="width:100px"/></colgroup>');
+    expect(markup).toContain('<tr style="height:200px;min-height:200px">');
+    expect(markup).toContain('<td style="width:100px;height:200px;min-height:200px">Sized</td>');
   });
 
   it('renders rich inline links with explicit link styling', () => {

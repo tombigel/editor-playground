@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { createInitialDocument, createButtonTextNode, createMediaNode } from '../../model/defaults';
+import { createInitialDocument, createButtonTextNode, createMediaNode, createTextNode } from '../../model/defaults';
+import {
+  createRichTableBlock,
+  createRichTableCell,
+  createRichTableRow,
+  createTextDocumentContent,
+} from '../../model/richContent';
 import { FocusedModePanel } from '../FocusedModePanel';
 import { EditorSidebar } from '../EditorSidebar';
 
@@ -152,6 +158,49 @@ describe('panels/FocusedModePanel', () => {
     expect(markup).toContain('>Color<');
     expect(markup).toContain('>Shadow<');
     expect(markup).toContain('aria-label="Close design focus mode"');
+  });
+
+  it.each([
+    {
+      mode: 'content' as const,
+      expected: ['Toggle table header row', '1 rows by 1 columns'],
+      unexpected: ['>HTML tag<'],
+    },
+    {
+      mode: 'design' as const,
+      expected: ['Table border width', 'Cell border width', '>Shadow<', '>Radius<'],
+      unexpected: ['aria-label="Manage fonts"'],
+    },
+  ])('routes table-specific $mode controls in focused mode', ({ mode, expected, unexpected }) => {
+    const { document, sectionNode, baseProps } = createInspectorProps();
+    const tableNode = createTextNode('table', sectionNode.id);
+    tableNode.subtype = 'table';
+    tableNode.content = createTextDocumentContent([
+      createRichTableBlock([
+        createRichTableRow([createRichTableCell([{ text: 'A' }])], { header: true }),
+      ]),
+    ]);
+    document.nodes[tableNode.id] = tableNode;
+    sectionNode.children.push(tableNode.id);
+
+    const markup = renderToStaticMarkup(
+      <FocusedModePanel
+        {...baseProps}
+        document={document}
+        node={tableNode}
+        focusedMode={mode}
+        mode={mode}
+        onExitFocusedMode={() => {}}
+      />,
+    );
+
+    for (const marker of expected) {
+      expect(markup).toContain(marker);
+    }
+    for (const marker of unexpected) {
+      expect(markup).not.toContain(marker);
+    }
+    expect(markup).toContain(`aria-label="Close ${mode} focus mode"`);
   });
 
   it('renders content-focused controls for text nodes', () => {

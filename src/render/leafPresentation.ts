@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { RICH_TABLE_DEFAULTS } from '../model/richContent';
 import { CODE_THEME_SURFACE } from '../model/textNodeDefaults';
 import type { MediaNode, TextNode, TypographyStyle } from '../model/types';
 import { isMediaNode, isTextNode } from '../model/types';
@@ -369,7 +370,7 @@ export function getSiteLeafBaseRules(selectors: {
     {
       selector: selectors.tableCell,
       style: {
-        padding: '0.35em 0.5em',
+        padding: RICH_TABLE_DEFAULTS.cellPadding,
         border: '1px solid color-mix(in srgb, currentColor 24%, transparent)',
         verticalAlign: 'top',
       },

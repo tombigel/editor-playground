@@ -92,6 +92,48 @@ describe('app smoke e2e', () => {
     expect(await dialog.locator('[data-ui="select-content"]').isVisible()).toBe(true);
   }, 30_000);
 
+  it('resizes an active table column without render loops or losing the size control', async () => {
+    const smokePage = await newSmokePage();
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+    smokePage.on('pageerror', (error) => {
+      pageErrors.push(error.message);
+    });
+    smokePage.on('console', (message) => {
+      if (message.type() === 'error') {
+        consoleErrors.push(message.text());
+      }
+    });
+
+    await smokePage.getByRole('button', { name: 'Text · Paragraph, heading, rich text…' }).click();
+    await smokePage.getByRole('button', { name: 'Table Simple text table' }).click();
+    await smokePage.locator('.stage-leaf.subtype-table').dblclick();
+    await smokePage.getByRole('spinbutton', { name: 'Selected cell padding' }).waitFor({ state: 'visible' });
+
+    await smokePage.getByRole('button', { name: 'Columns actions' }).click();
+    await smokePage.getByRole('menuitem', { name: 'Delete column' }).click();
+    await smokePage.getByRole('combobox', { name: 'Active column width' }).click();
+    await smokePage.getByRole('option', { name: 'px', exact: true }).click();
+
+    for (const unit of ['em', '%', 'px']) {
+      await smokePage.getByRole('combobox', { name: 'Active column width unit' }).click();
+      await smokePage.getByRole('option', { name: unit, exact: true }).click();
+    }
+
+    const widthInput = smokePage.getByRole('spinbutton', { name: 'Active column width' });
+    await widthInput.fill('128');
+    await widthInput.press('Enter');
+    expect(await widthInput.evaluate((element) => document.activeElement === element)).toBe(true);
+
+    const cellBox = await smokePage.getByRole('columnheader').boundingBox();
+    if (!cellBox) {
+      throw new Error('Expected the resized table column to be measurable');
+    }
+    expect(Math.abs(cellBox.width - 128)).toBeLessThan(1);
+    expect(pageErrors).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  }, 30_000);
+
   it('opens the showcase tour from URL state without render-loop errors', async () => {
     context = await browser.newContext({ viewport: { width: 1440, height: 1100 } });
     const smokePage = await context.newPage();

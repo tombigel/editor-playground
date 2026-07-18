@@ -3,7 +3,6 @@ import type {
   ContainerNode,
   DocumentModel,
   NodeId,
-  RichTableBlock,
   TextDocumentContent,
   TextNode,
   ViewportMeasurement,
@@ -28,6 +27,7 @@ import {
 } from '../../render/nodePresentation';
 import { useRichEditContext } from '../richEditContext';
 import { CodeTextEditOverlay } from './CodeTextEditOverlay';
+import { addTableEditMetadata } from './richTextEditOverlay/tableEditMetadata';
 
 const RichTextEditOverlay = lazy(() =>
   import('./RichTextEditOverlay').then((m) => ({ default: m.RichTextEditOverlay })),
@@ -381,7 +381,7 @@ function prepareStandaloneListEditContent(node: TextNode) {
 function prepareStandaloneTableEditContent(node: TextNode) {
   if (node.subtype !== 'table') {
     return {
-      content: createTextDocumentContent([addTableEditCellMetadata(createRichTableBlock())]),
+      content: createTextDocumentContent([addTableEditMetadata(createRichTableBlock())]),
       promotedNodeLink: false,
     };
   }
@@ -389,27 +389,10 @@ function prepareStandaloneTableEditContent(node: TextNode) {
   const tableBlock = getSingleTableBlockContent(node.content);
   return {
     content: createTextDocumentContent([
-      addTableEditCellMetadata(tableBlock ? structuredClone(tableBlock) : createRichTableBlock()),
+      addTableEditMetadata(tableBlock ? structuredClone(tableBlock) : createRichTableBlock()),
     ]),
     promotedNodeLink: false,
   };
-}
-
-function addTableEditCellMetadata(block: RichTableBlock): RichTableBlock {
-  return {
-    ...block,
-      children: block.children.map((row, rowIndex) => ({
-        ...row,
-        height: block.rowHeights?.[rowIndex] ?? null,
-        children: row.children.map((cell, columnIndex) => ({
-          ...cell,
-          header: row.header === true,
-          alignment: block.columnAlignments?.[columnIndex] ?? null,
-          width: block.columnWidths?.[columnIndex] ?? null,
-          tableStyle: block.style,
-        })),
-      })),
-    };
 }
 
 export function renderLeafSpacerOverlay({

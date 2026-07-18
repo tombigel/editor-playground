@@ -483,7 +483,7 @@ export function NumberFieldDemos() {
 			<ComponentPreview
 				id="base-number-unit"
 				name="ValueWithUnit"
-				description="Reusable editor composite for fixed units, selectable units, keyword menus, mixed numeric-or-keyword modes, and suggestion-enabled inputs with a styled combobox popup."
+				description="Reusable editor composite for fixed units, selectable units, keyword menus, mixed numeric-or-keyword modes, and suggestion-enabled inputs. Numeric unit changes preserve the effective rendered size; keyword states omit units and resolve a measured value when switched to a numeric unit."
 				sourceFile="src/components/ui/value-with-unit.tsx"
 				props={VALUE_WITH_UNIT_PROPS}
 			>

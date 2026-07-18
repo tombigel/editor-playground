@@ -13,10 +13,10 @@ import {
 	DEFAULT_RICH_TOOLBAR_OFFSET,
 	getRichToolbarViewportPosition,
 	persistRichToolbarSessionOffset,
-	readRichToolbarSessionOffset,
 	RICH_TOOLBAR_EDGE_GAP_PX,
 	type RichToolbarOffset,
 	type RichToolbarPlacement,
+	readRichToolbarSessionOffset,
 } from "../richToolbarPosition";
 import type { ToolbarDragState } from "./types";
 
@@ -42,6 +42,7 @@ export function useRichToolbarPosition({
 		left: RICH_TOOLBAR_EDGE_GAP_PX,
 	});
 	const [toolbarWidth, setToolbarWidth] = useState(0);
+	const [toolbarMaxWidth, setToolbarMaxWidth] = useState(720);
 	const [toolbarLayoutRevision, setToolbarLayoutRevision] = useState(0);
 
 	useEffect(() => {
@@ -107,6 +108,7 @@ export function useRichToolbarPosition({
 				panelHeight: toolbarDragRef.current.panelHeight,
 				viewportWidth: window.innerWidth,
 				viewportHeight: window.innerHeight,
+				horizontalBounds: toolbarDragRef.current.horizontalBounds,
 				offset: toolbarDragRef.current.originOffset,
 				deltaX: event.clientX - toolbarDragRef.current.originX,
 				deltaY: event.clientY - toolbarDragRef.current.originY,
@@ -118,6 +120,7 @@ export function useRichToolbarPosition({
 				panelHeight: toolbarDragRef.current.panelHeight,
 				viewportWidth: window.innerWidth,
 				viewportHeight: window.innerHeight,
+				horizontalBounds: toolbarDragRef.current.horizontalBounds,
 				offset: nextOffset,
 			});
 			setToolbarPlacement((current) =>
@@ -143,7 +146,9 @@ export function useRichToolbarPosition({
 			finishToolbarDrag(toolbarOffsetDraftRef.current);
 		}
 
-		window.addEventListener("pointermove", handlePointerMove, { passive: false });
+		window.addEventListener("pointermove", handlePointerMove, {
+			passive: false,
+		});
 		window.addEventListener("pointerup", handlePointerEnd);
 		window.addEventListener("pointercancel", handlePointerEnd);
 		return () => {
@@ -156,6 +161,7 @@ export function useRichToolbarPosition({
 	useLayoutEffect(() => {
 		void selectionRevision;
 		void toolbarLayoutRevision;
+		void toolbarMaxWidth;
 		const root = rootRef.current;
 		const toolbar = toolbarRef.current;
 		if (!root || !toolbar) {
@@ -163,6 +169,22 @@ export function useRichToolbarPosition({
 		}
 
 		const rootRect = root.getBoundingClientRect();
+		const stageRect = root
+			.closest<HTMLElement>('[aria-label="Editor stage"]')
+			?.getBoundingClientRect();
+		const horizontalBounds = stageRect
+			? { left: stageRect.left + 8, right: stageRect.right - 8 }
+			: null;
+		const nextToolbarMaxWidth = Math.max(
+			240,
+			Math.min(
+				window.innerWidth - 32,
+				(stageRect?.width ?? window.innerWidth) - 16,
+			),
+		);
+		setToolbarMaxWidth((current) =>
+			current === nextToolbarMaxWidth ? current : nextToolbarMaxWidth,
+		);
 		const toolbarRect = toolbar.getBoundingClientRect();
 		const nextViewportPosition = getRichToolbarViewportPosition({
 			rootRect,
@@ -170,6 +192,7 @@ export function useRichToolbarPosition({
 			panelHeight: toolbarRect.height,
 			viewportWidth: window.innerWidth,
 			viewportHeight: window.innerHeight,
+			horizontalBounds,
 			offset: toolbarOffsetDraft,
 		});
 
@@ -187,7 +210,13 @@ export function useRichToolbarPosition({
 		setToolbarWidth((current) =>
 			current === toolbarRect.width ? current : toolbarRect.width,
 		);
-	}, [rootRef, selectionRevision, toolbarLayoutRevision, toolbarOffsetDraft]);
+	}, [
+		rootRef,
+		selectionRevision,
+		toolbarLayoutRevision,
+		toolbarMaxWidth,
+		toolbarOffsetDraft,
+	]);
 
 	const handleToolbarDragPointerDown = useCallback(
 		(event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -200,6 +229,9 @@ export function useRichToolbarPosition({
 				event.currentTarget.setPointerCapture(event.pointerId);
 			} catch {}
 			const rootRect = rootRef.current.getBoundingClientRect();
+			const stageRect = rootRef.current
+				.closest<HTMLElement>('[aria-label="Editor stage"]')
+				?.getBoundingClientRect();
 			const toolbarRect = toolbarRef.current.getBoundingClientRect();
 			toolbarDragRef.current = {
 				pointerId: event.pointerId,
@@ -207,6 +239,9 @@ export function useRichToolbarPosition({
 				originY: event.clientY,
 				originOffset: toolbarOffsetDraftRef.current,
 				rootRect,
+				horizontalBounds: stageRect
+					? { left: stageRect.left + 8, right: stageRect.right - 8 }
+					: null,
 				panelWidth: toolbarRect.width,
 				panelHeight: toolbarRect.height,
 			};
@@ -224,6 +259,7 @@ export function useRichToolbarPosition({
 		toolbarPlacement,
 		toolbarPosition,
 		toolbarWidth,
+		toolbarMaxWidth,
 		handleToolbarDragPointerDown,
 	};
 }

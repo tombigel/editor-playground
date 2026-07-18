@@ -4,10 +4,9 @@ import {
 	type ReactNode,
 	useCallback,
 	useEffect,
+	useMemo,
 	useState,
 } from "react";
-
-import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ColorPicker } from "@/components/ui/color-picker";
 import { NumberInput } from "@/components/ui/number-input";
@@ -23,6 +22,7 @@ import {
 	type ValueWithUnitOption,
 	type ValueWithUnitSuggestion,
 } from "@/components/ui/value-with-unit";
+import { DARK_TOOLTIP_CLASS } from "@/lib/utils";
 
 import { formatDisplayValue } from "../../../model/conversion";
 import { parseFontSizeValue, parseSpacingValue } from "../../../model/units";
@@ -506,45 +506,122 @@ export function CompactSpacingField({
 	);
 }
 
+export function resolveTableLengthOptionValue({
+	nextOption,
+	currentDraft,
+	currentMode,
+	keywordValue,
+	numericDefaults,
+}: {
+	nextOption: string;
+	currentDraft: string;
+	currentMode: string;
+	keywordValue?: string;
+	numericDefaults?: Partial<Record<ToolbarTableLengthUnit, number>>;
+}) {
+	if (keywordValue && nextOption === keywordValue) {
+		return { value: keywordValue, draft: "", mode: keywordValue };
+	}
+
+	const nextUnit = nextOption as ToolbarTableLengthUnit;
+	const nextDraft =
+		currentMode === keywordValue || !currentDraft
+			? formatDisplayValue(numericDefaults?.[nextUnit] ?? 0)
+			: currentDraft;
+	return {
+		value: normalizeTableLengthValue(nextDraft, nextUnit),
+		draft: nextDraft,
+		mode: nextUnit,
+	};
+}
+
 export function CompactTableLengthField({
 	label,
 	icon,
 	value,
 	width,
 	onCommit,
+	units = TABLE_LENGTH_UNIT_OPTIONS,
+	placeholder = "0",
+	mixed = false,
+	keyword,
+	numericDefaults,
+	resolveUnitValue,
 }: {
 	label: string;
-	icon: React.ReactNode;
+	icon?: React.ReactNode;
 	value: string;
 	width: number;
 	onCommit: (value: string) => void;
+	units?: readonly ToolbarTableLengthUnit[];
+	placeholder?: string;
+	mixed?: boolean;
+	keyword?: { value: string; label: string };
+	numericDefaults?: Partial<Record<ToolbarTableLengthUnit, number>>;
+	resolveUnitValue?: (
+		nextUnit: ToolbarTableLengthUnit,
+		currentValue: string,
+	) => string | null;
 }) {
-	const [draft, setDraft] = useState(readTableLengthDraftState(value));
+	const keywordValue = keyword?.value;
+	const unitsKey = units.join("|");
+	const resolvedUnits = useMemo(
+		() => unitsKey.split("|") as ToolbarTableLengthUnit[],
+		[unitsKey],
+	);
+	const [draft, setDraft] = useState(
+		readTableLengthDraftState(value, resolvedUnits, keywordValue),
+	);
 	const [invalid, setInvalid] = useState(false);
-	const options: ValueWithUnitOption[] = TABLE_LENGTH_UNIT_OPTIONS.map(
-		(option) => ({
-			type: "option",
-			value: option,
-			label: option,
-			inputMode: "numeric",
-		}),
+	const options: ValueWithUnitOption[] = useMemo(
+		() => [
+			...resolvedUnits.map((option) => ({
+				type: "option" as const,
+				value: option,
+				label: option,
+				inputMode: "numeric" as const,
+			})),
+			...(keywordValue
+				? [
+						{ type: "separator" as const, id: `${label}-keyword` },
+						{
+							type: "option" as const,
+							value: keywordValue,
+							label: keyword?.label ?? keywordValue,
+							inputMode: "keyword" as const,
+						},
+					]
+				: []),
+		],
+		[keyword?.label, keywordValue, label, resolvedUnits],
 	);
 
 	useEffect(() => {
-		setDraft(readTableLengthDraftState(value));
+		setDraft(readTableLengthDraftState(value, resolvedUnits, keywordValue));
 		setInvalid(false);
-	}, [value]);
+	}, [keywordValue, resolvedUnits, value]);
 
 	const commitDraft = useCallback(() => {
-		const nextValue = normalizeTableLengthValue(draft.draft, draft.unit);
-		if (nextValue == null) {
-			setDraft(readTableLengthDraftState(value));
+		if (keywordValue && draft.mode === keywordValue) {
+			if (value !== keywordValue) {
+				onCommit(keywordValue);
+			}
 			setInvalid(false);
 			return;
 		}
-		onCommit(nextValue);
+		const nextValue = normalizeTableLengthValue(draft.draft, draft.unit);
+		if (nextValue == null) {
+			setDraft(
+				readTableLengthDraftState(value, resolvedUnits, keywordValue),
+			);
+			setInvalid(false);
+			return;
+		}
+		if (nextValue !== value) {
+			onCommit(nextValue);
+		}
 		setInvalid(false);
-	}, [draft, onCommit, value]);
+	}, [draft, keywordValue, onCommit, resolvedUnits, value]);
 
 	return (
 		<PopoverTooltip
@@ -553,52 +630,38 @@ export function CompactTableLengthField({
 			className={DARK_TOOLTIP_CLASS}
 			content={<div className="leading-3.5 font-medium">{label}</div>}
 		>
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: toolbar field shell coordinates blur/Enter commit across shared input and unit trigger */}
 			<div
 				className="pointer-events-auto flex shrink-0 items-center gap-1"
 				style={{ width, pointerEvents: "auto" }}
 				onPointerDown={(event) => {
 					event.stopPropagation();
 				}}
-				onBlur={(event: ReactFocusEvent<HTMLDivElement>) => {
-					if (
-						event.currentTarget.contains(event.relatedTarget as Node | null)
-					) {
-						return;
-					}
-					commitDraft();
-				}}
-				onKeyDown={(event: ReactKeyboardEvent<HTMLDivElement>) => {
-					if (event.defaultPrevented || event.key !== "Enter") {
-						return;
-					}
-					if (!(event.target instanceof HTMLInputElement)) {
-						return;
-					}
-					event.preventDefault();
-					commitDraft();
-					event.target.blur();
-				}}
 			>
-				<span className="editor-text-muted flex h-7 shrink-0 items-center">
-					{icon}
-				</span>
+				{icon ? (
+					<span className="editor-text-muted flex h-7 shrink-0 items-center">
+						{icon}
+					</span>
+				) : null}
 				<ValueWithUnit
-					mode="number-select"
+					mode={keyword ? "number-or-keyword-select" : "number-select"}
 					value={value || `${draft.draft || 0}${draft.unit}`}
 					onChange={(nextValue) => {
-						const parsed = readTableLengthDraftState(nextValue);
+						const parsed = readTableLengthDraftState(
+							nextValue,
+							resolvedUnits,
+							keywordValue,
+						);
 						if (parsed.valid) {
 							setDraft(parsed);
 							setInvalid(false);
-							onCommit(`${parsed.draft}${parsed.unit}`);
+							onCommit(
+								parsed.mode === keywordValue
+									? parsed.mode
+									: `${parsed.draft}${parsed.unit}`,
+							);
 							return;
 						}
-						if (
-							TABLE_LENGTH_UNIT_OPTIONS.includes(
-								nextValue as ToolbarTableLengthUnit,
-							)
-						) {
+						if (resolvedUnits.includes(nextValue as ToolbarTableLengthUnit)) {
 							setDraft((current) => ({
 								...current,
 								unit: nextValue as ToolbarTableLengthUnit,
@@ -607,17 +670,19 @@ export function CompactTableLengthField({
 					}}
 					options={options}
 					inputValue={draft.draft}
-					selectedOption={draft.unit}
-					placeholder="0"
+					selectedOption={draft.mode}
+					placeholder={mixed ? "Mixed" : placeholder}
 					min={0}
 					step="any"
 					ariaLabel={label}
 					invalid={invalid}
+					mixed={mixed}
 					segmentWidth={36}
 					className="min-w-0 flex-1"
 					controlClassName="h-7"
 					includeDisabledStyles={false}
 					onInputBlur={commitDraft}
+					onInputCommit={commitDraft}
 					onInputValueChange={(nextDraft) => {
 						setDraft((current) => ({ ...current, draft: nextDraft }));
 						if (!nextDraft.trim()) {
@@ -628,9 +693,39 @@ export function CompactTableLengthField({
 							normalizeTableLengthValue(nextDraft, draft.unit) == null,
 						);
 					}}
-					onResolveOptionValue={(nextUnit, currentValue) =>
-						normalizeTableLengthValue(currentValue, nextUnit as ToolbarTableLengthUnit)
-					}
+					onResolveOptionValue={(nextOption) => {
+						if (nextOption !== keywordValue && resolveUnitValue) {
+							const nextValue = resolveUnitValue(
+								nextOption as ToolbarTableLengthUnit,
+								value,
+							);
+							if (nextValue) {
+								const nextDraft = readTableLengthDraftState(
+									nextValue,
+									resolvedUnits,
+									keywordValue,
+								);
+								setDraft(nextDraft);
+								setInvalid(false);
+								return nextValue;
+							}
+						}
+						const resolved = resolveTableLengthOptionValue({
+							nextOption,
+							currentDraft: draft.draft,
+							currentMode: draft.mode,
+							keywordValue,
+							numericDefaults,
+						});
+						const nextUnit = resolved.mode as ToolbarTableLengthUnit;
+						setDraft({
+							draft: resolved.draft,
+							unit: resolvedUnits.includes(nextUnit) ? nextUnit : draft.unit,
+							mode: resolved.mode,
+							valid: true,
+						});
+						return resolved.value;
+					}}
 					expandToFill
 				/>
 			</div>
@@ -709,18 +804,32 @@ function readSpacingDraftState(value: string) {
 	}
 }
 
-function readTableLengthDraftState(value: string) {
-	const match = value.trim().match(/^(\d+(?:\.\d+)?)(px|em|%)$/);
-	if (!match) {
+function readTableLengthDraftState(
+	value: string,
+	units: readonly ToolbarTableLengthUnit[] = TABLE_LENGTH_UNIT_OPTIONS,
+	keyword?: string,
+) {
+	if (keyword && value.trim() === keyword) {
 		return {
 			draft: "",
-			unit: "px" as ToolbarTableLengthUnit,
+			unit: units[0] ?? "px",
+			mode: keyword,
+			valid: true,
+		};
+	}
+	const match = value.trim().match(/^(\d+(?:\.\d+)?)(px|em|%)$/);
+	if (!match || !units.includes(match[2] as ToolbarTableLengthUnit)) {
+		return {
+			draft: "",
+			unit: units[0] ?? "px",
+			mode: units[0] ?? "px",
 			valid: false,
 		};
 	}
 	return {
 		draft: formatDisplayValue(Number(match[1])),
 		unit: match[2] as ToolbarTableLengthUnit,
+		mode: match[2],
 		valid: true,
 	};
 }

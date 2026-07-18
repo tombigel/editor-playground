@@ -11,6 +11,7 @@ type ToolbarViewportArgs = {
 	panelHeight: number;
 	viewportWidth: number;
 	viewportHeight: number;
+	horizontalBounds?: { left: number; right: number } | null;
 	offset?: Partial<RichToolbarOffset> | null;
 };
 
@@ -42,6 +43,7 @@ export function getRichToolbarViewportPosition({
 	panelHeight,
 	viewportWidth,
 	viewportHeight,
+	horizontalBounds,
 	offset,
 }: ToolbarViewportArgs) {
 	const placement = getRichToolbarPlacement({ rootRect, panelHeight });
@@ -57,20 +59,24 @@ export function getRichToolbarViewportPosition({
 		minTop,
 		viewportHeight - panelHeight - RICH_TOOLBAR_EDGE_GAP_PX,
 	);
-	const maxLeft = Math.max(
+	const minLeft = Math.max(
 		RICH_TOOLBAR_EDGE_GAP_PX,
-		viewportWidth - panelWidth - RICH_TOOLBAR_EDGE_GAP_PX,
+		horizontalBounds?.left ?? RICH_TOOLBAR_EDGE_GAP_PX,
+	);
+	const maxLeft = Math.max(
+		minLeft,
+		Math.min(
+			viewportWidth - panelWidth - RICH_TOOLBAR_EDGE_GAP_PX,
+			(horizontalBounds?.right ?? viewportWidth - RICH_TOOLBAR_EDGE_GAP_PX) -
+				panelWidth,
+		),
 	);
 
 	return {
 		placement,
 		anchorLeft,
 		anchorTop,
-		left: clampNumber(
-			anchorLeft + normalizedOffset.x,
-			RICH_TOOLBAR_EDGE_GAP_PX,
-			maxLeft,
-		),
+		left: clampNumber(anchorLeft + normalizedOffset.x, minLeft, maxLeft),
 		top: clampNumber(anchorTop + normalizedOffset.y, minTop, maxTop),
 	};
 }
@@ -81,6 +87,7 @@ export function clampRichToolbarOffset({
 	panelHeight,
 	viewportWidth,
 	viewportHeight,
+	horizontalBounds,
 	offset,
 	deltaX,
 	deltaY,
@@ -92,6 +99,7 @@ export function clampRichToolbarOffset({
 		panelHeight,
 		viewportWidth,
 		viewportHeight,
+		horizontalBounds,
 		offset: normalizedOffset,
 	});
 	const minTop = RICH_TOOLBAR_TOPBAR_HEIGHT_PX + RICH_TOOLBAR_TOPBAR_GAP_PX;
@@ -99,15 +107,19 @@ export function clampRichToolbarOffset({
 		minTop,
 		viewportHeight - panelHeight - RICH_TOOLBAR_EDGE_GAP_PX,
 	);
+	const minLeft = Math.max(
+		RICH_TOOLBAR_EDGE_GAP_PX,
+		horizontalBounds?.left ?? RICH_TOOLBAR_EDGE_GAP_PX,
+	);
 	const maxLeft = Math.max(
-		RICH_TOOLBAR_EDGE_GAP_PX,
-		viewportWidth - panelWidth - RICH_TOOLBAR_EDGE_GAP_PX,
+		minLeft,
+		Math.min(
+			viewportWidth - panelWidth - RICH_TOOLBAR_EDGE_GAP_PX,
+			(horizontalBounds?.right ?? viewportWidth - RICH_TOOLBAR_EDGE_GAP_PX) -
+				panelWidth,
+		),
 	);
-	const nextLeft = clampNumber(
-		current.left + deltaX,
-		RICH_TOOLBAR_EDGE_GAP_PX,
-		maxLeft,
-	);
+	const nextLeft = clampNumber(current.left + deltaX, minLeft, maxLeft);
 	const nextTop = clampNumber(current.top + deltaY, minTop, maxTop);
 
 	return {

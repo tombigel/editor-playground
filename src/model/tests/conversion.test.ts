@@ -3,6 +3,7 @@ import {
   convertRenderedPxToBorderRadiusUnit,
   convertRenderedPxToFontRelativeUnit,
   convertRenderedPxToGeometryUnit,
+  convertTableLengthValue,
   formatDisplayValue,
 } from '../conversion';
 
@@ -34,6 +35,15 @@ describe('model/conversion', () => {
   it('converts rendered border radius using a stable average-dimension approximation', () => {
     expect(convertRenderedPxToBorderRadiusUnit(18, 'px', { width: 240, height: 120 })).toBe(18);
     expect(convertRenderedPxToBorderRadiusUnit(18, '%', { width: 240, height: 120 })).toBe(10);
+  });
+
+  it('converts table lengths through rendered pixels', () => {
+    const reference = { fontSizePx: 20, percentReferencePx: 400 };
+    expect(convertTableLengthValue('2em', 'px', reference)).toBe(40);
+    expect(convertTableLengthValue('40px', 'em', reference)).toBe(2);
+    expect(convertTableLengthValue('2em', '%', reference)).toBe(10);
+    expect(convertTableLengthValue('10%', 'em', reference)).toBe(2);
+    expect(convertTableLengthValue('auto', 'px', { ...reference, renderedPx: 125 })).toBe(125);
   });
 
   it('formats display numbers consistently', () => {

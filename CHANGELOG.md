@@ -27,6 +27,7 @@ Each release heading covers the **Project** version. Subsystem version bumps are
 - derive active table cell context
 - add selection based table styling
 - add contextual table cell controls
+- improve contextual table design controls
 
 ### Changed
 

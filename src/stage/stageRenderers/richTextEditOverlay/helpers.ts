@@ -1,15 +1,20 @@
 import type { CSSProperties } from "react";
-import { Editor, Element as SlateElement } from "slate";
 import type { BaseSelection, Path } from "slate";
-
+import { Editor, Element as SlateElement } from "slate";
+import type { TableSelectionDescriptor } from "../../../api/documentApi";
 import {
 	BOLD_FONT_WEIGHT,
 	DEFAULT_FONT_WEIGHT,
 	isBoldFontWeight,
 } from "../../../api/fontApi";
 import { formatDisplayValue } from "../../../model/conversion";
+import type {
+	RichTableBlock,
+	RichTableCell,
+	RichTableCellStyle,
+	TableColumnAlignment,
+} from "../../../model/types";
 import { parseFontSizeValue } from "../../../model/units";
-import type { RichTableBlock, RichTableCell, RichTableCellStyle, TableColumnAlignment } from "../../../model/types";
 import {
 	getMarkValue,
 	getSelectedBlockType,
@@ -25,9 +30,9 @@ import {
 } from "../../../render/richTextEditor";
 import {
 	RICH_SELECT_IDS,
+	type RichEditor,
 	type RichEditSelectId,
 	type RichEditValueFieldId,
-	type RichEditor,
 	type RichToolbarState,
 	SYSTEM_FONT_VALUE,
 } from "./types";
@@ -50,7 +55,9 @@ export function readToolbarFontReference(element: HTMLElement | null) {
 		return { rootFontSizePx: 16, inheritedFontSizePx: 16 };
 	}
 
-	const rootComputed = defaultView.getComputedStyle(ownerDocument.documentElement);
+	const rootComputed = defaultView.getComputedStyle(
+		ownerDocument.documentElement,
+	);
 	const inheritedComputed = defaultView.getComputedStyle(
 		element ?? ownerDocument.documentElement,
 	);
@@ -58,7 +65,9 @@ export function readToolbarFontReference(element: HTMLElement | null) {
 	const inheritedFontSizePx = Number.parseFloat(inheritedComputed.fontSize);
 	return {
 		rootFontSizePx:
-			Number.isFinite(rootFontSizePx) && rootFontSizePx > 0 ? rootFontSizePx : 16,
+			Number.isFinite(rootFontSizePx) && rootFontSizePx > 0
+				? rootFontSizePx
+				: 16,
 		inheritedFontSizePx:
 			Number.isFinite(inheritedFontSizePx) && inheritedFontSizePx > 0
 				? inheritedFontSizePx
@@ -70,7 +79,11 @@ export function readInitialFontSizeValue(
 	contentStyle: CSSProperties | undefined,
 ) {
 	const fontSize = contentStyle?.fontSize;
-	if (typeof fontSize === "number" && Number.isFinite(fontSize) && fontSize > 0) {
+	if (
+		typeof fontSize === "number" &&
+		Number.isFinite(fontSize) &&
+		fontSize > 0
+	) {
 		return `${formatDisplayValue(fontSize)}px`;
 	}
 	if (typeof fontSize === "string") {
@@ -121,7 +134,8 @@ export function readToolbarState(editor: RichEditor): RichToolbarState {
 		Number.parseInt(getMarkValue(editor, "fontWeight"), 10) ||
 		(isMarkActive(editor, "bold") ? BOLD_FONT_WEIGHT : DEFAULT_FONT_WEIGHT);
 	return {
-		boldActive: isMarkActive(editor, "bold") || isBoldFontWeight(currentFontWeight),
+		boldActive:
+			isMarkActive(editor, "bold") || isBoldFontWeight(currentFontWeight),
 		italicActive: isMarkActive(editor, "italic"),
 		underlineActive: isMarkActive(editor, "underline"),
 		strikethroughActive: isMarkActive(editor, "strikethrough"),
@@ -191,6 +205,7 @@ export function isTargetWithinToolbar(target: EventTarget | null): boolean {
 }
 
 export type ActiveTableContext = {
+	table: RichTableBlock;
 	rowIndex: number;
 	columnIndex: number;
 	rowCount: number;
@@ -203,7 +218,9 @@ export type ActiveTableContext = {
 	hasHeader: boolean;
 };
 
-export function getActiveTableContext(editor: RichEditor): ActiveTableContext | null {
+export function getActiveTableContext(
+	editor: RichEditor,
+): ActiveTableContext | null {
 	if (!editor.selection) {
 		return null;
 	}
@@ -236,12 +253,21 @@ export function getActiveTableContext(editor: RichEditor): ActiveTableContext | 
 	}
 
 	const rowCount = table.children.length;
-	const columnCount = Math.max(1, ...table.children.map((row) => row.children.length));
-	if (rowIndex < 0 || rowIndex >= rowCount || columnIndex < 0 || columnIndex >= columnCount) {
+	const columnCount = Math.max(
+		1,
+		...table.children.map((row) => row.children.length),
+	);
+	if (
+		rowIndex < 0 ||
+		rowIndex >= rowCount ||
+		columnIndex < 0 ||
+		columnIndex >= columnCount
+	) {
 		return null;
 	}
 
 	return {
+		table,
 		rowIndex,
 		columnIndex,
 		rowCount,
@@ -253,6 +279,26 @@ export function getActiveTableContext(editor: RichEditor): ActiveTableContext | 
 		direction: table.direction ?? null,
 		hasHeader: table.children[0]?.header === true,
 	};
+}
+
+export function getTableSelectionDescriptor(
+	context: ActiveTableContext,
+	target: TableSelectionDescriptor["type"],
+): TableSelectionDescriptor {
+	switch (target) {
+		case "cell":
+			return {
+				type: "cell",
+				rowIndex: context.rowIndex,
+				columnIndex: context.columnIndex,
+			};
+		case "row":
+			return { type: "row", rowIndex: context.rowIndex };
+		case "column":
+			return { type: "column", columnIndex: context.columnIndex };
+		case "table":
+			return { type: "table" };
+	}
 }
 
 export function normalizeColorInputValue(

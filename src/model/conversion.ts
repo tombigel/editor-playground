@@ -70,6 +70,48 @@ export function convertRenderedPxToSpacingUnit(
   return unit === 'px' ? Math.round(converted) : converted;
 }
 
+export type TableLengthUnit = 'px' | 'em' | '%';
+
+export function convertTableLengthValue(
+  value: string,
+  nextUnit: TableLengthUnit,
+  reference: {
+    renderedPx?: number;
+    fontSizePx: number;
+    percentReferencePx?: number;
+  },
+) {
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)(px|em|%)$/);
+  let renderedPx = reference.renderedPx;
+  if (match) {
+    const numericValue = Number(match[1]);
+    const currentUnit = match[2] as TableLengthUnit;
+    renderedPx =
+      currentUnit === 'px'
+        ? numericValue
+        : currentUnit === 'em'
+          ? numericValue * reference.fontSizePx
+          : reference.percentReferencePx && reference.percentReferencePx > 0
+            ? (numericValue / 100) * reference.percentReferencePx
+            : undefined;
+  }
+
+  if (!Number.isFinite(renderedPx) || renderedPx == null || renderedPx < 0) {
+    return null;
+  }
+  if (nextUnit === 'px') {
+    return clampDisplayValue(renderedPx);
+  }
+  if (nextUnit === 'em') {
+    return Number.isFinite(reference.fontSizePx) && reference.fontSizePx > 0
+      ? clampDisplayValue(renderedPx / reference.fontSizePx)
+      : null;
+  }
+  return reference.percentReferencePx && reference.percentReferencePx > 0
+    ? clampDisplayValue((renderedPx / reference.percentReferencePx) * 100)
+    : null;
+}
+
 export function convertRenderedPxToBorderRadiusUnit(
   px: number,
   unit: 'px' | '%',

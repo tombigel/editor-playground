@@ -10,6 +10,7 @@ import {
   listContentToRichListBlock,
 } from '../../model/richContent';
 import { getTextSubtypeIcon } from '../inspector/config.text';
+import { convertStageTableStyleLengthToValue } from '../inspector/stageConversions';
 import {
   createListBlockWithKind,
   createListBlockWithMarkerStyle,
@@ -1157,6 +1158,26 @@ describe('panels/InspectorPanel', () => {
     expect(convertStageFontSizeToInput('text_10', 'px', ownerDocument)).toBe('32');
     expect(convertStageFontSizeToInput('text_10', 'em', ownerDocument)).toBe('1.6');
     expect(convertStageFontSizeToInput('text_10', 'rem', ownerDocument)).toBe('2');
+  });
+
+  it('converts table style lengths using the rendered cell references', () => {
+    const rect = (width: number, height: number) => ({ width, height }) as DOMRect;
+    const cell = { getBoundingClientRect: () => rect(100, 40) };
+    const table = {
+      querySelector: (selector: string) => (selector === 'th, td' ? cell : null),
+      getBoundingClientRect: () => rect(400, 160),
+    };
+    const root = { querySelector: (selector: string) => (selector === 'table' ? table : null) };
+    const ownerDocument = {
+      getElementById: (id: string) => (id === 'stage-node-table_1' ? root : null),
+      defaultView: {
+        getComputedStyle: () => ({ fontSize: '20px', paddingTop: '10px', borderTopWidth: '2px' }),
+      },
+    } as unknown as Document;
+
+    expect(convertStageTableStyleLengthToValue('table_1', 'cell-padding', '0.5em', 'px', ownerDocument)).toBe('10px');
+    expect(convertStageTableStyleLengthToValue('table_1', 'cell-padding', '10px', 'em', ownerDocument)).toBe('0.5em');
+    expect(convertStageTableStyleLengthToValue('table_1', 'cell-padding', '10px', '%', ownerDocument)).toBe('10%');
   });
 
   it('defers height percent conversion when the parent wrapper uses section min-height semantics', () => {

@@ -110,6 +110,7 @@ import {
 import {
 	cloneSelection,
 	getActiveTableContext,
+	getTableSelectionDescriptor,
 	isSelectVisibleForStructureMode,
 	isTargetWithinLinkPopover,
 	isTargetWithinSelectLayer,
@@ -122,6 +123,7 @@ import {
 } from "./richTextEditOverlay/helpers";
 import { LinkInsertPopover } from "./richTextEditOverlay/LinkInsertPopover";
 import { renderEditElement, renderEditLeaf } from "./richTextEditOverlay/renderers";
+import { addTableEditMetadata } from "./richTextEditOverlay/tableEditMetadata";
 import { RichTextToolbar } from "./richTextEditOverlay/RichTextToolbar";
 import {
 	DEFAULT_LINK_POPOVER,
@@ -188,6 +190,7 @@ export function RichTextEditOverlay({
 		toolbarPlacement,
 		toolbarPosition,
 		toolbarWidth,
+		toolbarMaxWidth,
 		handleToolbarDragPointerDown,
 	} = useRichToolbarPosition({ rootRef, selectionRevision });
 
@@ -624,6 +627,16 @@ export function RichTextEditOverlay({
 		return true;
 	}, [editor, linkSelection, toolbarSelection]);
 
+	const restoreToolbarSelectionWithoutFocus = useCallback(() => {
+		const selectionToRestore = linkSelection ?? toolbarSelection;
+		if (!selectionToRestore) {
+			return false;
+		}
+
+		Transforms.select(editor, selectionToRestore);
+		return true;
+	}, [editor, linkSelection, toolbarSelection]);
+
 	const retainedSelection = linkSelection ?? toolbarSelection;
 	const decorateRetainedSelection = useCallback(
 		([node, path]: [Descendant, number[]]) => {
@@ -741,8 +754,13 @@ export function RichTextEditOverlay({
 	const mutateActiveTable = useCallback((
 		mutator: (block: RichTableBlock) => RichTableBlock,
 		selectCell?: { rowIndex: number; columnIndex: number },
+		options?: { rootOnly?: boolean; preserveControlFocus?: boolean },
 	) => {
-		restoreToolbarSelection();
+		if (options?.preserveControlFocus) {
+			restoreToolbarSelectionWithoutFocus();
+		} else {
+			restoreToolbarSelection();
+		}
 		const entry = Array.from(Editor.nodes(editor, {
 			match: (node) => Element.isElement(node) && "type" in node && node.type === "table",
 			mode: "lowest",
@@ -751,9 +769,22 @@ export function RichTextEditOverlay({
 			return;
 		}
 		const [block, path] = entry;
-		const nextBlock = mutator(block);
-		Transforms.removeNodes(editor, { at: path });
-		Transforms.insertNodes(editor, nextBlock, { at: path });
+		const nextBlock = addTableEditMetadata(mutator(block));
+		if (options?.rootOnly) {
+			const { children: _nextChildren, ...nextRoot } = nextBlock;
+			const { children: _currentChildren, ...currentRoot } = block;
+			Editor.withoutNormalizing(editor, () => {
+				for (const key of Object.keys(currentRoot)) {
+					if (!(key in nextRoot)) {
+						Transforms.unsetNodes(editor, key, { at: path });
+					}
+				}
+				Transforms.setNodes<RichTableBlock>(editor, nextRoot, { at: path });
+			});
+		} else {
+			Transforms.removeNodes(editor, { at: path });
+			Transforms.insertNodes(editor, nextBlock, { at: path });
+		}
 		if (selectCell) {
 			const rowIndex = Math.min(
 				Math.max(0, selectCell.rowIndex),
@@ -768,15 +799,23 @@ export function RichTextEditOverlay({
 			} catch {}
 		}
 		refreshAfterEdit();
-		focusEditorSoon();
-	}, [editor, focusEditorSoon, refreshAfterEdit, restoreToolbarSelection]);
+		if (!options?.preserveControlFocus) {
+			focusEditorSoon();
+		}
+	}, [
+		editor,
+		focusEditorSoon,
+		refreshAfterEdit,
+		restoreToolbarSelection,
+		restoreToolbarSelectionWithoutFocus,
+	]);
 
-	const handleTableInsertRow = useCallback(() => {
+	const handleTableInsertRow = useCallback((position: "before" | "after") => {
 		const context = activeTableContext;
 		if (!context) {
 			return;
 		}
-		const rowIndex = context.rowIndex + 1;
+		const rowIndex = context.rowIndex + (position === "after" ? 1 : 0);
 		mutateActiveTable(
 			(block) => insertTableRowBlock(block, rowIndex),
 			{ rowIndex, columnIndex: context.columnIndex },
@@ -794,12 +833,12 @@ export function RichTextEditOverlay({
 		);
 	}, [activeTableContext, mutateActiveTable]);
 
-	const handleTableInsertColumn = useCallback(() => {
+	const handleTableInsertColumn = useCallback((position: "before" | "after") => {
 		const context = activeTableContext;
 		if (!context) {
 			return;
 		}
-		const columnIndex = context.columnIndex + 1;
+		const columnIndex = context.columnIndex + (position === "after" ? 1 : 0);
 		mutateActiveTable(
 			(block) => insertTableColumnBlock(block, columnIndex),
 			{ rowIndex: context.rowIndex, columnIndex },
@@ -833,6 +872,7 @@ export function RichTextEditOverlay({
 		mutateActiveTable(
 			(block) => setTableColumnAlignmentBlock(block, context.columnIndex, alignment),
 			{ rowIndex: context.rowIndex, columnIndex: context.columnIndex },
+			{ rootOnly: true },
 		);
 	}, [activeTableContext, mutateActiveTable]);
 
@@ -844,6 +884,7 @@ export function RichTextEditOverlay({
 		mutateActiveTable(
 			(block) => setTableColumnWidthBlock(block, context.columnIndex, width || null),
 			{ rowIndex: context.rowIndex, columnIndex: context.columnIndex },
+			{ rootOnly: true, preserveControlFocus: true },
 		);
 	}, [activeTableContext, mutateActiveTable]);
 
@@ -855,6 +896,7 @@ export function RichTextEditOverlay({
 		mutateActiveTable(
 			(block) => setTableRowHeightBlock(block, context.rowIndex, height || null),
 			{ rowIndex: context.rowIndex, columnIndex: context.columnIndex },
+			{ rootOnly: true, preserveControlFocus: true },
 		);
 	}, [activeTableContext, mutateActiveTable]);
 
@@ -863,18 +905,19 @@ export function RichTextEditOverlay({
 		mutateActiveTable(
 			(block) => setTableDirectionBlock(block, (context?.direction ?? block.direction) === "rtl" ? "ltr" : "rtl"),
 			context ? { rowIndex: context.rowIndex, columnIndex: context.columnIndex } : undefined,
+			{ rootOnly: true },
 		);
 	}, [activeTableContext, mutateActiveTable]);
 
-	const getActiveCellSelection = useCallback((): TableSelectionDescriptor | null => {
+	const getActiveTableSelection = useCallback((
+		target: TableSelectionDescriptor["type"],
+	): TableSelectionDescriptor | null => {
 		const context = activeTableContext;
-		return context
-			? { type: "cell", rowIndex: context.rowIndex, columnIndex: context.columnIndex }
-			: null;
+		return context ? getTableSelectionDescriptor(context, target) : null;
 	}, [activeTableContext]);
 
 	const handleTableCellStyle = useCallback((patch: TableCellStylePatch) => {
-		const selection = getActiveCellSelection();
+		const selection = getActiveTableSelection("cell");
 		if (!selection || !activeTableContext) {
 			return;
 		}
@@ -882,13 +925,14 @@ export function RichTextEditOverlay({
 			(block) => setTableSelectionStyleBlock(block, selection, patch),
 			{ rowIndex: activeTableContext.rowIndex, columnIndex: activeTableContext.columnIndex },
 		);
-	}, [activeTableContext, getActiveCellSelection, mutateActiveTable]);
+	}, [activeTableContext, getActiveTableSelection, mutateActiveTable]);
 
 	const handleTableSelectionBorder = useCallback((
+		target: TableSelectionDescriptor["type"],
 		scope: TableBorderScope,
 		patch: TableCellBorderPatch,
 	) => {
-		const selection = getActiveCellSelection();
+		const selection = getActiveTableSelection(target);
 		if (!selection || !activeTableContext) {
 			return;
 		}
@@ -896,7 +940,7 @@ export function RichTextEditOverlay({
 			(block) => setTableSelectionBorderBlock(block, selection, scope, patch),
 			{ rowIndex: activeTableContext.rowIndex, columnIndex: activeTableContext.columnIndex },
 		);
-	}, [activeTableContext, getActiveCellSelection, mutateActiveTable]);
+	}, [activeTableContext, getActiveTableSelection, mutateActiveTable]);
 
 	const applyLinkFromPopover = useCallback(() => {
 		if (linkPopover.linkType === "external" && !linkPopover.href.trim()) {
@@ -953,6 +997,7 @@ export function RichTextEditOverlay({
 				mode={editMode}
 				toolbarRef={toolbarRef}
 				toolbarPosition={toolbarPosition}
+				toolbarMaxWidth={toolbarMaxWidth}
 				toolbarDragging={toolbarDragging}
 				onToolbarDragPointerDown={handleToolbarDragPointerDown}
 				documentFonts={documentFonts}

@@ -56,6 +56,7 @@ export {
   normalizeCodeTheme,
   normalizeListItemDepth,
 } from './richContent/shared';
+export { RICH_TABLE_DEFAULTS } from './richContent/tableDefaults';
 export {
   validateRichContentStructure,
   validateTextDocumentContentStructure,

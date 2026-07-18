@@ -28,6 +28,7 @@ export type ToolbarDragState = {
 	originY: number;
 	originOffset: RichToolbarOffset;
 	rootRect: DOMRect;
+	horizontalBounds: { left: number; right: number } | null;
 	panelWidth: number;
 	panelHeight: number;
 };

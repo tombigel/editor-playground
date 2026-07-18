@@ -6,6 +6,12 @@ import {
 	createMediaNode,
 	createTextNode,
 } from "../../../model/defaults";
+import {
+	createRichTableBlock,
+	createRichTableCell,
+	createRichTableRow,
+	createTextDocumentContent,
+} from "../../../model/richContent";
 import { ButtonDesignSection } from "../contentSections/buttonSections";
 import {
 	SvgContentSection,
@@ -15,14 +21,69 @@ import {
 import {
 	CodeDesignSection,
 	CodeTextStyleSection,
+	TableContentSection,
+	TableDesignSection,
 } from "../contentSections/textSections";
 import { VideoContentSection } from "../contentSections/videoSections";
-import {
-	NavigationFields,
-	OpenInNewTabField,
-} from "../contentSections/shared";
+import type { InspectorActionHandlers } from "../types";
+import { NavigationFields, OpenInNewTabField } from "../contentSections/shared";
 
 describe("panels/inspector/content section rows", () => {
+	it("keeps table structure minimal in Content and table-wide styling in Design", () => {
+		const node = createTextNode("table", "root");
+		node.subtype = "table";
+		node.content = createTextDocumentContent([
+			createRichTableBlock([
+				createRichTableRow(
+					[
+						createRichTableCell([{ text: "A" }]),
+						createRichTableCell([{ text: "B" }]),
+					],
+					{ header: true },
+				),
+			]),
+		]);
+		const sharedProps = {
+			node,
+			actions: {} as InspectorActionHandlers,
+			focusedMode: null,
+			onEnterFocusedMode: () => {},
+		};
+		const contentMarkup = renderToStaticMarkup(
+			<TableContentSection {...sharedProps} />,
+		);
+		const designMarkup = renderToStaticMarkup(
+			<TableDesignSection {...sharedProps} />,
+		);
+
+		expect(contentMarkup).toContain("1 rows by 2 columns");
+		expect(contentMarkup).toContain("Header row");
+		expect(contentMarkup).not.toContain("Table border");
+		expect(designMarkup).toContain(">Background<");
+		expect(designMarkup).toContain(">Border<");
+		expect(designMarkup).toContain("Cell border");
+		expect(designMarkup).not.toContain("Default cell");
+		expect(designMarkup).toMatch(
+			/aria-label="Table border width"[^>]*value="0"/,
+		);
+		expect(designMarkup).toContain('value="0.5"');
+		expect(designMarkup).toMatch(
+			/aria-label="Cell border width"[^>]*value="1"/,
+		);
+		expect(designMarkup).toContain(">Radius<");
+		expect(designMarkup).toContain(">Shadow<");
+		expect(designMarkup).toContain("Header background");
+		expect(designMarkup).toContain("Header text");
+		expect(designMarkup).toContain('aria-label="Header background"');
+		expect(designMarkup).toContain('aria-label="Header text color"');
+		expect(designMarkup.indexOf(">Table<")).toBeLessThan(
+			designMarkup.indexOf(">Header<"),
+		);
+		expect(designMarkup.indexOf(">Header<")).toBeLessThan(
+			designMarkup.indexOf(">Cell<"),
+		);
+	});
+
 	it("uses FormField for simple button and code design rows", () => {
 		const document = createInitialDocument();
 		const buttonNode = createButtonTextNode("root");

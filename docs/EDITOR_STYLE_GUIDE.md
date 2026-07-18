@@ -557,6 +557,10 @@ Spec:
 - one continuous outer shell owned by the composite wrapper
 - the shared shell keeps the outer `focus-within` treatment, while the active inner input or trigger only gets an accent-colored inner border
 - mixed-selection styling belongs to the shared component, not per-caller overrides
+- numeric + unit fields must show the effective value, including inherited or component defaults; placeholders must not stand in for a known numeric value
+- keyword values such as `auto` use the keyword-only trigger state without a numeric input or unit suffix
+- changing units must preserve the effective rendered size by converting through measured pixels and the relevant percentage/font-size reference
+- changing a keyword value to a numeric unit must immediately measure, resolve, and persist a concrete numeric value for that unit; never reveal an empty numeric field after the mode change
 - suggestion-enabled variants should use the shared styled popup with combobox/listbox semantics by default; do not bind `list`/`datalist` at the same time because native autosuggest chrome cannot be styled or coordinated with the editor popup
 
 ### 11.6 Switches
@@ -805,6 +809,7 @@ Rules:
 - they must still use the same token-backed border/background/focus language
 - inspector and settings should share the same row, group, pill, and notice contracts before adding panel-local wrappers
 - `ValueWithUnit` owns the continuous outer border, focus-within treatment, and mixed-selection shell; callers should not recreate that structure locally
+- `BorderControlGroup` uses its stacked layout for full border treatment and its inline layout for compact width-and-color rows; consumers provide the row label and a content-sized control rail
 
 ### 13.1 Shared Inspector And Settings Contracts
 

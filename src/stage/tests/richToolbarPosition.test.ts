@@ -73,6 +73,19 @@ describe("stage/richToolbarPosition", () => {
 		expect(position.left).toBe(120);
 	});
 
+	it("keeps the toolbar inside the stage horizontal bounds", () => {
+		const position = getRichToolbarViewportPosition({
+			rootRect: createRect({ top: 220, left: 180, width: 420, height: 96 }),
+			panelWidth: 524,
+			panelHeight: 144,
+			viewportWidth: 900,
+			viewportHeight: 700,
+			horizontalBounds: { left: 68, right: 592 },
+		});
+
+		expect(position.left).toBe(68);
+	});
+
 	it("clamps dragged offsets below the top bar and inside viewport edges", () => {
 		const offset = clampRichToolbarOffset({
 			rootRect: createRect({ top: 120, left: 40, width: 180, height: 72 }),

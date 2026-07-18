@@ -17,6 +17,10 @@ import {
   VideoDesignSection,
 } from '../inspector/ContentSections';
 import {
+  TableContentSection,
+  TableDesignSection,
+} from '../inspector/contentSections/textSections';
+import {
   InspectorSectionCard,
   NodeBasicsSection,
   WrapperDesignSection,
@@ -134,6 +138,21 @@ export function resolveFocusedModeBlocks(
         )),
       ];
     }
+    if (isTextNode(node) && node.subtype === 'table') {
+      return [
+        createFocusedModeBlock('content', 'primary', () => (
+          <TableContentSection
+            node={node}
+            actions={context.actions}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="space-y-3 px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
     if (isTextNode(node) && !(node.link !== undefined && node.style?.background !== undefined)) {
       return [
         createFocusedModeBlock('content', 'primary', () => (
@@ -225,6 +244,21 @@ export function resolveFocusedModeBlocks(
           <WrapperDesignSection
             node={node}
             onWrapperStyleChange={context.actions.onWrapperStyleChange}
+            focusedMode={context.focusedMode}
+            onEnterFocusedMode={context.actions.onEnterFocusedMode}
+            headerContent={options.headerContent}
+            headerAction={headerAction}
+            contentClassName="space-y-2.5 px-3 pt-1.5 pb-5"
+          />
+        )),
+      ];
+    }
+    if (isTextNode(node) && node.subtype === 'table') {
+      return [
+        createFocusedModeBlock('design', 'primary', () => (
+          <TableDesignSection
+            node={node}
+            actions={context.actions}
             focusedMode={context.focusedMode}
             onEnterFocusedMode={context.actions.onEnterFocusedMode}
             headerContent={options.headerContent}

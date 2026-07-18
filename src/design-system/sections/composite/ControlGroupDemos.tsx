@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import {
 	BorderControlGroup,
+	FormField,
 	ShadowControlGroup,
 } from "@/panels/InspectorControls";
 import { ComponentPreview } from "../../previews/ComponentPreview";
@@ -39,17 +40,41 @@ function BorderControlDemo() {
 	const [width, setWidth] = useState("1px");
 	const [radius, setRadius] = useState("16px");
 	return (
-		<div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
-			<Label className="mt-2 text-[11px] font-medium">Border</Label>
-			<BorderControlGroup
-				nodeId="demo"
-				colorValue={color}
-				widthValue={width}
-				radiusValue={radius}
-				onColorChange={setColor}
-				onWidthChange={setWidth}
-				onRadiusChange={setRadius}
-			/>
+		<div className="space-y-4">
+			<div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
+				<Label className="mt-2 text-[11px] font-medium">Border</Label>
+				<BorderControlGroup
+					nodeId="demo"
+					colorValue={color}
+					widthValue={width}
+					radiusValue={radius}
+					onColorChange={setColor}
+					onWidthChange={setWidth}
+					onRadiusChange={setRadius}
+				/>
+			</div>
+			<FormField label="Inline" layout="inline" controlWidth="132px">
+				<BorderControlGroup
+					layout="inline"
+					showRadius={false}
+					colorValue={color}
+					widthValue={width}
+					widthUnits={["px", "em"]}
+					onColorChange={setColor}
+					onWidthChange={setWidth}
+				/>
+			</FormField>
+			<div className="grid grid-cols-[64px_minmax(0,1fr)] items-start gap-1">
+				<Label className="mt-2 text-[11px] font-medium">No radius</Label>
+				<BorderControlGroup
+					colorValue={color}
+					widthValue={width}
+					widthUnits={["px", "em"]}
+					showRadius={false}
+					onColorChange={setColor}
+					onWidthChange={setWidth}
+				/>
+			</div>
 		</div>
 	);
 }
@@ -101,7 +126,9 @@ export function ControlGroupDemos() {
 					<ShadowControlDemo />
 					{/* Multi-select (mixed) */}
 					<div>
-						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">Multi-select</div>
+						<div className="editor-text-muted mb-1.5 text-[10px] font-medium uppercase tracking-wide">
+							Multi-select
+						</div>
 						<ShadowControlGroup
 							color="rgba(18, 32, 51, 0.14)"
 							blur={16}
@@ -142,6 +169,27 @@ export function ControlGroupDemos() {
 						name: "radiusValue",
 						type: "string",
 						description: "Border radius with unit.",
+					},
+					{
+						name: "widthUnits",
+						type: "InspectorLengthUnit[]",
+						description: "Allowed units for the border width field.",
+					},
+					{
+						name: "colorAriaLabel",
+						type: "string",
+						description: "Accessible name for the color swatch.",
+					},
+					{
+						name: "widthAriaLabel",
+						type: "string",
+						description: "Accessible name for the width input.",
+					},
+					{
+						name: "layout",
+						type: '"stacked" | "inline"',
+						default: '"stacked"',
+						description: "Stacked detail fields or a compact inline width-and-color row.",
 					},
 				]}
 			>

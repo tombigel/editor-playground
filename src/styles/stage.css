@@ -738,7 +738,7 @@
 }
 
 .stage-leaf.subtype-table :where(th, td) {
-  padding: 0.35em 0.5em;
+  padding: 0.5em;
   border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
   vertical-align: top;
 }

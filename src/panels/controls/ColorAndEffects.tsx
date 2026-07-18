@@ -2,7 +2,12 @@ import { memo, useRef, type ReactNode } from 'react';
 import { forceOpaqueColorValue } from '../../api/documentViewApi';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { Label } from '@/components/ui/label';
-import { LabeledNumberField, LabeledUnitField } from './NumberFields';
+import {
+  type InspectorLengthUnit,
+  LabeledNumberField,
+  LabeledUnitField,
+  NumericUnitInlineField,
+} from './NumberFields';
 
 // ---------------------------------------------------------------------------
 // HoverColorField
@@ -80,34 +85,69 @@ export const BorderControlGroup = memo(function BorderControlGroup({
   onColorChange,
   onWidthChange,
   onRadiusChange,
+  onWidthUnitChangeValue,
   showRadius = true,
   colorFallback = '#d8e0ea',
   widthPlaceholder = '1',
   radiusPlaceholder = '16',
+  widthUnits = ['px'],
+  colorAriaLabel = 'Border color',
+  widthAriaLabel = 'Width',
+  layout = 'stacked',
 }: {
-  nodeId: string;
+  nodeId?: string;
   colorValue: string;
   widthValue: string;
-  radiusValue: string;
+  radiusValue?: string;
   onColorChange: (value: string) => void;
   onWidthChange: (value: string) => void;
-  onRadiusChange: (value: string) => void;
+  onRadiusChange?: (value: string) => void;
+  onWidthUnitChangeValue?: (nextUnit: string, currentValue: string) => string | null;
   showRadius?: boolean;
   colorFallback?: string;
   widthPlaceholder?: string;
   radiusPlaceholder?: string;
+  widthUnits?: InspectorLengthUnit[];
+  colorAriaLabel?: string;
+  widthAriaLabel?: string;
+  layout?: 'stacked' | 'inline';
 }) {
+  if (layout === 'inline') {
+    return (
+      <div className="flex w-full min-w-0 items-center gap-1">
+        <NumericUnitInlineField
+          value={widthValue}
+          units={widthUnits}
+          onChange={onWidthChange}
+          onUnitChangeValue={onWidthUnitChangeValue}
+          placeholder={widthPlaceholder}
+          min={0}
+          aria-label={widthAriaLabel}
+          className="min-w-0 flex-1"
+        />
+        <HoverColorField
+          value={colorValue || undefined}
+          onChange={onColorChange}
+          ariaLabel={colorAriaLabel}
+          fallback={colorFallback}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-1.5">
       <div className="flex place-content-end">
-        <HoverColorField value={colorValue || undefined} onChange={onColorChange} ariaLabel="Border color" fallback={colorFallback} />
+        <HoverColorField value={colorValue || undefined} onChange={onColorChange} ariaLabel={colorAriaLabel} fallback={colorFallback} />
       </div>
       <div className={`grid gap-1.5 ${showRadius ? 'grid-cols-2' : 'grid-cols-1'}`}>
         <LabeledUnitField
           label="Width"
+          ariaLabel={widthAriaLabel}
           value={widthValue}
-          units={['px']}
+          units={widthUnits}
           onChange={onWidthChange}
+          onUnitChangeValue={onWidthUnitChangeValue}
           placeholder={widthPlaceholder}
           min={0}
         />
@@ -115,9 +155,9 @@ export const BorderControlGroup = memo(function BorderControlGroup({
           <LabeledUnitField
             nodeId={nodeId}
             label="Radius"
-            value={radiusValue}
+            value={radiusValue ?? ''}
             units={['px', '%']}
-            onChange={onRadiusChange}
+            onChange={onRadiusChange ?? (() => {})}
             placeholder={radiusPlaceholder}
             min={0}
           />

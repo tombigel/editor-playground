@@ -3,6 +3,7 @@ import {
   convertRenderedPxToFontRelativeUnit,
   convertRenderedPxToGeometryUnit,
   convertRenderedPxToSpacingUnit,
+  convertTableLengthValue,
   formatDisplayValue,
 } from '../../api/documentViewApi';
 import type { BorderStyle, ShadowStyle, ViewportMeasurement } from '../../api/documentViewApi';
@@ -455,6 +456,36 @@ export function convertStageBorderRadiusToValue(
 
   const converted = convertRenderedPxToBorderRadiusValue(measurement.radiusPx, mode, measurement.box);
   return converted == null ? null : `${formatFieldNumber(converted)}${mode}`;
+}
+
+export type TableStyleLengthTarget = 'table-border' | 'cell-border' | 'cell-padding';
+
+export function convertStageTableStyleLengthToValue(
+  nodeId: string,
+  target: TableStyleLengthTarget,
+  currentValue: string,
+  nextUnit: 'px' | 'em' | '%',
+  ownerDocument: Document = document,
+) {
+  const root = ownerDocument.getElementById(`stage-node-${nodeId}`);
+  const table = root?.querySelector<HTMLElement>('table');
+  const cell = table?.querySelector<HTMLElement>('th, td');
+  const element = target === 'table-border' ? table : cell;
+  const defaultView = ownerDocument.defaultView;
+  if (!element || !table || !defaultView) {
+    return null;
+  }
+
+  const computed = defaultView.getComputedStyle(element);
+  const renderedPx = Number.parseFloat(
+    target === 'cell-padding' ? computed.paddingTop : computed.borderTopWidth,
+  );
+  const converted = convertTableLengthValue(currentValue, nextUnit, {
+    renderedPx,
+    fontSizePx: Number.parseFloat(computed.fontSize),
+    percentReferencePx: target === 'cell-padding' ? element.getBoundingClientRect().width : table.getBoundingClientRect().width,
+  });
+  return converted == null ? null : `${formatFieldNumber(converted)}${nextUnit}`;
 }
 
 // ---------------------------------------------------------------------------
